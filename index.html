@@ -1856,49 +1856,50 @@
 <title>Etiqueta Previmune</title>
 <style>
   @page {
-    size: 62mm 40mm;
+    size: 50mm 15mm;
     margin: 0;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * { margin:0; padding:0; box-sizing:border-box; font-weight: 700; }
   body {
-    width: 62mm;
-    height: 40mm;
+    width: 50mm;
+    height: 15mm;
     font-family: Arial, sans-serif;
-    font-size: 9pt;
+    font-size: 5.5pt;
     background: #fff;
     color: #000;
   }
   .etiqueta {
-    width: 62mm;
-    height: 40mm;
-    padding: 1.5mm 2mm;
+    width: 50mm;
+    height: 15mm;
+    padding: 0.3mm 1mm;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border: 1px solid #000;
   }
   .header {
     background: #1a56a0;
     color: #fff;
     text-align: center;
-    font-size: 12pt;
+    font-size: 6.5pt;
     font-weight: 900;
-    padding: 1mm 0;
-    border-bottom: 2px solid #003080;
-    letter-spacing: 1px;
+    padding: 0.2mm 0;
+    border-bottom: 1px solid #003080;
+    letter-spacing: 0.5px;
   }
   .linha {
     display: flex;
     align-items: center;
-    font-size: 8.5pt;
-    border-bottom: 1px solid #ddd;
-    padding: 0.8mm 0;
+    font-size: 5pt;
+    border-bottom: 0.3px solid #ccc;
+    padding: 0.1mm 0;
+    line-height: 1.1;
+    font-weight: 700;
   }
-  .label { font-weight: 700; min-width: 8mm; color: #222; }
-  .valor { font-weight: 400; }
+  .label { font-weight: 900; min-width: 6mm; color: #000; white-space: nowrap; }
+  .valor { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 38mm; }
   .footer {
     background: #1a56a0;
-    height: 4mm;
+    height: 1.5mm;
   }
 
     /* ===== BOTÃO OUTLINE ORANGE ===== */
