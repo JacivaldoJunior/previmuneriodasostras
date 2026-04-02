@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Previmune — Sistema de Vacinação</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --orange: #e76b1f;
+      --orange-dark: #c85a10;
+      --orange-light: #ff8c42;
+      --orange-50: #fff7f1;
+      --orange-100: #ffe8d4;
+      --orange-200: #ffc999;
+      --white: #ffffff;
+      --gray-50: #fafafa;
+      --gray-100: #f4f4f5;
+      --gray-200: #e4e4e7;
+      --gray-400: #a1a1aa;
+      --gray-500: #71717a;
+      --gray-600: #52525b;
+      --gray-800: #27272a;
+      --gray-900: #18181b;
+      --red: #ef4444;
+      --red-light: #fef2f2;
+      --green: #22c55e;
+      --green-light: #f0fdf4;
+      --yellow: #f59e0b;
+      --yellow-light: #fffbeb;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.06);
+      --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 240px;
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-logo img {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      object-fit: contain;
+      background: var(--orange-50);
+      padding: 4px;
+    }
+    .sidebar-logo-text h2 {
+      font-size: 16px; font-weight: 800;
+      color: var(--orange-dark);
+    }
+    .sidebar-logo-text p {
+      font-size: 11px; color: var(--gray-400);
+      font-weight: 500;
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 0;
+      overflow-y: auto;
+    }
+    .nav-section {
+      padding: 0 12px;
+      margin-bottom: 4px;
+    }
+    .nav-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--gray-400);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 8px 4px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 14px; font-weight: 500;
+      color: var(--gray-600);
+      transition: all 0.15s;
+      border: none; background: none; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--gray-100); color: var(--gray-900); }
+    .nav-item.active {
+      background: var(--orange-50);
+      color: var(--orange-dark);
+      font-weight: 600;
+    }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-item .badge-count {
+      margin-left: auto;
+      background: var(--orange-100);
+      color: var(--orange-dark);
+      font-size: 11px; font-weight: 700;
+      padding: 2px 7px; border-radius: 999px;
+    }
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--gray-100);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--orange-50);
+    }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: white; font-weight: 700;
+    }
+    .user-name { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+    .user-role { font-size: 11px; color: var(--gray-400); }
+
+    /* ===== MAIN ===== */
+    .main {
+      margin-left: 240px;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 28px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--gray-900); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .btn-refresh {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm); padding: 7px 14px;
+      font-size: 13px; font-weight: 500; color: var(--gray-600);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-refresh:hover { background: var(--gray-100); border-color: var(--gray-300); }
+
+    .content {
+      padding: 24px 28px;
+      flex: 1;
+    }
+
+    /* ===== PAGES ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== STAT CARDS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .stat-icon.orange { background: var(--orange-50); }
+    .stat-icon.green { background: var(--green-light); }
+    .stat-icon.yellow { background: var(--yellow-light); }
+    .stat-icon.red { background: var(--red-light); }
+    .stat-value { font-size: 26px; font-weight: 800; color: var(--gray-900); line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--gray-400); font-weight: 500; margin-top: 2px; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+    .card-subtitle { font-size: 12px; color: var(--gray-400); margin-top: 1px; }
+    .card-body { padding: 20px; }
+
+    /* ===== GRID LAYOUTS ===== */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .col-span-2 { grid-column: span 2; }
+
+    /* ===== FORMS ===== */
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 12px; font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
+    }
+    .form-label span.req { color: var(--orange); margin-left: 2px; }
+    .form-control {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--gray-900);
+      background: var(--white);
+      transition: all 0.15s;
+      outline: none;
+      font-family: inherit;
+    }
+    .form-control:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(231, 107, 31, 0.12);
+    }
+    .form-control::placeholder { color: var(--gray-400); }
+    select.form-control { cursor: pointer; }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none;
+      transition: all 0.15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--orange-light), var(--orange));
+      color: white;
+      box-shadow: 0 2px 8px rgba(231,107,31,0.3);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+      box-shadow: 0 4px 12px rgba(231,107,31,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--orange-200);
+      color: var(--orange-dark);
+    }
+    .btn-ghost:hover { background: var(--orange-50); border-color: var(--orange); }
+    .btn-danger {
+      background: transparent; color: var(--red);
+      border: 1.5px solid #fecaca;
+    }
+    .btn-danger:hover { background: var(--red-light); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-icon { padding: 7px; border-radius: var(--radius-sm); font-size: 15px; }
+    .btn-full { width: 100%; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* ===== TABLE ===== */
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      padding: 10px 14px;
+      font-size: 11px; font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: left;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .data-table td {
+      padding: 12px 14px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr:hover { background: var(--orange-50); }
+    .data-table .actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .scroll-table { max-height: 380px; overflow-y: auto; }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+    }
+    .badge-orange { background: var(--orange-100); color: var(--orange-dark); }
+    .badge-green { background: var(--green-light); color: #166534; }
+    .badge-yellow { background: var(--yellow-light); color: #92400e; }
+    .badge-red { background: var(--red-light); color: #991b1b; }
+
+    /* ===== SEARCH ===== */
+    .search-wrap { position: relative; }
+    .search-wrap .icon-search {
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; color: var(--gray-400);
+    }
+    .search-wrap .form-control { padding-left: 32px; }
+
+    /* ===== TOAST ===== */
+    #toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 9999;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--gray-900);
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      animation: slideIn 0.25s ease;
+      min-width: 260px; max-width: 360px;
+    }
+    .toast.success { background: #166534; }
+    .toast.error { background: #991b1b; }
+    .toast.warning { background: #92400e; }
+    @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideOut { to { transform: translateY(20px); opacity: 0; } }
+
+    /* ===== MODAL ===== */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200;
+      backdrop-filter: blur(2px);
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 0;
+      max-width: 720px; width: 96%;
+      max-height: 90vh;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .modal-head {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg, var(--orange-50), var(--white));
+    }
+    .modal-head h3 { font-size: 17px; font-weight: 700; color: var(--gray-900); }
+    .modal-head p { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .modal-foot { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 18px; color: var(--gray-400);
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+    }
+    .btn-close:hover { background: var(--gray-100); color: var(--gray-900); }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center; padding: 48px 20px;
+      color: var(--gray-400);
+    }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ===== CONFIRM DIALOG ===== */
+    .confirm-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.5);
+      display: none; align-items: center; justify-content: center;
+      z-index: 300;
+      backdrop-filter: blur(2px);
+    }
+    .confirm-backdrop.open { display: flex; }
+    .confirm-box {
+      background: white; border-radius: var(--radius-lg);
+      padding: 28px 28px 20px;
+      max-width: 380px; width: 92%;
+      box-shadow: var(--shadow-lg);
+    }
+    .confirm-box h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .confirm-box p { font-size: 14px; color: var(--gray-500); margin-bottom: 20px; }
+    .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ===== LOADING ===== */
+    .loading-row td { text-align: center; padding: 28px; color: var(--gray-400); font-size: 14px; }
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid var(--orange-200);
+      border-top-color: var(--orange);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== DIVIDER ===== */
+    .divider { height: 1px; background: var(--gray-100); margin: 16px 0; }
+
+    /* ===== HIGHLIGHT CARD ===== */
+    .highlight-bar {
+      border-left: 3px solid var(--orange);
+      padding: 10px 14px;
+      background: var(--orange-50);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 13px; color: var(--orange-dark);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+    }
+
+    /* ===== VACINA EDIT MODAL FORM ===== */
+    .vacina-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+  
+    /* ===== LEMBRETES ===== */
+    .badge-urgente { background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700; }
+    .badge-proximo { background:#fffbeb;color:#d97706;border:1px solid #fcd34d;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700; }
+    .badge-ok { background:#f0fdf4;color:#16a34a;border:1px solid #86efac;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700; }
+    .badge-enviado { background:#eff6ff;color:#2563eb;border:1px solid #93c5fd;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700; }
+    .btn-whatsapp-lg { background:#25d366;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:0.8rem;transition:all 0.2s;display:inline-flex;align-items:center;gap:4px; }
+    .btn-whatsapp-lg:hover { background:#128c7e;transform:translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <img src="https://cdn.abacus.ai/images/3e6c26e8-ae1b-4e5b-9c3d-894b5478a627.png" alt="Previmune">
+    <div class="sidebar-logo-text">
+      <h2>Previmune</h2>
+      <p>Sistema de Vacinação</p>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <button class="nav-item active" onclick="navTo('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="navTo('pacientes')">
+        <span class="icon">👤</span> Pacientes
+        <span class="badge-count" id="nav-count-pacientes">—</span>
+      </button>
+      <button class="nav-item" onclick="navTo('aplicacoes')">
+        <span class="icon">💉</span> Aplicações
+        <span class="badge-count" id="nav-count-aplicacoes">—</span>
+      </button>
+      <button class="nav-item" onclick="navTo('estoque')">
+        <span class="icon">🏥</span> Estoque
+        <span class="badge-count" id="nav-count-estoque">—</span>
+      </button>
+      <button class="nav-item" onclick="navTo('lembretes')" id="nav-btn-lembretes">
+        <span class="icon">🔔</span> Lembretes
+        <span class="badge-count" id="nav-count-lembretes" style="background:#e74c3c;color:#fff">—</span>
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Ações rápidas</div>
+      <button class="nav-item" onclick="navTo('novo-paciente')">
+        <span class="icon">➕</span> Novo Paciente
+      </button>
+      <button class="nav-item" onclick="navTo('nova-aplicacao')">
+        <span class="icon">📋</span> Registrar Aplicação
+      </button>
+      <button class="nav-item" onclick="navTo('nova-vacina')">
+        <span class="icon">📦</span> Adicionar Vacina
+      </button>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar">E</div>
+      <div>
+        <div class="user-name">Equipe</div>
+        <div class="user-role">Administrador</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <button class="btn-refresh" onclick="fetchAll()">
+        🔄 Atualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== PAGE: DASHBOARD ===== -->
+    <div id="page-dashboard" class="page active">
+      <!-- ALERTA DOSES PRÓXIMAS -->
+      <div id="dash-alerta-doses" style="display:none;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #f97316;border-radius:12px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:flex-start;gap:14px">
+        <span style="font-size:1.8rem;line-height:1">⚠️</span>
+        <div style="flex:1">
+          <div style="font-weight:700;color:#c2410c;font-size:1rem;margin-bottom:6px">Doses vencendo em breve!</div>
+          <div id="dash-alerta-doses-lista" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+        <button onclick="navTo('lembretes')" style="background:#f97316;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer;font-size:0.85rem;white-space:nowrap">Ver todos →</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon orange">👤</div>
+          <div>
+            <div class="stat-value" id="stat-pacientes">—</div>
+            <div class="stat-label">Pacientes</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">💉</div>
+          <div>
+            <div class="stat-value" id="stat-aplicacoes">—</div>
+            <div class="stat-label">Aplicações</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">📦</div>
+          <div>
+            <div class="stat-value" id="stat-vacinas">—</div>
+            <div class="stat-label">Vacinas no Estoque</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">💰</div>
+          <div>
+            <div class="stat-value" id="stat-faturamento">—</div>
+            <div class="stat-label">Faturamento Total</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Últimas Aplicações</div>
+              <div class="card-subtitle">5 mais recentes</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="navTo('aplicacoes')">Ver todas →</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="dash-aplicacoes">
+              <thead><tr><th>Paciente</th><th>Vacina</th><th>Data</th><th>Valor</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Alerta de Estoque</div>
+              <div class="card-subtitle">Vacinas com estoque baixo ou zerado</div>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="dash-estoque-baixo">
+              <thead><tr><th>Vacina</th><th>Lote</th><th>Validade</th><th>Qtd</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: PACIENTES ===== -->
+    <div id="page-pacientes" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Pacientes</div>
+            <div class="card-subtitle" id="total-pacientes-label">Carregando...</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="search-wrap">
+              <span class="icon-search">🔍</span>
+              <input class="form-control" style="width:220px" id="searchPaciente" placeholder="Buscar por nome ou CPF" oninput="renderPacientes()">
+            </div>
+            <button class="btn btn-primary" onclick="navTo('novo-paciente')">➕ Novo</button>
+          </div>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-pacientes">
+            <thead>
+              <tr>
+                <th>Nome</th><th>CPF</th><th>Nascimento</th><th>Telefone</th><th>Endereço</th><th style="text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: NOVO PACIENTE ===== -->
+    <div id="page-novo-paciente" class="page">
+      <div style="max-width:620px">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="form-paciente-title">Novo Paciente</div>
+              <div class="card-subtitle">Preencha os dados do paciente</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <input type="hidden" id="paciente_edit_id">
+            <div class="form-group">
+              <label class="form-label">Nome completo <span class="req">*</span></label>
+              <input class="form-control" id="nome" placeholder="Ex: Maria da Silva">
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">CPF <span class="req">*</span></label>
+                <input class="form-control" id="cpf" placeholder="000.000.000-00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data de Nascimento</label>
+                <input class="form-control" id="nascimento" type="date">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefone</label>
+              <input class="form-control" id="telefone" placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Endereço</label>
+              <input class="form-control" id="endereco" placeholder="Rua, Número, Bairro, Cidade">
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+              <button class="btn btn-ghost" onclick="cancelarPaciente()">Cancelar</button>
+              <button class="btn btn-primary" id="btn-salvar-paciente" onclick="cadastrarOuAtualizarPaciente()">💾 Salvar Paciente</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: APLICAÇÕES ===== -->
+    <div id="page-aplicacoes" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Aplicações Registradas</div>
+            <div class="card-subtitle" id="total-aplicacoes-label">Carregando...</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="search-wrap">
+              <span class="icon-search">🔍</span>
+              <input class="form-control" style="width:220px" id="searchAplic" placeholder="Buscar por vacina/paciente" oninput="renderAplicacoes()">
+            </div>
+            <button class="btn btn-primary" onclick="navTo('nova-aplicacao')">➕ Nova</button>
+          </div>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-aplicacoes">
+            <thead>
+              <tr>
+                <th>Paciente</th><th>Vacina</th><th>Data</th><th>Dose</th><th>Qtd</th><th>Valor</th><th>Pagamento</th><th style="text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: NOVA APLICAÇÃO ===== -->
+    <div id="page-nova-aplicacao" class="page">
+      <div style="max-width:680px">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Registrar Aplicação</div>
+              <div class="card-subtitle">Ao registrar, o estoque será reduzido automaticamente</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Paciente <span class="req">*</span></label>
+              <select class="form-control" id="paciente_select">
+                <option value="">— Selecione um paciente —</option>
+              </select>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Vacina (Estoque) <span class="req">*</span></label>
+                <select class="form-control" id="vacina_select" onchange="preencherValorVacina()">
+                  <option value="">— Selecione a vacina —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quantidade</label>
+                <input class="form-control" id="quantidade" type="number" min="1" value="1">
+              </div>
+            </div>
+            <div id="alerta-estoque" style="display:none;margin-bottom:10px"></div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Data da Aplicação</label>
+                <input class="form-control" id="data_aplicacao" type="date">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Dose</label>
+                <input class="form-control" id="dose" placeholder="1ª, 2ª, Reforço...">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Valor (R$)</label>
+                <input class="form-control" id="valor" type="number" min="0" step="0.01" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Forma de Pagamento</label>
+                <select class="form-control" id="pagamento">
+                  <option>Pix</option>
+                  <option>Cartão de Crédito</option>
+                  <option>Cartão de Débito</option>
+                  <option>Dinheiro</option>
+                  <option>Convênio</option>
+                </select>
+              </div>
+            </div>
+            <div class="highlight-bar" style="margin-bottom:16px">
+              💡 O sistema reduzirá o estoque automaticamente ao registrar a aplicação.
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <button class="btn btn-ghost" onclick="navTo('aplicacoes')">Cancelar</button>
+              <button class="btn btn-primary" onclick="registrarAplicacao()">💉 Registrar Aplicação</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: ESTOQUE ===== -->
+    <div id="page-estoque" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Estoque de Vacinas</div>
+            <div class="card-subtitle">Gerencie lotes, quantidades e validades</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="navTo('nova-vacina')">➕ Adicionar</button>
+          </div>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-vacinas">
+            <thead>
+              <tr>
+                <th>Vacina</th><th>Fornecedor</th><th>Lote</th><th>NF</th><th>Entrada</th><th>Validade</th><th>Qtd</th><th>Preço (R$)</th><th style="text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: NOVA VACINA ===== -->
+    <div id="page-nova-vacina" class="page">
+      <div style="max-width:560px">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Adicionar Vacina ao Estoque</div>
+              <div class="card-subtitle">Cadastre um novo lote</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Nome da Vacina <span class="req">*</span></label>
+              <input class="form-control" id="novo_vacina_nome" placeholder="Ex: Influenza Quadrivalente">
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Lote</label>
+                <input class="form-control" id="novo_vacina_lote" placeholder="Ex: LT2024-001">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Validade</label>
+                <input class="form-control" id="novo_vacina_validade" type="date">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Quantidade</label>
+                <input class="form-control" id="novo_vacina_stock" type="number" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Preço de Venda (R$)</label>
+                <input class="form-control" id="novo_vacina_preco" type="number" min="0" step="0.01" placeholder="0.00">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Fornecedor</label>
+                <input class="form-control" id="novo_vacina_fornecedor" placeholder="Ex: Sanofi, Pfizer...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data de Entrada</label>
+                <input class="form-control" id="novo_vacina_entrada" type="date">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nota Fiscal</label>
+              <input class="form-control" id="novo_vacina_nf" placeholder="Ex: NF-2024-001">
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+              <button class="btn btn-ghost" onclick="navTo('estoque')">Cancelar</button>
+              <button class="btn btn-primary" onclick="criarVacina()">📦 Adicionar ao Estoque</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: LEMBRETES -->
+    <div id="page-lembretes" class="page">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🔔 Lembretes de Próximas Doses</div>
+            <div class="card-subtitle">Gerencie os agendamentos de revacinação</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalNovoLembrete()">+ Novo Lembrete</button>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <!-- Filtros -->
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+            <select id="filtro-lembrete-status" class="form-control" style="max-width:180px" onchange="renderLembretes()">
+              <option value="">Todos</option>
+              <option value="pendente">Pendentes</option>
+              <option value="enviado">Enviados</option>
+            </select>
+            <input id="searchLembrete" class="form-control" style="max-width:240px" placeholder="🔍 Buscar paciente..." oninput="renderLembretes()">
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="tabela-lembretes">
+              <thead>
+                <tr>
+                  <th>Paciente</th>
+                  <th>Telefone</th>
+                  <th>Vacina</th>
+                  <th>Próxima Dose</th>
+                  <th>Dias restantes</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODAL: NOVO LEMBRETE -->
+<div id="modal-lembrete" class="modal-backdrop">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">🔔 Novo Lembrete de Dose</div>
+      <button class="modal-close" onclick="fecharModalLembrete()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Paciente <span class="req">*</span></label>
+        <select class="form-control" id="lembrete_paciente_id">
+          <option value="">Selecione o paciente...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vacina <span class="req">*</span></label>
+        <input class="form-control" id="lembrete_vacina" placeholder="Ex: Prevnar 13, Hepatite B...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data da Próxima Dose <span class="req">*</span></label>
+        <input class="form-control" id="lembrete_data" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observação</label>
+        <input class="form-control" id="lembrete_obs" placeholder="Ex: 3ª dose da série">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalLembrete()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLembrete()">💾 Salvar Lembrete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- MODAL: HISTÓRICO PACIENTE -->
+<div id="modal-historico" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="modal-hist-title">Histórico</h3>
+        <p id="modal-hist-sub"></p>
+      </div>
+      <button class="btn-close" onclick="fecharModalHistorico()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-hist-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalHistorico()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DETALHE APLICAÇÃO -->
+<div id="modal-aplicacao" class="modal-backdrop">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <div>
+        <h3>Detalhe da Aplicação</h3>
+      </div>
+      <button class="btn-close" onclick="fecharModalAplicacao()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-aplic-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalAplicacao()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR VACINA -->
+<div id="modal-editar-vacina" class="modal-backdrop">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <div>
+        <h3>Editar Vacina</h3>
+        <p>Atualize os dados do estoque</p>
+      </div>
+      <button class="btn-close" onclick="fecharModalEditarVacina()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit_vacina_id">
+      <div class="vacina-form-grid">
+        <div class="form-group" style="grid-column:span 2">
+          <label class="form-label">Nome da Vacina <span class="req">*</span></label>
+          <input class="form-control" id="edit_vacina_nome">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lote</label>
+          <input class="form-control" id="edit_vacina_lote">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Validade</label>
+          <input class="form-control" type="date" id="edit_vacina_validade">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantidade</label>
+          <input class="form-control" type="number" min="0" id="edit_vacina_stock">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preço (R$)</label>
+          <input class="form-control" type="number" min="0" step="0.01" id="edit_vacina_preco">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fornecedor</label>
+          <input class="form-control" id="edit_vacina_fornecedor" placeholder="Ex: Sanofi, Pfizer...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nota Fiscal</label>
+          <input class="form-control" id="edit_vacina_nf" placeholder="Ex: NF-2024-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data de Entrada</label>
+          <input class="form-control" type="date" id="edit_vacina_entrada">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalEditarVacina()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoVacina()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div id="confirm-backdrop" class="confirm-backdrop">
+  <div class="confirm-box">
+    <h4 id="confirm-title">Confirmar ação</h4>
+    <p id="confirm-msg"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="resolveConfirm(false)">Cancelar</button>
+      <button class="btn btn-danger" id="confirm-ok-btn" onclick="resolveConfirm(true)">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ======= CONFIGURE AQUI =======
+  const SUPABASE_URL = "https://shepwjdunsjijivmbqbq.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZXB3amR1bnNqaWppdm1icWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTE2NTQsImV4cCI6MjA5MDYyNzY1NH0.FjOwInO7cJoIryTwKddR8KkPXPSdiMvZJhrDXBrzywM";
+  // ==============================
+
+  const { createClient } = supabase;
+  let db;
+  try {
+    db = createClient(SUPABASE_URL, SUPABASE_KEY);
+  } catch(e) {
+    console.warn('Supabase não configurado:', e.message);
+    db = null;
+  }
+
+  let pacientes = [], aplicacoes = [], vacinas = [];
+  let confirmResolve = null;
+
+  // ===== NAVIGATION =====
+  const pageMap = {
+    'dashboard':       { id: 'page-dashboard',       title: 'Dashboard' },
+    'pacientes':       { id: 'page-pacientes',        title: 'Pacientes' },
+    'novo-paciente':   { id: 'page-novo-paciente',    title: 'Novo Paciente' },
+    'aplicacoes':      { id: 'page-aplicacoes',       title: 'Aplicações' },
+    'nova-aplicacao':  { id: 'page-nova-aplicacao',   title: 'Registrar Aplicação' },
+    'estoque':         { id: 'page-estoque',          title: 'Estoque de Vacinas' },
+    'nova-vacina':     { id: 'page-nova-vacina',      title: 'Adicionar Vacina' },
+    'lembretes':       { id: 'page-lembretes',        title: '🔔 Lembretes de Doses' },
+  };
+
+  function navTo(page) {
+    // hide all
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    const p = pageMap[page];
+    if (!p) return;
+    document.getElementById(p.id).classList.add('active');
+    document.getElementById('topbar-title').textContent = p.title;
+
+    // mark nav active
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') === `navTo('${page}')`) n.classList.add('active');
+    });
+
+    // on enter page actions
+    if (page === 'nova-aplicacao') { populatePacienteSelect(); populateVacinaSelect(); setDefaultDate(); }
+    if (page === 'novo-paciente') {
+      const editId = document.getElementById('paciente_edit_id').value;
+      document.getElementById('form-paciente-title').textContent = editId ? 'Editar Paciente' : 'Novo Paciente';
+      document.getElementById('btn-salvar-paciente').textContent = editId ? '💾 Atualizar' : '💾 Salvar Paciente';
+    }
+  }
+
+  function setDefaultDate() {
+    const el = document.getElementById('data_aplicacao');
+    if (!el.value) el.value = new Date().toISOString().slice(0, 10);
+  }
+
+  // ===== TOAST =====
+  function toast(msg, type = 'default') {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    const icons = { success: '✅', error: '❌', warning: '⚠️', default: 'ℹ️' };
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icons[type] || '💬'}</span><span>${msg}</span>`;
+    container.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'slideOut 0.25s ease forwards';
+      setTimeout(() => el.remove(), 250);
+    }, 3200);
+  }
+
+  // ===== CONFIRM =====
+  function confirm(title, msg) {
+    return new Promise(resolve => {
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-msg').textContent = msg;
+      document.getElementById('confirm-backdrop').classList.add('open');
+      confirmResolve = resolve;
+    });
+  }
+  function resolveConfirm(val) {
+    document.getElementById('confirm-backdrop').classList.remove('open');
+    if (confirmResolve) confirmResolve(val);
+    confirmResolve = null;
+  }
+
+  // ===== FETCH ALL =====
+  async function fetchAll() {
+    await Promise.all([fetchPacientes(), fetchVacinas(), fetchAplicacoes()]);
+    renderDashboard();
+    await fetchLembretes();
+  }
+
+  // ===== PACIENTES =====
+  async function fetchPacientes() {
+    try {
+      if (!db) { renderPacientes(); return; }
+      const { data, error } = await db.from('pacientes').select('*').order('id', { ascending: false });
+      if (error) throw error;
+      pacientes = data || [];
+      renderPacientes();
+      document.getElementById('total-pacientes-label').textContent = `${pacientes.length} registro(s)`;
+      document.getElementById('stat-pacientes').textContent = pacientes.length;
+      document.getElementById('nav-count-pacientes').textContent = pacientes.length;
+    } catch (err) {
+      console.error(err);
+      toast('Erro ao buscar pacientes: ' + (err.message || err), 'error');
+    }
+  }
+
+  function renderPacientes() {
+    const tbody = document.querySelector('#tabela-pacientes tbody');
+    const q = (document.getElementById('searchPaciente')?.value || '').toLowerCase().trim();
+    const list = pacientes.filter(p => !q || (p.nome||'').toLowerCase().includes(q) || (p.cpf||'').toLowerCase().includes(q));
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👤</div><p>Nenhum paciente encontrado</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(p => {
+      const nasc = p.nascimento ? new Date(p.nascimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      return `<tr>
+        <td><strong>${esc(p.nome||'')}</strong></td>
+        <td>${esc(p.cpf||'—')}</td>
+        <td>${nasc}</td>
+        <td>${esc(p.telefone||'—')}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.endereco||'—')}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="abrirHistorico(${p.id})">📋 Histórico</button>
+            <button class="btn btn-ghost btn-sm" onclick="editarPaciente(${p.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirPaciente(${p.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function populatePacienteSelect() {
+    const sel = document.getElementById('paciente_select');
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Selecione um paciente —</option>`;
+    pacientes.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.nome} — ${p.cpf||''}`;
+      sel.appendChild(opt);
+    });
+    if (prev) sel.value = prev;
+  }
+
+  async function cadastrarOuAtualizarPaciente() {
+    const id = document.getElementById('paciente_edit_id').value;
+    const nome = document.getElementById('nome').value.trim();
+    const cpf = document.getElementById('cpf').value.trim();
+    const nascimento = document.getElementById('nascimento').value;
+    const telefone = document.getElementById('telefone').value.trim();
+    const endereco = document.getElementById('endereco').value.trim();
+    if (!nome || !cpf) { toast('Preencha ao menos nome e CPF.', 'warning'); return; }
+    const btn = document.getElementById('btn-salvar-paciente');
+    btn.disabled = true;
+    try {
+      if (id) {
+        const { error } = await db.from('pacientes').update({ nome, cpf, nascimento: nascimento||null, telefone, endereco }).match({ id: Number(id) });
+        if (error) throw error;
+        toast('Paciente atualizado com sucesso!', 'success');
+      } else {
+        const { error } = await db.from('pacientes').insert([{ nome, cpf, nascimento: nascimento||null, telefone, endereco }]);
+        if (error) throw error;
+        toast('Paciente cadastrado com sucesso!', 'success');
+      }
+      limparFormPaciente();
+      await fetchPacientes();
+      navTo('pacientes');
+    } catch (err) {
+      console.error(err); toast('Erro ao salvar: ' + (err.message || err), 'error');
+    } finally { btn.disabled = false; }
+  }
+
+  function editarPaciente(id) {
+    const p = pacientes.find(x => Number(x.id) === Number(id));
+    if (!p) return;
+    document.getElementById('paciente_edit_id').value = p.id;
+    document.getElementById('nome').value = p.nome || '';
+    document.getElementById('cpf').value = p.cpf || '';
+    document.getElementById('nascimento').value = p.nascimento || '';
+    document.getElementById('telefone').value = p.telefone || '';
+    document.getElementById('endereco').value = p.endereco || '';
+    navTo('novo-paciente');
+  }
+
+  async function excluirPaciente(id) {
+    const ok = await confirm('Excluir paciente?', 'Esta ação também pode remover as aplicações vinculadas (se configurado cascade). Deseja continuar?');
+    if (!ok) return;
+    try {
+      const { error } = await db.from('pacientes').delete().match({ id });
+      if (error) throw error;
+      toast('Paciente excluído.', 'success');
+      await fetchPacientes(); await fetchAplicacoes();
+    } catch (err) { toast('Erro ao excluir: ' + (err.message||err), 'error'); }
+  }
+
+  function cancelarPaciente() {
+    limparFormPaciente();
+    navTo('pacientes');
+  }
+
+  function limparFormPaciente() {
+    ['paciente_edit_id','nome','cpf','nascimento','telefone','endereco'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+
+  // ===== VACINAS =====
+  async function fetchVacinas() {
+    try {
+      if (!db) { renderEstoque(); return; }
+      const { data, error } = await db.from('vacinas').select('*').order('id', { ascending: false });
+      if (error) throw error;
+      vacinas = data || [];
+      renderVacinas();
+      populateVacinaSelect();
+      document.getElementById('stat-vacinas').textContent = vacinas.length;
+      document.getElementById('nav-count-estoque').textContent = vacinas.length;
+    } catch (err) {
+      console.error(err); toast('Erro ao buscar vacinas: ' + (err.message||err), 'error');
+    }
+  }
+
+  function renderVacinas() {
+    const tbody = document.querySelector('#tabela-vacinas tbody');
+    if (!vacinas.length) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><p>Nenhuma vacina no estoque</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = vacinas.map(v => {
+      const val = v.validade ? new Date(v.validade + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const qtd = Number(v.stock || 0);
+      let qtdBadge;
+      if (qtd <= 0) qtdBadge = `<span class="badge badge-red">🚨 ${qtd}</span>`;
+      else if (qtd <= 5) qtdBadge = `<span class="badge badge-yellow">⚠️ ${qtd}</span>`;
+      else qtdBadge = `<span class="badge badge-green">✓ ${qtd}</span>`;
+      const preco = v.preco ? `R$ ${Number(v.preco).toFixed(2)}` : '—';
+      const fornecedor = esc(v.fornecedor || '—');
+      const nf = esc(v.nota_fiscal || '—');
+      const entrada = v.data_entrada ? new Date(v.data_entrada + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      return `<tr>
+        <td><strong>${esc(v.nome||'')}</strong></td>
+        <td>${fornecedor}</td>
+        <td>${esc(v.lote||'—')}</td>
+        <td>${nf}</td>
+        <td>${entrada}</td>
+        <td>${val}</td>
+        <td>${qtdBadge}</td>
+        <td>${preco}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="abrirEditarVacina(${v.id})">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="removerVacina(${v.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function populateVacinaSelect() {
+    const sel = document.getElementById('vacina_select');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = `<option value="">— Selecione a vacina —</option>`;
+    vacinas.forEach(v => {
+      if (Number(v.stock || 0) > 0) {
+        const opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = `${v.nome} — Lote: ${v.lote||'-'} — Qtd: ${v.stock||0}`;
+        if (v.preco) opt.dataset.preco = v.preco;
+        sel.appendChild(opt);
+      }
+    });
+    if (prev) sel.value = prev;
+  }
+
+  function preencherValorVacina() {
+    const sel = document.getElementById('vacina_select');
+    const opt = sel.options[sel.selectedIndex];
+    if (opt && opt.dataset.preco) {
+      document.getElementById('valor').value = Number(opt.dataset.preco).toFixed(2);
+    }
+    const vacinaId = Number(sel.value);
+    if (vacinaId) {
+      const v = vacinas.find(x => Number(x.id) === vacinaId);
+      const alertEl = document.getElementById('alerta-estoque');
+      if (v && Number(v.stock||0) <= 5) {
+        alertEl.style.display = 'block';
+        alertEl.innerHTML = `<div class="highlight-bar" style="border-left-color:var(--yellow);background:var(--yellow-light);color:#92400e">⚠️ Estoque baixo: apenas <strong>${v.stock}</strong> unidade(s) disponível(is).</div>`;
+      } else {
+        alertEl.style.display = 'none';
+      }
+    }
+  }
+
+  async function criarVacina() {
+    const nome = document.getElementById('novo_vacina_nome').value.trim();
+    const lote = document.getElementById('novo_vacina_lote').value.trim();
+    const validade = document.getElementById('novo_vacina_validade').value;
+    const stock = Number(document.getElementById('novo_vacina_stock').value || 0);
+    const preco = Number(document.getElementById('novo_vacina_preco').value || 0);
+    const fornecedor = document.getElementById('novo_vacina_fornecedor').value.trim();
+    const nota_fiscal = document.getElementById('novo_vacina_nf').value.trim();
+    const data_entrada = document.getElementById('novo_vacina_entrada').value;
+    if (!nome) { toast('Informe o nome da vacina.', 'warning'); return; }
+    try {
+      const { error } = await db.from('vacinas').insert([{ nome, lote, validade: validade||null, stock, preco: preco||null, fornecedor: fornecedor||null, nota_fiscal: nota_fiscal||null, data_entrada: data_entrada||null }]);
+      if (error) throw error;
+      toast('Vacina adicionada ao estoque!', 'success');
+      ['novo_vacina_nome','novo_vacina_lote','novo_vacina_validade','novo_vacina_preco','novo_vacina_fornecedor','novo_vacina_nf','novo_vacina_entrada'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('novo_vacina_stock').value = 0;
+      await fetchVacinas();
+      navTo('estoque');
+    } catch (err) { toast('Erro ao adicionar vacina: ' + (err.message||err), 'error'); }
+  }
+
+  function abrirEditarVacina(id) {
+    const v = vacinas.find(x => Number(x.id) === Number(id));
+    if (!v) return;
+    document.getElementById('edit_vacina_id').value = v.id;
+    document.getElementById('edit_vacina_nome').value = v.nome || '';
+    document.getElementById('edit_vacina_lote').value = v.lote || '';
+    document.getElementById('edit_vacina_validade').value = v.validade || '';
+    document.getElementById('edit_vacina_stock').value = v.stock || 0;
+    document.getElementById('edit_vacina_preco').value = v.preco ? Number(v.preco).toFixed(2) : '';
+    document.getElementById('edit_vacina_fornecedor').value = v.fornecedor || '';
+    document.getElementById('edit_vacina_nf').value = v.nota_fiscal || '';
+    document.getElementById('edit_vacina_entrada').value = v.data_entrada || '';
+    document.getElementById('modal-editar-vacina').classList.add('open');
+  }
+
+  function fecharModalEditarVacina() {
+    document.getElementById('modal-editar-vacina').classList.remove('open');
+  }
+
+  async function salvarEdicaoVacina() {
+    const id = document.getElementById('edit_vacina_id').value;
+    const nome = document.getElementById('edit_vacina_nome').value.trim();
+    const lote = document.getElementById('edit_vacina_lote').value.trim();
+    const validade = document.getElementById('edit_vacina_validade').value;
+    const stock = Number(document.getElementById('edit_vacina_stock').value || 0);
+    const preco = Number(document.getElementById('edit_vacina_preco').value || 0);
+    const fornecedor = document.getElementById('edit_vacina_fornecedor').value.trim();
+    const nota_fiscal = document.getElementById('edit_vacina_nf').value.trim();
+    const data_entrada = document.getElementById('edit_vacina_entrada').value;
+    if (!nome) { toast('Informe o nome.', 'warning'); return; }
+    try {
+      const { error } = await db.from('vacinas').update({ nome, lote, validade: validade||null, stock, preco: preco||null, fornecedor: fornecedor||null, nota_fiscal: nota_fiscal||null, data_entrada: data_entrada||null }).match({ id: Number(id) });
+      if (error) throw error;
+      toast('Vacina atualizada!', 'success');
+      fecharModalEditarVacina();
+      await fetchVacinas();
+    } catch (err) { toast('Erro ao atualizar: ' + (err.message||err), 'error'); }
+  }
+
+  async function removerVacina(id) {
+    const ok = await confirm('Remover do estoque?', 'Este lote será removido permanentemente do estoque.');
+    if (!ok) return;
+    try {
+      const { error } = await db.from('vacinas').delete().match({ id });
+      if (error) throw error;
+      toast('Vacina removida.', 'success');
+      await fetchVacinas();
+    } catch (err) { toast('Erro ao remover: ' + (err.message||err), 'error'); }
+  }
+
+  // ===== APLICAÇÕES =====
+  async function fetchAplicacoes() {
+    try {
+      if (!db) { renderAplicacoes(); renderDashboard(); return; }
+      const { data, error } = await db.from('aplicacoes').select('*').order('id', { ascending: false });
+      if (error) throw error;
+      aplicacoes = data || [];
+      renderAplicacoes();
+      document.getElementById('total-aplicacoes-label').textContent = `${aplicacoes.length} registro(s)`;
+      document.getElementById('stat-aplicacoes').textContent = aplicacoes.length;
+      document.getElementById('nav-count-aplicacoes').textContent = aplicacoes.length;
+      const total = aplicacoes.reduce((s, a) => s + Number(a.valor||0), 0);
+      document.getElementById('stat-faturamento').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    } catch (err) {
+      console.error(err); toast('Erro ao buscar aplicações: ' + (err.message||err), 'error');
+    }
+  }
+
+  function renderAplicacoes() {
+    const tbody = document.querySelector('#tabela-aplicacoes tbody');
+    const q = (document.getElementById('searchAplic')?.value || '').toLowerCase().trim();
+    const list = aplicacoes.filter(a => {
+      if (!q) return true;
+      const p = findPaciente(a.paciente_id);
+      return (a.vacina_text||a.vacina||'').toLowerCase().includes(q)
+          || (p && (p.nome||'').toLowerCase().includes(q))
+          || (a.lote||'').toLowerCase().includes(q);
+    });
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">💉</div><p>Nenhuma aplicação encontrada</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(a => {
+      const p = findPaciente(a.paciente_id);
+      const pac = p ? p.nome : `ID:${a.paciente_id}`;
+      const dt = a.data_aplicacao ? new Date(a.data_aplicacao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const val = a.valor ? `R$ ${Number(a.valor).toFixed(2)}` : '—';
+      const pagBadge = a.forma_pagamento
+        ? `<span class="badge badge-orange">${a.forma_pagamento}</span>` : '—';
+      return `<tr>
+        <td><strong>${esc(pac)}</strong></td>
+        <td>${esc(a.vacina_text||a.vacina||'—')}</td>
+        <td>${dt}</td>
+        <td>${esc(a.dose||'—')}</td>
+        <td>${a.quantidade||1}</td>
+        <td>${val}</td>
+        <td>${pagBadge}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="verAplicacao(${a.id})">👁️</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirAplicacao(${a.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function registrarAplicacao() {
+    const paciente_id = Number(document.getElementById('paciente_select').value || 0);
+    const vacina_id = Number(document.getElementById('vacina_select').value || 0);
+    const quantidade = Number(document.getElementById('quantidade').value || 1);
+    const data_aplicacao = document.getElementById('data_aplicacao').value || new Date().toISOString().slice(0,10);
+    const dose = document.getElementById('dose').value.trim();
+    const valor = Number(document.getElementById('valor').value || 0);
+    const forma_pagamento = document.getElementById('pagamento').value;
+
+    if (!paciente_id) { toast('Selecione um paciente.', 'warning'); return; }
+    if (!vacina_id) { toast('Selecione uma vacina.', 'warning'); return; }
+    if (quantidade <= 0) { toast('Quantidade inválida.', 'warning'); return; }
+
+    const v = findVacina(vacina_id);
+    if (!v) { toast('Vacina não encontrada.', 'error'); return; }
+    if (Number(v.stock||0) < quantidade) {
+      toast(`Estoque insuficiente! Disponível: ${v.stock} unidade(s).`, 'error');
+      return;
+    }
+
+    try {
+      // tenta RPC
+      try {
+        const { error } = await db.rpc('registrar_aplicacao', {
+          paciente_id, vacina_id, vacina_text: v.nome, lote: v.lote||null,
+          data_aplicacao, dose: dose||null, quantidade, valor: valor||0, forma_pagamento: forma_pagamento||null
+        });
+        if (error) throw error;
+      } catch (rpcErr) {
+        console.warn('RPC fallback:', rpcErr);
+        const { error: e1 } = await db.from('aplicacoes').insert([{
+          paciente_id, vacina_id, vacina_text: v.nome, lote: v.lote||null,
+          data_aplicacao, dose, quantidade, valor, forma_pagamento
+        }]);
+        if (e1) throw e1;
+        const novoStock = Number(v.stock||0) - quantidade;
+        const { error: e2 } = await db.from('vacinas').update({ stock: novoStock }).match({ id: vacina_id });
+        if (e2) throw e2;
+      }
+
+      toast('Aplicação registrada e estoque atualizado!', 'success');
+      ['quantidade','data_aplicacao','dose','valor'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = id === 'quantidade' ? 1 : '';
+      });
+      document.getElementById('alerta-estoque').style.display = 'none';
+      await fetchAplicacoes(); await fetchVacinas();
+      navTo('aplicacoes');
+    } catch (err) {
+      console.error(err); toast('Erro ao registrar: ' + (err.message||err), 'error');
+    }
+  }
+
+  function verAplicacao(id) {
+    const a = aplicacoes.find(x => Number(x.id) === Number(id));
+    if (!a) return;
+    const p = findPaciente(a.paciente_id);
+    const dt = a.data_aplicacao ? new Date(a.data_aplicacao + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    document.getElementById('modal-aplic-body').innerHTML = `
+      <div style="display:grid;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div class="form-label">Paciente</div><strong>${esc(p ? p.nome : 'ID:'+a.paciente_id)}</strong></div>
+          <div><div class="form-label">CPF</div>${esc(p ? p.cpf||'—' : '—')}</div>
+          <div><div class="form-label">Vacina</div><strong>${esc(a.vacina_text||a.vacina||'—')}</strong></div>
+          <div><div class="form-label">Lote</div>${esc(a.lote||'—')}</div>
+          <div><div class="form-label">Data</div>${dt}</div>
+          <div><div class="form-label">Dose</div>${esc(a.dose||'—')}</div>
+          <div><div class="form-label">Quantidade</div>${a.quantidade||1}</div>
+          <div><div class="form-label">Valor</div><strong>R$ ${a.valor ? Number(a.valor).toFixed(2) : '0.00'}</strong></div>
+          <div><div class="form-label">Pagamento</div><span class="badge badge-orange">${esc(a.forma_pagamento||'—')}</span></div>
+        </div>
+      </div>`;
+    document.getElementById('modal-aplicacao').classList.add('open');
+  }
+  function fecharModalAplicacao() { document.getElementById('modal-aplicacao').classList.remove('open'); }
+
+  async function excluirAplicacao(id) {
+    const ok = await confirm('Excluir aplicação?', 'Atenção: o estoque NÃO será reajustado automaticamente.');
+    if (!ok) return;
+    try {
+      const { error } = await db.from('aplicacoes').delete().match({ id });
+      if (error) throw error;
+      toast('Aplicação excluída.', 'success');
+      await fetchAplicacoes();
+    } catch (err) { toast('Erro ao excluir: ' + (err.message||err), 'error'); }
+  }
+
+  // ===== HISTÓRICO =====
+  function abrirHistorico(pacienteId) {
+    const p = findPaciente(pacienteId);
+    const hist = aplicacoes.filter(a => Number(a.paciente_id) === Number(pacienteId));
+    document.getElementById('modal-hist-title').textContent = p ? p.nome : `Paciente ID:${pacienteId}`;
+    document.getElementById('modal-hist-sub').textContent = p ? `CPF: ${p.cpf||'—'} • Telefone: ${p.telefone||'—'}` : '';
+    const body = document.getElementById('modal-hist-body');
+    if (!hist.length) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">💉</div><p>Nenhuma aplicação registrada para este paciente.</p></div>`;
+    } else {
+      const total = hist.reduce((s,h) => s + Number(h.valor||0), 0);
+      body.innerHTML = `
+        <table class="data-table">
+          <thead><tr><th>Vacina</th><th>Data</th><th>Qtd</th><th>Dose</th><th>Valor</th><th>Pagamento</th></tr></thead>
+          <tbody>
+            ${hist.map(h => {
+              const dt = h.data_aplicacao ? new Date(h.data_aplicacao+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+              return `<tr>
+                <td><strong>${esc(h.vacina_text||h.vacina||'')}</strong></td>
+                <td>${dt}</td><td>${h.quantidade||1}</td>
+                <td>${esc(h.dose||'—')}</td>
+                <td>R$ ${h.valor ? Number(h.valor).toFixed(2) : '0.00'}</td>
+                <td><span class="badge badge-orange">${esc(h.forma_pagamento||'—')}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:14px;text-align:right;font-weight:700;color:var(--orange-dark)">
+          Total gasto: ${total.toLocaleString('pt-BR', { style:'currency', currency:'BRL' })}
+        </div>`;
+    }
+    document.getElementById('modal-historico').classList.add('open');
+  }
+  function fecharModalHistorico() { document.getElementById('modal-historico').classList.remove('open'); }
+
+  // ===== DASHBOARD =====
+  function renderDashboard() {
+    // Últimas 5 aplicações
+    const tbody5 = document.querySelector('#dash-aplicacoes tbody');
+    const last5 = aplicacoes.slice(0, 5);
+    if (!last5.length) {
+      tbody5.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--gray-400)">Nenhuma aplicação ainda</td></tr>`;
+    } else {
+      tbody5.innerHTML = last5.map(a => {
+        const p = findPaciente(a.paciente_id);
+        const dt = a.data_aplicacao ? new Date(a.data_aplicacao+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+        const val = a.valor ? `R$ ${Number(a.valor).toFixed(2)}` : '—';
+        return `<tr>
+          <td>${esc(p ? p.nome : 'ID:'+a.paciente_id)}</td>
+          <td>${esc(a.vacina_text||a.vacina||'—')}</td>
+          <td>${dt}</td>
+          <td><strong style="color:var(--orange-dark)">${val}</strong></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Estoque baixo (qtd <= 5)
+    const tbodyEstoque = document.querySelector('#dash-estoque-baixo tbody');
+    const baixo = vacinas.filter(v => Number(v.stock||0) <= 5);
+    if (!baixo.length) {
+      tbodyEstoque.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--green)">✅ Estoque OK em todos os itens</td></tr>`;
+    } else {
+      tbodyEstoque.innerHTML = baixo.map(v => {
+        const val = v.validade ? new Date(v.validade+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+        const qtd = Number(v.stock||0);
+        const badge = qtd <= 0 ? `<span class="badge badge-red">🚨 ${qtd}</span>` : `<span class="badge badge-yellow">⚠️ ${qtd}</span>`;
+        return `<tr>
+          <td><strong>${esc(v.nome)}</strong></td>
+          <td>${esc(v.lote||'—')}</td>
+          <td>${val}</td>
+          <td>${badge}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // ===== UTILS =====
+  function esc(t) {
+    if (t === null || t === undefined) return '';
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function findPaciente(id) { return pacientes.find(p => Number(p.id) === Number(id)); }
+  function findVacina(id) { return vacinas.find(v => Number(v.id) === Number(id)); }
+
+  // Close modals on backdrop click
+  ['modal-historico','modal-aplicacao','modal-editar-vacina'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+  });
+
+  // ===== LEMBRETES =====
+  let lembretes = [];
+
+  async function fetchLembretes() {
+    try {
+      if (!db) { renderLembretes(); return; }
+      const { data, error } = await db.from('lembretes').select('*').order('proxima_dose', { ascending: true });
+      if (error) throw error;
+      lembretes = data || [];
+      renderLembretes();
+      atualizarAlertaDashboard();
+      const urgentes = lembretes.filter(l => {
+        const dias = diasAte(l.proxima_dose);
+        return dias >= 0 && dias <= 5 && l.status !== 'enviado';
+      });
+      const navBadge = document.getElementById('nav-count-lembretes');
+      if (navBadge) navBadge.textContent = urgentes.length > 0 ? urgentes.length : '—';
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function diasAte(dateStr) {
+    if (!dateStr) return 9999;
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const alvo = new Date(dateStr + 'T00:00:00');
+    return Math.round((alvo - hoje) / (1000*60*60*24));
+  }
+
+  function atualizarAlertaDashboard() {
+    const alertBox = document.getElementById('dash-alerta-doses');
+    const listaEl = document.getElementById('dash-alerta-doses-lista');
+    if (!alertBox || !listaEl) return;
+    const urgentes = lembretes.filter(l => {
+      const d = diasAte(l.proxima_dose);
+      return d >= 0 && d <= 5 && l.status !== 'enviado';
+    });
+    if (!urgentes.length) { alertBox.style.display = 'none'; return; }
+    alertBox.style.display = 'flex';
+    listaEl.innerHTML = urgentes.map(l => {
+      const p = pacientes.find(x => x.id === l.paciente_id);
+      const nome = p ? p.nome : 'Paciente';
+      const dias = diasAte(l.proxima_dose);
+      const dataFmt = new Date(l.proxima_dose + 'T00:00:00').toLocaleDateString('pt-BR');
+      const cor = dias === 0 ? '#dc2626' : dias <= 2 ? '#ea580c' : '#d97706';
+      return `<div style="font-size:0.9rem;color:#7c2d12">
+        <strong style="color:${cor}">${dias === 0 ? 'HOJE' : 'em ' + dias + ' dia(s)'}</strong>
+        — ${nome} → <strong>${l.vacina}</strong> (${dataFmt})
+      </div>`;
+    }).join('');
+  }
+
+  function renderLembretes() {
+    const tbody = document.querySelector('#tabela-lembretes tbody');
+    if (!tbody) return;
+    const q = (document.getElementById('searchLembrete')?.value || '').toLowerCase().trim();
+    const filtroStatus = document.getElementById('filtro-lembrete-status')?.value || '';
+    let list = lembretes.filter(l => {
+      const p = pacientes.find(x => x.id === l.paciente_id);
+      const nome = (p ? p.nome : '').toLowerCase();
+      const matchQ = !q || nome.includes(q) || (l.vacina||'').toLowerCase().includes(q);
+      const matchS = !filtroStatus || l.status === filtroStatus;
+      return matchQ && matchS;
+    });
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔔</div><p>Nenhum lembrete cadastrado</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(l => {
+      const p = pacientes.find(x => x.id === l.paciente_id);
+      const nome = p ? p.nome : '—';
+      const tel = p ? (p.telefone || '—') : '—';
+      const dias = diasAte(l.proxima_dose);
+      const dataFmt = l.proxima_dose ? new Date(l.proxima_dose + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      let diasBadge;
+      if (dias < 0) diasBadge = `<span class="badge-urgente">Vencido (${Math.abs(dias)}d)</span>`;
+      else if (dias === 0) diasBadge = `<span class="badge-urgente">HOJE!</span>`;
+      else if (dias <= 5) diasBadge = `<span class="badge-proximo">⚠️ ${dias} dia(s)</span>`;
+      else diasBadge = `<span class="badge-ok">${dias} dia(s)</span>`;
+      const statusBadge = l.status === 'enviado'
+        ? `<span class="badge-enviado">✅ Enviado</span>`
+        : `<span class="badge-urgente" style="background:#fef9c3;color:#92400e;border-color:#fde68a">Pendente</span>`;
+      const telLimpo = tel.replace(/\D/g,'');
+      const msgWpp = encodeURIComponent(
+        `Olá ${nome}! 😊 Passando para lembrar que a dose da vacina *${l.vacina}* está agendada para *${dataFmt}*. ${l.obs ? '(' + l.obs + ')' : ''} Qualquer dúvida, estamos à disposição! — Previmune`
+      );
+      const btnWpp = telLimpo.length >= 10
+        ? `<button class="btn-whatsapp-lg" onclick="window.open('https://wa.me/55${telLimpo}?text=${msgWpp}','_blank');marcarEnviado(${l.id})">📲 WhatsApp</button>`
+        : `<button class="btn-whatsapp-lg" style="background:#aaa;cursor:not-allowed" title="Sem telefone">📲 S/ tel</button>`;
+      return `<tr>
+        <td><strong>${nome}</strong></td>
+        <td>${tel}</td>
+        <td>${l.vacina||'—'}</td>
+        <td>${dataFmt}</td>
+        <td>${diasBadge}</td>
+        <td>${statusBadge}</td>
+        <td style="text-align:right;white-space:nowrap">
+          ${btnWpp}
+          <button class="btn btn-ghost btn-sm" style="margin-left:4px" onclick="deletarLembrete(${l.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function marcarEnviado(id) {
+    try {
+      if (!db) return;
+      await db.from('lembretes').update({ status: 'enviado' }).match({ id });
+      await fetchLembretes();
+    } catch(e) {}
+  }
+
+  async function deletarLembrete(id) {
+    if (!await confirm('Excluir lembrete?', 'Esta ação não pode ser desfeita.')) return;
+    try {
+      const { error } = await db.from('lembretes').delete().match({ id });
+      if (error) throw error;
+      toast('Lembrete removido.', 'success');
+      await fetchLembretes();
+    } catch(err) { toast('Erro: ' + err.message, 'error'); }
+  }
+
+  function abrirModalNovoLembrete() {
+    // Preencher select de pacientes
+    const sel = document.getElementById('lembrete_paciente_id');
+    sel.innerHTML = '<option value="">Selecione o paciente...</option>' +
+      pacientes.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+    document.getElementById('lembrete_vacina').value = '';
+    document.getElementById('lembrete_data').value = '';
+    document.getElementById('lembrete_obs').value = '';
+    document.getElementById('modal-lembrete').classList.add('open');
+  }
+
+  function fecharModalLembrete() {
+    document.getElementById('modal-lembrete').classList.remove('open');
+  }
+
+  async function salvarLembrete() {
+    const paciente_id = Number(document.getElementById('lembrete_paciente_id').value);
+    const vacina = document.getElementById('lembrete_vacina').value.trim();
+    const proxima_dose = document.getElementById('lembrete_data').value;
+    const obs = document.getElementById('lembrete_obs').value.trim();
+    if (!paciente_id) { toast('Selecione o paciente.', 'warning'); return; }
+    if (!vacina) { toast('Informe a vacina.', 'warning'); return; }
+    if (!proxima_dose) { toast('Informe a data da próxima dose.', 'warning'); return; }
+    try {
+      const { error } = await db.from('lembretes').insert([{ paciente_id, vacina, proxima_dose, obs: obs||null, status: 'pendente' }]);
+      if (error) throw error;
+      toast('Lembrete salvo com sucesso!', 'success');
+      fecharModalLembrete();
+      await fetchLembretes();
+    } catch(err) { toast('Erro ao salvar: ' + err.message, 'error'); }
+  }
+
+  // Fechar modal lembrete clicando fora
+  document.getElementById('modal-lembrete').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+
+  // INIT
+  document.addEventListener('DOMContentLoaded', fetchAll);
+</script>
+</body>
+</html>
