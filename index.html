@@ -474,9 +474,402 @@
     .badge-enviado { background:#eff6ff;color:#2563eb;border:1px solid #93c5fd;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700; }
     .btn-whatsapp-lg { background:#25d366;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:0.8rem;transition:all 0.2s;display:inline-flex;align-items:center;gap:4px; }
     .btn-whatsapp-lg:hover { background:#128c7e;transform:translateY(-1px); }
+    
+    /* ===== LOGIN PAGE ===== */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, #fff7f1 0%, #ffffff 40%, #fff3e8 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    #login-screen.hidden { display: none; }
+    .login-container {
+      width: 100%; max-width: 420px;
+      padding: 20px;
+    }
+    .login-card {
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(231,107,31,0.15), 0 4px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .login-header {
+      background: linear-gradient(135deg, #e76b1f, #c85a10);
+      padding: 40px 36px 32px;
+      text-align: center;
+      position: relative;
+    }
+    .login-header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 40px;
+      background: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 -2px 12px rgba(231,107,31,0.3);
+    }
+    .login-logo {
+      width: 100px; height: 100px;
+      border-radius: 20px;
+      object-fit: contain;
+      background: rgba(255,255,255,0.15);
+      padding: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    .login-brand-name {
+      font-size: 28px; font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .login-brand-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .login-body {
+      padding: 44px 36px 36px;
+    }
+    .login-title {
+      font-size: 20px; font-weight: 700;
+      color: #18181b;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+    .login-subtitle {
+      font-size: 13px; color: #71717a;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .login-field { margin-bottom: 16px; }
+    .login-label {
+      display: block;
+      font-size: 12px; font-weight: 600;
+      color: #52525b;
+      margin-bottom: 6px;
+    }
+    .login-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #e4e4e7;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #18181b;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+      background: #fafafa;
+    }
+    .login-input:focus {
+      border-color: #e76b1f;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(231,107,31,0.1);
+    }
+    .login-input-wrap { position: relative; }
+    .login-input-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); font-size: 16px;
+      pointer-events: none;
+    }
+    .login-input-wrap .login-input { padding-left: 38px; }
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #ff8c42, #e76b1f);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      margin-top: 8px;
+      box-shadow: 0 4px 16px rgba(231,107,31,0.4);
+      letter-spacing: 0.02em;
+    }
+    .login-btn:hover {
+      background: linear-gradient(135deg, #e76b1f, #c85a10);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(231,107,31,0.5);
+    }
+    .login-btn:active { transform: translateY(0); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .login-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+      align-items: center; gap: 8px;
+    }
+    .login-error.show { display: flex; }
+    .login-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px; color: #a1a1aa;
+    }
+    /* LOGOUT BUTTON */
+    .btn-logout {
+      display: flex; align-items: center; gap: 6px;
+      background: transparent; border: 1px solid #fecaca;
+      color: #ef4444; border-radius: 8px;
+      padding: 6px 12px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-logout:hover { background: #fef2f2; }
+    /* BLOQUEIO DE ACESSO */
+    .access-denied {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 60vh; text-align: center; color: #a1a1aa;
+    }
+    .access-denied .icon { font-size: 52px; margin-bottom: 16px; }
+    .access-denied h3 { font-size: 18px; font-weight: 700; color: #52525b; margin-bottom: 8px; }
+    .access-denied p { font-size: 14px; }
+
+    
+    /* ===== AUTOCOMPLETE SEARCH SELECT ===== */
+    .search-select-wrap {
+      position: relative;
+    }
+    .search-select-input-row {
+      display: flex; align-items: center;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      transition: all 0.15s;
+      overflow: hidden;
+    }
+    .search-select-input-row:focus-within {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(231, 107, 31, 0.12);
+    }
+    .search-select-icon {
+      padding: 0 10px;
+      font-size: 15px;
+      color: var(--gray-400);
+      flex-shrink: 0;
+    }
+    .search-select-input {
+      flex: 1;
+      padding: 9px 8px 9px 0;
+      border: none; outline: none;
+      font-size: 14px;
+      color: var(--gray-900);
+      background: transparent;
+      font-family: inherit;
+    }
+    .search-select-input::placeholder { color: var(--gray-400); }
+    .search-select-clear {
+      padding: 0 10px;
+      background: none; border: none;
+      cursor: pointer; font-size: 16px;
+      color: var(--gray-400);
+      display: none;
+      line-height: 1;
+    }
+    .search-select-clear:hover { color: var(--gray-900); }
+    .search-select-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      z-index: 500;
+      max-height: 240px;
+      overflow-y: auto;
+      display: none;
+    }
+    .search-select-dropdown.open { display: block; }
+    .search-select-option {
+      padding: 10px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background 0.1s;
+      line-height: 1.4;
+    }
+    .search-select-option:last-child { border-bottom: none; }
+    .search-select-option:hover,
+    .search-select-option.highlighted { background: var(--orange-50); color: var(--orange-dark); }
+    .search-select-option.selected { background: var(--orange-100); font-weight: 600; color: var(--orange-dark); }
+    .search-select-option.no-results { color: var(--gray-400); cursor: default; font-style: italic; }
+    .search-select-option .opt-main { font-weight: 600; color: var(--gray-900); }
+    .search-select-option .opt-sub { font-size: 11px; color: var(--gray-400); margin-top: 1px; }
+    .search-select-option:hover .opt-main,
+    .search-select-option.highlighted .opt-main { color: var(--orange-dark); }
+    /* hidden value holder */
+    .search-select-value { display: none; }
+
+    
+    /* ===== GUIA VACINAL ===== */
+    .guia-tabs {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 20px;
+    }
+    .guia-tab {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 2px solid var(--gray-200);
+      background: var(--white);
+      font-size: 13px; font-weight: 600;
+      color: var(--gray-500);
+      cursor: pointer; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .guia-tab:hover { border-color: var(--orange); color: var(--orange); }
+    .guia-tab.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: white;
+      box-shadow: 0 2px 8px rgba(231,107,31,0.35);
+    }
+    .guia-panel { display: none; }
+    .guia-panel.active { display: block; }
+    .guia-vacina-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-100);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      display: flex; gap: 14px; align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.15s;
+    }
+    .guia-vacina-card:hover { box-shadow: var(--shadow-md); }
+    .guia-vacina-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .guia-vacina-nome {
+      font-size: 14px; font-weight: 700; color: var(--gray-900);
+      margin-bottom: 2px;
+    }
+    .guia-vacina-doenca {
+      font-size: 12px; color: var(--gray-500); margin-bottom: 6px;
+    }
+    .guia-vacina-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .guia-tag {
+      font-size: 11px; font-weight: 600;
+      padding: 3px 9px; border-radius: 999px;
+    }
+    .guia-tag-dose { background: var(--orange-100); color: var(--orange-dark); }
+    .guia-tag-intervalo { background: var(--yellow-light); color: #92400e; }
+    .guia-tag-obs { background: var(--gray-100); color: var(--gray-600); }
+    .guia-tag-reforco { background: var(--green-light); color: #166534; }
+    .guia-search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 0 14px;
+      margin-bottom: 20px;
+      transition: all 0.15s;
+    }
+    .guia-search-bar:focus-within {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(231,107,31,0.1);
+    }
+    .guia-search-bar input {
+      flex: 1; border: none; outline: none; padding: 11px 0;
+      font-size: 14px; font-family: inherit; background: transparent;
+      color: var(--gray-900);
+    }
+    .guia-search-bar input::placeholder { color: var(--gray-400); }
+    .guia-alerta {
+      background: var(--orange-50);
+      border-left: 4px solid var(--orange);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--orange-dark);
+      margin-bottom: 16px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .guia-section-title {
+      font-size: 13px; font-weight: 700; color: var(--gray-400);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin: 20px 0 10px;
+    }
+    .guia-esquema-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    .guia-esquema-table th {
+      background: var(--orange-50);
+      color: var(--orange-dark);
+      font-weight: 700; font-size: 12px;
+      padding: 8px 12px; text-align: left;
+      border-bottom: 2px solid var(--orange-100);
+    }
+    .guia-esquema-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: top;
+    }
+    .guia-esquema-table tr:hover td { background: var(--orange-50); }
+    .badge-idade {
+      display: inline-block;
+      background: var(--orange);
+      color: white;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      margin-right: 4px; margin-bottom: 2px;
+    }
+
     </style>
 </head>
 <body>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <img class="login-logo" src="https://cdn.abacus.ai/images/3e6c26e8-ae1b-4e5b-9c3d-894b5478a627.png" alt="Previmune">
+        <div class="login-brand-name">PREVIMUNE</div>
+        <div class="login-brand-sub">Clínica de Vacinas</div>
+      </div>
+      <div class="login-body">
+        <div class="login-title">Bem-vindo(a) de volta!</div>
+        <div class="login-subtitle">Faça login para acessar o sistema</div>
+        <div class="login-error" id="login-error">
+          <span>⚠️</span><span id="login-error-msg">Usuário ou senha incorretos.</span>
+        </div>
+        <div class="login-field">
+          <label class="login-label">Usuário</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon">👤</span>
+            <input class="login-input" type="text" id="login-usuario" placeholder="Digite seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('login-senha').focus()">
+          </div>
+        </div>
+        <div class="login-field">
+          <label class="login-label">Senha</label>
+          <div class="login-input-wrap">
+            <span class="login-input-icon">🔒</span>
+            <input class="login-input" type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter') fazerLogin()">
+          </div>
+        </div>
+        <button class="login-btn" id="login-btn" onclick="fazerLogin()">
+          Entrar no Sistema →
+        </button>
+        <div class="login-footer">
+          Sistema Previmune © 2025 · Clínica de Vacinas
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- SIDEBAR -->
 <nav class="sidebar">
@@ -490,14 +883,14 @@
   <div class="sidebar-nav">
     <div class="nav-section">
       <div class="nav-label">Principal</div>
-      <button class="nav-item active" onclick="navTo('dashboard')">
+      <button class="nav-item active nav-dashboard-btn" onclick="navTo('dashboard')">
         <span class="icon">📊</span> Dashboard
       </button>
       <button class="nav-item" onclick="navTo('pacientes')">
         <span class="icon">👤</span> Pacientes
         <span class="badge-count" id="nav-count-pacientes">—</span>
       </button>
-      <button class="nav-item" onclick="navTo('aplicacoes')">
+      <button class="nav-item nav-aplicacoes-btn" onclick="navTo('aplicacoes')">
         <span class="icon">💉</span> Aplicações
         <span class="badge-count" id="nav-count-aplicacoes">—</span>
       </button>
@@ -515,21 +908,38 @@
       <button class="nav-item" onclick="navTo('novo-paciente')">
         <span class="icon">➕</span> Novo Paciente
       </button>
-      <button class="nav-item" onclick="navTo('nova-aplicacao')">
+      <button class="nav-item nav-aplicacoes-btn" onclick="navTo('nova-aplicacao')">
         <span class="icon">📋</span> Registrar Aplicação
       </button>
       <button class="nav-item" onclick="navTo('nova-vacina')">
         <span class="icon">📦</span> Adicionar Vacina
       </button>
     </div>
+    <div class="nav-section">
+      <div class="nav-label">Consulta</div>
+      <button class="nav-item" onclick="navTo('guia-vacinal')">
+        <span class="icon">📖</span> Guia Vacinal
+      </button>
+    </div>
+    <div class="nav-section nav-admin-only" style="display:none">
+      <div class="nav-label">Administração</div>
+      <button class="nav-item" onclick="navTo('usuarios')">
+        <span class="icon">👥</span> Usuários
+      </button>
+    </div>
   </div>
   <div class="sidebar-footer">
-    <div class="sidebar-user">
-      <div class="user-avatar">E</div>
-      <div>
-        <div class="user-name">Equipe</div>
-        <div class="user-role">Administrador</div>
+    <div class="sidebar-user" style="flex-direction:column;align-items:flex-start;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        <div class="user-avatar" id="sidebar-avatar">?</div>
+        <div>
+          <div class="user-name" id="sidebar-nome">—</div>
+          <div class="user-role" id="sidebar-cargo">—</div>
+        </div>
       </div>
+      <button class="btn-logout" style="width:100%;justify-content:center" onclick="fazerLogout()">
+        🚪 Sair do sistema
+      </button>
     </div>
   </div>
 </nav>
@@ -737,16 +1147,38 @@
           <div class="card-body">
             <div class="form-group">
               <label class="form-label">Paciente <span class="req">*</span></label>
-              <select class="form-control" id="paciente_select">
-                <option value="">— Selecione um paciente —</option>
-              </select>
+              <div class="search-select-wrap" id="wrap-paciente">
+                <input type="hidden" id="paciente_select" value="">
+                <div class="search-select-input-row">
+                  <span class="search-select-icon">🔍</span>
+                  <input type="text" class="search-select-input" id="paciente_search"
+                    placeholder="Digite o nome ou CPF do paciente..."
+                    autocomplete="off"
+                    oninput="filtrarOpcoesPaciente()"
+                    onfocus="abrirDropdownPaciente()"
+                    onkeydown="navegarDropdown(event,'paciente')">
+                  <button type="button" class="search-select-clear" id="paciente_clear" onclick="limparSelecaoPaciente()">×</button>
+                </div>
+                <div class="search-select-dropdown" id="paciente_dropdown"></div>
+              </div>
             </div>
             <div class="grid-2">
               <div class="form-group">
                 <label class="form-label">Vacina (Estoque) <span class="req">*</span></label>
-                <select class="form-control" id="vacina_select" onchange="preencherValorVacina()">
-                  <option value="">— Selecione a vacina —</option>
-                </select>
+                <div class="search-select-wrap" id="wrap-vacina">
+                  <input type="hidden" id="vacina_select" value="">
+                  <div class="search-select-input-row">
+                    <span class="search-select-icon">🔍</span>
+                    <input type="text" class="search-select-input" id="vacina_search"
+                      placeholder="Digite o nome da vacina ou lote..."
+                      autocomplete="off"
+                      oninput="filtrarOpcoesVacina()"
+                      onfocus="abrirDropdownVacina()"
+                      onkeydown="navegarDropdown(event,'vacina')">
+                    <button type="button" class="search-select-clear" id="vacina_clear" onclick="limparSelecaoVacina()">×</button>
+                  </div>
+                  <div class="search-select-dropdown" id="vacina_dropdown"></div>
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label">Quantidade</label>
@@ -805,7 +1237,11 @@
             <div class="card-title">Estoque de Vacinas</div>
             <div class="card-subtitle">Gerencie lotes, quantidades e validades</div>
           </div>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="search-wrap">
+              <span class="icon-search">🔍</span>
+              <input class="form-control" style="width:240px" id="searchEstoque" placeholder="Buscar vacina, lote, fornecedor..." oninput="renderVacinas()">
+            </div>
             <button class="btn btn-primary" onclick="navTo('nova-vacina')">➕ Adicionar</button>
           </div>
         </div>
@@ -917,6 +1353,123 @@
             </table>
           </div>
         </div>
+      </div>
+    </div>
+
+
+    <!-- ===== PAGE: USUÁRIOS (só admin) ===== -->
+    <div id="page-usuarios" class="page">
+      <div class="card" style="max-width:860px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">👥 Gerenciar Usuários</div>
+            <div class="card-subtitle">Cadastre e gerencie os acessos ao sistema</div>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalNovoUsuario()">➕ Novo Usuário</button>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-usuarios">
+            <thead>
+              <tr>
+                <th>Nome</th><th>Usuário</th><th>Cargo</th><th>Status</th><th style="text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:#a1a1aa">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ===== PAGE: GUIA VACINAL ===== -->
+    <div id="page-guia-vacinal" class="page">
+      <div style="max-width:900px">
+
+        <!-- BUSCA RÁPIDA -->
+        <div class="guia-search-bar">
+          <span style="font-size:18px">🔍</span>
+          <input type="text" id="guia-busca" placeholder="Buscar vacina, doença ou faixa etária..." oninput="filtrarGuia()">
+        </div>
+
+        <div class="guia-alerta">
+          <span style="font-size:20px">💡</span>
+          <div>
+            <strong>Cola de atendimento — Calendário PNI 2025</strong><br>
+            Selecione a aba pela faixa etária ou busque a vacina. Baseado no Calendário Nacional de Vacinação (SBIm/MS).
+          </div>
+        </div>
+
+        <!-- ABAS POR FAIXA ETÁRIA -->
+        <div class="guia-tabs" id="guia-tabs">
+          <button class="guia-tab active" onclick="guiaAba('nascimento')">🍼 Ao nascer</button>
+          <button class="guia-tab" onclick="guiaAba('2meses')">2 meses</button>
+          <button class="guia-tab" onclick="guiaAba('3meses')">3 meses</button>
+          <button class="guia-tab" onclick="guiaAba('4meses')">4 meses</button>
+          <button class="guia-tab" onclick="guiaAba('6meses')">6 meses</button>
+          <button class="guia-tab" onclick="guiaAba('9meses')">9 meses</button>
+          <button class="guia-tab" onclick="guiaAba('12meses')">12 meses</button>
+          <button class="guia-tab" onclick="guiaAba('15meses')">15 meses</button>
+          <button class="guia-tab" onclick="guiaAba('4anos')">4 anos</button>
+          <button class="guia-tab" onclick="guiaAba('adulto')">👩 Adulto/Idoso</button>
+          <button class="guia-tab" onclick="guiaAba('gestante')">🤰 Gestante</button>
+          <button class="guia-tab" onclick="guiaAba('todas')">📋 Todas</button>
+        </div>
+
+        <!-- RESULTADO DE BUSCA -->
+        <div id="guia-resultado-busca" style="display:none">
+          <div class="guia-section-title">Resultados da busca</div>
+          <div id="guia-resultado-lista"></div>
+        </div>
+
+        <!-- PAINÉIS POR FAIXA -->
+        <div id="guia-paineis">
+
+          <!-- AO NASCER -->
+          <div class="guia-panel active" id="painel-nascimento"></div>
+          <div class="guia-panel" id="painel-2meses"></div>
+          <div class="guia-panel" id="painel-3meses"></div>
+          <div class="guia-panel" id="painel-4meses"></div>
+          <div class="guia-panel" id="painel-6meses"></div>
+          <div class="guia-panel" id="painel-9meses"></div>
+          <div class="guia-panel" id="painel-12meses"></div>
+          <div class="guia-panel" id="painel-15meses"></div>
+          <div class="guia-panel" id="painel-4anos"></div>
+          <div class="guia-panel" id="painel-adulto"></div>
+          <div class="guia-panel" id="painel-gestante"></div>
+          <div class="guia-panel" id="painel-todas"></div>
+
+        </div>
+
+        <!-- TABELA ESQUEMA COMPLETO -->
+        <div style="margin-top:28px">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📊 Esquema Completo por Vacina</div>
+                <div class="card-subtitle">Todas as doses e idades recomendadas</div>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div class="table-wrapper">
+                <table class="guia-esquema-table">
+                  <thead>
+                    <tr>
+                      <th>Vacina</th>
+                      <th>Protege contra</th>
+                      <th>Idades / Doses</th>
+                      <th>Total de doses</th>
+                      <th>Obs</th>
+                    </tr>
+                  </thead>
+                  <tbody id="guia-esquema-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1077,6 +1630,114 @@
   let pacientes = [], aplicacoes = [], vacinas = [];
   let confirmResolve = null;
 
+  // ===== ESTADO DE LOGIN =====
+  let usuarioLogado = null; // { id, nome, login, cargo, status }
+
+  // ===== LOGIN / LOGOUT =====
+  async function fazerLogin() {
+    const loginVal = document.getElementById('login-usuario').value.trim();
+    const senhaVal = document.getElementById('login-senha').value;
+    const errEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-btn');
+
+    errEl.classList.remove('show');
+    if (!loginVal || !senhaVal) {
+      document.getElementById('login-error-msg').textContent = 'Preencha o usuário e a senha.';
+      errEl.classList.add('show'); return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+
+    try {
+      // Busca usuário pelo login
+      const { data, error } = await db
+        .from('usuarios')
+        .select('*')
+        .eq('login', loginVal)
+        .eq('senha', senhaVal)
+        .eq('status', 'ativo')
+        .single();
+
+      if (error || !data) {
+        document.getElementById('login-error-msg').textContent = 'Usuário ou senha incorretos, ou conta inativa.';
+        errEl.classList.add('show');
+        btn.disabled = false; btn.textContent = 'Entrar no Sistema →'; return;
+      }
+
+      usuarioLogado = data;
+      // Salva sessão
+      sessionStorage.setItem('previmune_usuario', JSON.stringify(data));
+      aplicarAcessosPerfil();
+      document.getElementById('login-screen').classList.add('hidden');
+      await fetchAll();
+    } catch(err) {
+      document.getElementById('login-error-msg').textContent = 'Erro de conexão: ' + (err.message || err);
+      errEl.classList.add('show');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Entrar no Sistema →';
+    }
+  }
+
+  function fazerLogout() {
+    usuarioLogado = null;
+    sessionStorage.removeItem('previmune_usuario');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-usuario').value = '';
+    document.getElementById('login-senha').value = '';
+    document.getElementById('login-error').classList.remove('show');
+    // Reset estado
+    pacientes = []; aplicacoes = []; vacinas = []; lembretes = [];
+  }
+
+  function aplicarAcessosPerfil() {
+    if (!usuarioLogado) return;
+    const cargo = usuarioLogado.cargo;
+    const nome = usuarioLogado.nome || usuarioLogado.login;
+    const inicial = nome.charAt(0).toUpperCase();
+
+    // Atualiza sidebar
+    document.getElementById('sidebar-avatar').textContent = inicial;
+    document.getElementById('sidebar-nome').textContent = nome;
+    const cargoLabels = { adm: 'Administrador', atendente: 'Atendente', tecnica_enfermagem: 'Técnica de Enfermagem' };
+    document.getElementById('sidebar-cargo').textContent = cargoLabels[cargo] || cargo;
+
+    // Controla itens de nav
+    const isTecnica = cargo === 'tecnica_enfermagem';
+    const isAdm = cargo === 'adm';
+
+    // Dashboard e Aplicações: ocultar para técnica
+    document.querySelectorAll('.nav-dashboard-btn, .nav-aplicacoes-btn').forEach(el => {
+      el.style.display = isTecnica ? 'none' : '';
+    });
+
+    // Página admin de usuários: só adm
+    document.querySelectorAll('.nav-admin-only').forEach(el => {
+      el.style.display = isAdm ? '' : 'none';
+    });
+
+    // Se for técnica, navega direto para pacientes
+    if (isTecnica) {
+      navTo('pacientes');
+    } else {
+      navTo('dashboard');
+    }
+  }
+
+  // Verifica sessão ao carregar
+  function verificarSessao() {
+    const salvo = sessionStorage.getItem('previmune_usuario');
+    if (salvo) {
+      try {
+        usuarioLogado = JSON.parse(salvo);
+        aplicarAcessosPerfil();
+        document.getElementById('login-screen').classList.add('hidden');
+        return true;
+      } catch(e) {}
+    }
+    return false;
+  }
+
   // ===== NAVIGATION =====
   const pageMap = {
     'dashboard':       { id: 'page-dashboard',       title: 'Dashboard' },
@@ -1087,6 +1748,8 @@
     'estoque':         { id: 'page-estoque',          title: 'Estoque de Vacinas' },
     'nova-vacina':     { id: 'page-nova-vacina',      title: 'Adicionar Vacina' },
     'lembretes':       { id: 'page-lembretes',        title: '🔔 Lembretes de Doses' },
+    'usuarios':        { id: 'page-usuarios',          title: '👥 Gerenciar Usuários' },
+    'guia-vacinal':    { id: 'page-guia-vacinal',      title: '📖 Guia Vacinal — Calendário PNI' },
   };
 
   function navTo(page) {
@@ -1106,6 +1769,7 @@
 
     // on enter page actions
     if (page === 'nova-aplicacao') { populatePacienteSelect(); populateVacinaSelect(); setDefaultDate(); }
+    if (page === 'usuarios') { fetchUsuarios(); }
     if (page === 'novo-paciente') {
       const editId = document.getElementById('paciente_edit_id').value;
       document.getElementById('form-paciente-title').textContent = editId ? 'Editar Paciente' : 'Novo Paciente';
@@ -1199,16 +1863,9 @@
   }
 
   function populatePacienteSelect() {
-    const sel = document.getElementById('paciente_select');
-    const prev = sel.value;
-    sel.innerHTML = `<option value="">— Selecione um paciente —</option>`;
-    pacientes.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = `${p.nome} — ${p.cpf||''}`;
-      sel.appendChild(opt);
-    });
-    if (prev) sel.value = prev;
+    // Novo sistema: apenas reinicia se não há seleção atual
+    const hiddenVal = document.getElementById('paciente_select').value;
+    if (!hiddenVal) limparSelecaoPaciente();
   }
 
   async function cadastrarOuAtualizarPaciente() {
@@ -1291,11 +1948,20 @@
 
   function renderVacinas() {
     const tbody = document.querySelector('#tabela-vacinas tbody');
-    if (!vacinas.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><p>Nenhuma vacina no estoque</p></div></td></tr>`;
+    const q = (document.getElementById('searchEstoque')?.value || '').toLowerCase().trim();
+    const lista = q
+      ? vacinas.filter(v =>
+          (v.nome||'').toLowerCase().includes(q) ||
+          (v.lote||'').toLowerCase().includes(q) ||
+          (v.fornecedor||'').toLowerCase().includes(q) ||
+          (v.nota_fiscal||'').toLowerCase().includes(q)
+        )
+      : vacinas;
+    if (!lista.length) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><p>${q ? 'Nenhuma vacina encontrada para "' + q + '"' : 'Nenhuma vacina no estoque'}</p></div></td></tr>`;
       return;
     }
-    tbody.innerHTML = vacinas.map(v => {
+    tbody.innerHTML = lista.map(v => {
       const val = v.validade ? new Date(v.validade + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
       const qtd = Number(v.stock || 0);
       let qtdBadge;
@@ -1326,38 +1992,21 @@
   }
 
   function populateVacinaSelect() {
-    const sel = document.getElementById('vacina_select');
-    if (!sel) return;
-    const prev = sel.value;
-    sel.innerHTML = `<option value="">— Selecione a vacina —</option>`;
-    vacinas.forEach(v => {
-      if (Number(v.stock || 0) > 0) {
-        const opt = document.createElement('option');
-        opt.value = v.id;
-        opt.textContent = `${v.nome} — Lote: ${v.lote||'-'} — Qtd: ${v.stock||0}`;
-        if (v.preco) opt.dataset.preco = v.preco;
-        sel.appendChild(opt);
-      }
-    });
-    if (prev) sel.value = prev;
+    // Novo sistema: apenas reinicia se não há seleção atual
+    const hiddenVal = document.getElementById('vacina_select') ? document.getElementById('vacina_select').value : '';
+    if (!hiddenVal) limparSelecaoVacina();
   }
 
   function preencherValorVacina() {
-    const sel = document.getElementById('vacina_select');
-    const opt = sel.options[sel.selectedIndex];
-    if (opt && opt.dataset.preco) {
-      document.getElementById('valor').value = Number(opt.dataset.preco).toFixed(2);
-    }
-    const vacinaId = Number(sel.value);
+    const vacinaId = Number(document.getElementById('vacina_select').value || 0);
     if (vacinaId) {
       const v = vacinas.find(x => Number(x.id) === vacinaId);
+      if (v && v.preco) document.getElementById('valor').value = Number(v.preco).toFixed(2);
       const alertEl = document.getElementById('alerta-estoque');
       if (v && Number(v.stock||0) <= 5) {
         alertEl.style.display = 'block';
         alertEl.innerHTML = `<div class="highlight-bar" style="border-left-color:var(--yellow);background:var(--yellow-light);color:#92400e">⚠️ Estoque baixo: apenas <strong>${v.stock}</strong> unidade(s) disponível(is).</div>`;
-      } else {
-        alertEl.style.display = 'none';
-      }
+      } else { alertEl.style.display = 'none'; }
     }
   }
 
@@ -1671,8 +2320,690 @@
   function findPaciente(id) { return pacientes.find(p => Number(p.id) === Number(id)); }
   function findVacina(id) { return vacinas.find(v => Number(v.id) === Number(id)); }
 
+
+
+
+  // ===== AUTOCOMPLETE SEARCH-SELECT =====
+  let dropdownAberto = null; // 'paciente' | 'vacina' | null
+
+  // ---- PACIENTE ----
+  function filtrarOpcoesPaciente() {
+    const q = (document.getElementById('paciente_search').value || '').toLowerCase().trim();
+    const lista = q
+      ? pacientes.filter(p =>
+          (p.nome||'').toLowerCase().includes(q) ||
+          (p.cpf||'').toLowerCase().includes(q)
+        ).slice(0, 50)
+      : pacientes.slice(0, 50);
+    renderDropdownPaciente(lista);
+    document.getElementById('paciente_clear').style.display = q ? 'block' : 'none';
+    // limpa seleção se usuário digitou algo diferente
+    document.getElementById('paciente_select').value = '';
+  }
+
+  function abrirDropdownPaciente() {
+    fecharTodosDropdowns();
+    const q = (document.getElementById('paciente_search').value || '').toLowerCase().trim();
+    const lista = q
+      ? pacientes.filter(p =>
+          (p.nome||'').toLowerCase().includes(q) || (p.cpf||'').toLowerCase().includes(q)
+        ).slice(0, 50)
+      : pacientes.slice(0, 50);
+    renderDropdownPaciente(lista);
+    document.getElementById('paciente_dropdown').classList.add('open');
+    dropdownAberto = 'paciente';
+  }
+
+  function renderDropdownPaciente(lista) {
+    const dd = document.getElementById('paciente_dropdown');
+    if (!lista.length) {
+      dd.innerHTML = `<div class="search-select-option no-results">Nenhum paciente encontrado</div>`;
+    } else {
+      const selectedId = document.getElementById('paciente_select').value;
+      dd.innerHTML = lista.map(p => {
+        const isSelected = String(p.id) === String(selectedId);
+        return `<div class="search-select-option${isSelected ? ' selected' : ''}"
+          onmousedown="selecionarPaciente(${p.id}, '${esc(p.nome)}', event)">
+          <div class="opt-main">${esc(p.nome)}</div>
+          <div class="opt-sub">CPF: ${esc(p.cpf||'—')} · Tel: ${esc(p.telefone||'—')}</div>
+        </div>`;
+      }).join('');
+    }
+    dd.classList.add('open');
+  }
+
+  function selecionarPaciente(id, nome, event) {
+    if (event) event.preventDefault();
+    document.getElementById('paciente_select').value = id;
+    document.getElementById('paciente_search').value = nome;
+    document.getElementById('paciente_clear').style.display = 'block';
+    document.getElementById('paciente_dropdown').classList.remove('open');
+    dropdownAberto = null;
+  }
+
+  function limparSelecaoPaciente() {
+    document.getElementById('paciente_select').value = '';
+    document.getElementById('paciente_search').value = '';
+    document.getElementById('paciente_clear').style.display = 'none';
+    document.getElementById('paciente_dropdown').classList.remove('open');
+  }
+
+  // ---- VACINA ----
+  function filtrarOpcoesVacina() {
+    const q = (document.getElementById('vacina_search').value || '').toLowerCase().trim();
+    const listaBase = vacinas.filter(v => Number(v.stock||0) > 0);
+    const lista = q
+      ? listaBase.filter(v =>
+          (v.nome||'').toLowerCase().includes(q) ||
+          (v.lote||'').toLowerCase().includes(q) ||
+          (v.fornecedor||'').toLowerCase().includes(q)
+        ).slice(0, 60)
+      : listaBase.slice(0, 60);
+    renderDropdownVacina(lista);
+    document.getElementById('vacina_clear').style.display = q ? 'block' : 'none';
+    document.getElementById('vacina_select').value = '';
+  }
+
+  function abrirDropdownVacina() {
+    fecharTodosDropdowns();
+    const q = (document.getElementById('vacina_search').value || '').toLowerCase().trim();
+    const listaBase = vacinas.filter(v => Number(v.stock||0) > 0);
+    const lista = q
+      ? listaBase.filter(v =>
+          (v.nome||'').toLowerCase().includes(q) || (v.lote||'').toLowerCase().includes(q)
+        ).slice(0, 60)
+      : listaBase.slice(0, 60);
+    renderDropdownVacina(lista);
+    document.getElementById('vacina_dropdown').classList.add('open');
+    dropdownAberto = 'vacina';
+  }
+
+  function renderDropdownVacina(lista) {
+    const dd = document.getElementById('vacina_dropdown');
+    if (!lista.length) {
+      dd.innerHTML = `<div class="search-select-option no-results">Nenhuma vacina disponível em estoque</div>`;
+    } else {
+      const selectedId = document.getElementById('vacina_select').value;
+      dd.innerHTML = lista.map(v => {
+        const isSelected = String(v.id) === String(selectedId);
+        const qtd = Number(v.stock||0);
+        const qtdCor = qtd <= 0 ? '#ef4444' : qtd <= 5 ? '#f59e0b' : '#22c55e';
+        return `<div class="search-select-option${isSelected ? ' selected' : ''}"
+          onmousedown="selecionarVacina(${v.id}, event)">
+          <div class="opt-main">${esc(v.nome)}</div>
+          <div class="opt-sub">Lote: ${esc(v.lote||'—')} · <span style="color:${qtdCor};font-weight:700">Qtd: ${qtd}</span>${v.preco ? ' · R$ ' + Number(v.preco).toFixed(2) : ''}</div>
+        </div>`;
+      }).join('');
+    }
+    dd.classList.add('open');
+  }
+
+  function selecionarVacina(id, event) {
+    if (event) event.preventDefault();
+    const v = vacinas.find(x => Number(x.id) === Number(id));
+    if (!v) return;
+    document.getElementById('vacina_select').value = id;
+    document.getElementById('vacina_search').value = v.nome;
+    document.getElementById('vacina_clear').style.display = 'block';
+    document.getElementById('vacina_dropdown').classList.remove('open');
+    dropdownAberto = null;
+    preencherValorVacina();
+  }
+
+  function limparSelecaoVacina() {
+    document.getElementById('vacina_select').value = '';
+    const s = document.getElementById('vacina_search');
+    if (s) s.value = '';
+    const c = document.getElementById('vacina_clear');
+    if (c) c.style.display = 'none';
+    const dd = document.getElementById('vacina_dropdown');
+    if (dd) dd.classList.remove('open');
+    document.getElementById('alerta-estoque').style.display = 'none';
+  }
+
+  // ---- NAVEGAÇÃO POR TECLADO ----
+  function navegarDropdown(event, tipo) {
+    const ddId = tipo === 'paciente' ? 'paciente_dropdown' : 'vacina_dropdown';
+    const dd = document.getElementById(ddId);
+    const opts = dd.querySelectorAll('.search-select-option:not(.no-results)');
+    if (!opts.length) return;
+    let idx = Array.from(opts).findIndex(o => o.classList.contains('highlighted'));
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (idx < opts.length - 1) idx++;
+      else idx = 0;
+      opts.forEach(o => o.classList.remove('highlighted'));
+      opts[idx].classList.add('highlighted');
+      opts[idx].scrollIntoView({ block: 'nearest' });
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (idx > 0) idx--;
+      else idx = opts.length - 1;
+      opts.forEach(o => o.classList.remove('highlighted'));
+      opts[idx].classList.add('highlighted');
+      opts[idx].scrollIntoView({ block: 'nearest' });
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      const highlighted = dd.querySelector('.search-select-option.highlighted');
+      if (highlighted) highlighted.dispatchEvent(new MouseEvent('mousedown'));
+    } else if (event.key === 'Escape') {
+      dd.classList.remove('open');
+      dropdownAberto = null;
+    }
+  }
+
+  // ---- FECHAR AO CLICAR FORA ----
+  function fecharTodosDropdowns() {
+    document.querySelectorAll('.search-select-dropdown').forEach(d => d.classList.remove('open'));
+    dropdownAberto = null;
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-select-wrap')) fecharTodosDropdowns();
+  });
+
+  // ---- Limpar campos ao entrar na página de nova aplicação ----
+  const _setDefaultDate = setDefaultDate;
+  window.setDefaultDate = function() {
+    _setDefaultDate();
+    limparSelecaoPaciente();
+    limparSelecaoVacina();
+  };
+
+
+  // ===== GUIA VACINAL =====
+  const VACINAS_PNI = [
+    {
+      nome: 'BCG',
+      doenca: 'Tuberculose grave (meningite TB, TB miliar)',
+      icon: '🫁', cor: '#fef3c7',
+      idades: ['Ao nascer'],
+      doses: 1, intervalo: '—',
+      obs: 'Dose única. Aplicada na maternidade. Cicatriz característica.',
+      reforco: false,
+      faixas: ['nascimento', 'todas']
+    },
+    {
+      nome: 'Hepatite B (HB)',
+      doenca: 'Hepatite B',
+      icon: '🔶', cor: '#fff7ed',
+      idades: ['Ao nascer', '2 meses', '6 meses'],
+      doses: 3, intervalo: '0, 2 e 6 meses',
+      obs: '1ª dose nas primeiras 12h de vida. Depois nos 2 e 6 meses (via Penta).',
+      reforco: false,
+      faixas: ['nascimento', '2meses', '6meses', 'todas']
+    },
+    {
+      nome: 'Pentavalente (DTP + Hib + HB)',
+      doenca: 'Difteria, Tétano, Coqueluche, Hib, Hepatite B',
+      icon: '💉', cor: '#eff6ff',
+      idades: ['2 meses', '4 meses', '6 meses'],
+      doses: 3, intervalo: '60 dias entre doses',
+      obs: 'Esquema básico: 2, 4 e 6 meses. Reforço com DTP aos 15 meses e 4 anos.',
+      reforco: true,
+      faixas: ['2meses', '4meses', '6meses', 'todas']
+    },
+    {
+      nome: 'VIP (Poliomielite Inativada)',
+      doenca: 'Poliomielite (paralisia infantil)',
+      icon: '🦵', cor: '#f0fdf4',
+      idades: ['2 meses', '4 meses', '6 meses'],
+      doses: 3, intervalo: '60 dias entre doses',
+      obs: 'Injetável. Reforço com VOP (oral) aos 15 meses e 4 anos.',
+      reforco: true,
+      faixas: ['2meses', '4meses', '6meses', 'todas']
+    },
+    {
+      nome: 'Pneumocócica 10 (Pneumo 10)',
+      doenca: 'Pneumonia, meningite, otite por pneumococo',
+      icon: '🫧', cor: '#fdf4ff',
+      idades: ['2 meses', '4 meses', '12 meses (reforço)'],
+      doses: 3, intervalo: '2, 4 meses + reforço 12m',
+      obs: 'Esquema 2+1. Reforço aos 12 meses.',
+      reforco: true,
+      faixas: ['2meses', '4meses', '12meses', 'todas']
+    },
+    {
+      nome: 'Rotavírus (VORH)',
+      doenca: 'Diarreia grave por rotavírus',
+      icon: '🦠', cor: '#fff0f3',
+      idades: ['2 meses', '4 meses'],
+      doses: 2, intervalo: '60 dias entre doses',
+      obs: '⚠️ LIMITE DE IDADE: 1ª dose até 3m 15d; 2ª dose até 7m 29d. Via oral.',
+      reforco: false,
+      faixas: ['2meses', '4meses', 'todas']
+    },
+    {
+      nome: 'Meningocócica C (MenC)',
+      doenca: 'Meningite meningocócica C',
+      icon: '🧠', cor: '#fef3c7',
+      idades: ['3 meses', '5 meses', '12 meses (reforço)'],
+      doses: 3, intervalo: '3, 5 meses + reforço 12m',
+      obs: 'Esquema 2+1. Reforço aos 12 meses.',
+      reforco: true,
+      faixas: ['3meses', '12meses', 'todas']
+    },
+    {
+      nome: 'Influenza (Gripe)',
+      doenca: 'Gripe (influenza sazonal)',
+      icon: '🤧', cor: '#eff6ff',
+      idades: ['6 meses (anual)'],
+      doses: 1, intervalo: 'Anual',
+      obs: 'Crianças de 6m a 8 anos: 2 doses na 1ª vez, intervalo 30 dias. Depois 1 dose/ano.',
+      reforco: false,
+      faixas: ['6meses', 'adulto', 'gestante', 'todas']
+    },
+    {
+      nome: 'Febre Amarela (FA)',
+      doenca: 'Febre Amarela',
+      icon: '🌡️', cor: '#fef9c3',
+      idades: ['9 meses', 'Reforço: 4 anos'],
+      doses: 2, intervalo: '9 meses + reforço 4 anos',
+      obs: 'Dose única na vida após os 5 anos. Contraindicada em imunocomprometidos.',
+      reforco: true,
+      faixas: ['9meses', '4anos', 'adulto', 'todas']
+    },
+    {
+      nome: 'Tríplice Viral (SCR)',
+      doenca: 'Sarampo, Caxumba, Rubéola',
+      icon: '🔴', cor: '#fff1f2',
+      idades: ['12 meses', '15 meses (reforço)'],
+      doses: 2, intervalo: '12 e 15 meses',
+      obs: '1ª dose: 12 meses. 2ª dose (reforço): 15 meses.',
+      reforco: true,
+      faixas: ['12meses', '15meses', 'todas']
+    },
+    {
+      nome: 'Varicela (Catapora)',
+      doenca: 'Varicela (catapora)',
+      icon: '💧', cor: '#f0f9ff',
+      idades: ['15 meses'],
+      doses: 1, intervalo: '—',
+      obs: 'Dose única pelo SUS. 2ª dose disponível na rede privada (recomendada SBIm).',
+      reforco: false,
+      faixas: ['15meses', 'todas']
+    },
+    {
+      nome: 'DTP (Tríplice Bacteriana)',
+      doenca: 'Difteria, Tétano, Coqueluche',
+      icon: '💊', cor: '#f5f3ff',
+      idades: ['15 meses (1º reforço)', '4 anos (2º reforço)'],
+      doses: 2, intervalo: 'Reforços: 15m e 4 anos',
+      obs: 'Reforço após esquema básico com Pentavalente.',
+      reforco: true,
+      faixas: ['15meses', '4anos', 'todas']
+    },
+    {
+      nome: 'VOP (Poliomielite Oral)',
+      doenca: 'Poliomielite — reforço',
+      icon: '💊', cor: '#f0fdf4',
+      idades: ['15 meses (1º reforço)', '4 anos (2º reforço)'],
+      doses: 2, intervalo: 'Reforços orais',
+      obs: 'Gotinhas orais. Complementa esquema VIP dos 2, 4, 6 meses.',
+      reforco: true,
+      faixas: ['15meses', '4anos', 'todas']
+    },
+    {
+      nome: 'HPV (Gardasil / Cervarix)',
+      doenca: 'HPV — câncer de colo do útero, verrugas',
+      icon: '🎗️', cor: '#fdf4ff',
+      idades: ['9 a 14 anos (meninas)', '9 a 14 anos (meninos)'],
+      doses: 2, intervalo: '0 e 6 meses (9-14 anos)',
+      obs: '⚠️ Imunossuprimidos e transplantados: 3 doses (0, 2, 6 meses). Privado: a partir de 9 anos.',
+      reforco: false,
+      faixas: ['adulto', 'todas']
+    },
+    {
+      nome: 'Hepatite A (HA)',
+      doenca: 'Hepatite A',
+      icon: '🟡', cor: '#fffbeb',
+      idades: ['15 meses'],
+      doses: 1, intervalo: '—',
+      obs: 'Dose única pelo SUS a partir de 15 meses. Privado: 2 doses com intervalo 6 meses.',
+      reforco: false,
+      faixas: ['15meses', 'adulto', 'todas']
+    },
+    {
+      nome: 'dTpa (Acelular adulto)',
+      doenca: 'Difteria, Tétano, Coqueluche — adultos',
+      icon: '💉', cor: '#eff6ff',
+      idades: ['A cada 10 anos (adultos)', 'Gestante: 20ª semana'],
+      doses: 1, intervalo: 'Reforço a cada 10 anos',
+      obs: '⭐ GESTANTE: obrigatória em cada gestação a partir da 20ª semana.',
+      reforco: true,
+      faixas: ['adulto', 'gestante', 'todas']
+    },
+    {
+      nome: 'Meningocócica ACWY (MenACWY)',
+      doenca: 'Meningite meningocócica A, C, W, Y',
+      icon: '🧠', cor: '#fef3c7',
+      idades: ['11-12 anos', 'Reforço: 16 anos'],
+      doses: 2, intervalo: '11-12 anos + reforço 16a',
+      obs: 'Indicada também para universitários e asplênicos. Privado: 1 dose.',
+      reforco: true,
+      faixas: ['adulto', 'todas']
+    },
+    {
+      nome: 'Pneumocócica 13 (Pneumo 13)',
+      doenca: 'Pneumonia, meningite (13 sorotipos)',
+      icon: '🫧', cor: '#fdf4ff',
+      idades: ['2 meses', '4 meses', '12 meses', 'Adultos ≥65 anos'],
+      doses: 4, intervalo: '2, 4, 12 meses + adultos',
+      obs: 'Privado: preferida para crianças. Para adultos ≥65: antes da Pneumo 23.',
+      reforco: true,
+      faixas: ['2meses', '4meses', '12meses', 'adulto', 'todas']
+    },
+    {
+      nome: 'Pneumocócica 23 (Pneumo 23)',
+      doenca: 'Pneumonia (23 sorotipos) — adultos',
+      icon: '🫧', cor: '#fdf4ff',
+      idades: ['≥60 anos (1 dose)', 'Grupos de risco'],
+      doses: 1, intervalo: 'Única (ou reforço 5 anos)',
+      obs: 'Idosos e portadores de condições crônicas. Após Pneumo 13.',
+      reforco: false,
+      faixas: ['adulto', 'todas']
+    },
+    {
+      nome: 'Herpes Zóster (Shingrix)',
+      doenca: 'Herpes Zóster (cobreiro)',
+      icon: '⚡', cor: '#fff1f2',
+      idades: ['≥50 anos'],
+      doses: 2, intervalo: '0 e 2-6 meses',
+      obs: '2 doses com intervalo de 2 a 6 meses. Alta eficácia em idosos.',
+      reforco: false,
+      faixas: ['adulto', 'todas']
+    },
+    {
+      nome: 'Dengue (Qdenga)',
+      doenca: 'Dengue (sorotipos 1, 2, 3, 4)',
+      icon: '🦟', cor: '#fef9c3',
+      idades: ['10 a 14 anos (SUS)', '4 anos em diante (privado)'],
+      doses: 2, intervalo: '0 e 3 meses',
+      obs: '⚠️ Privado: indicada independente de sorologias. SUS: 10-14 anos soropositivos.',
+      reforco: false,
+      faixas: ['adulto', 'todas']
+    },
+    {
+      nome: 'Hepatite B — adultos',
+      doenca: 'Hepatite B',
+      icon: '🔶', cor: '#fff7ed',
+      idades: ['Não vacinados de qualquer idade'],
+      doses: 3, intervalo: '0, 1 e 6 meses',
+      obs: 'Adultos sem esquema completo. Verificar sorologia (Anti-HBs) após série.',
+      reforco: false,
+      faixas: ['adulto', 'gestante', 'todas']
+    },
+    {
+      nome: 'Rotavírus Pentavalente (RotaTeq)',
+      doenca: 'Diarreia por rotavírus — privado',
+      icon: '🦠', cor: '#fff0f3',
+      idades: ['2 meses', '4 meses', '6 meses'],
+      doses: 3, intervalo: '2, 4 e 6 meses',
+      obs: '⚠️ Limites de idade: 1ª até 14 semanas; última até 8 meses. Via oral.',
+      reforco: false,
+      faixas: ['2meses', '4meses', '6meses', 'todas']
+    },
+    {
+      nome: 'Influenza — Gestante',
+      doenca: 'Gripe (influenza) na gestação',
+      icon: '🤰', cor: '#fdf4ff',
+      idades: ['Qualquer trimestre da gestação'],
+      doses: 1, intervalo: 'Anual',
+      obs: '⭐ Recomendada em qualquer trimestre. Protege mãe e bebê (imunidade passiva).',
+      reforco: false,
+      faixas: ['gestante', 'todas']
+    },
+    {
+      nome: 'Hepatite A — Gestante',
+      doenca: 'Hepatite A',
+      icon: '🟡', cor: '#fffbeb',
+      idades: ['Gestante suscetível'],
+      doses: 2, intervalo: '0 e 6 meses',
+      obs: 'Avaliar risco-benefício. Segura na gestação em situações de risco.',
+      reforco: false,
+      faixas: ['gestante', 'todas']
+    },
+  ];
+
+  function guiaAba(aba) {
+    document.querySelectorAll('.guia-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.guia-panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('painel-' + aba).classList.add('active');
+    document.getElementById('guia-resultado-busca').style.display = 'none';
+    document.getElementById('guia-busca').value = '';
+    renderPainelGuia(aba);
+  }
+
+  function renderPainelGuia(aba) {
+    const panel = document.getElementById('painel-' + aba);
+    const lista = VACINAS_PNI.filter(v => v.faixas.includes(aba));
+    if (!lista.length) {
+      panel.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>Nenhuma vacina específica para esta faixa.</p></div>';
+      return;
+    }
+    const nomesFaixa = {
+      nascimento: 'Ao Nascer', '2meses': '2 Meses', '3meses': '3 Meses',
+      '4meses': '4 Meses', '6meses': '6 Meses', '9meses': '9 Meses',
+      '12meses': '12 Meses', '15meses': '15 Meses', '4anos': '4 Anos',
+      adulto: 'Adulto / Idoso', gestante: 'Gestante', todas: 'Todas as Vacinas'
+    };
+    panel.innerHTML = `
+      <div class="guia-section-title">💉 Vacinas — ${nomesFaixa[aba] || aba} (${lista.length} vacina${lista.length > 1 ? 's' : ''})</div>
+      ${lista.map(v => renderCardVacina(v)).join('')}
+    `;
+  }
+
+  function renderCardVacina(v) {
+    return `
+      <div class="guia-vacina-card">
+        <div class="guia-vacina-icon" style="background:${v.cor}">${v.icon}</div>
+        <div style="flex:1">
+          <div class="guia-vacina-nome">${v.nome}</div>
+          <div class="guia-vacina-doenca">${v.doenca}</div>
+          <div class="guia-vacina-tags">
+            <span class="guia-tag guia-tag-dose">💉 ${v.doses} dose${v.doses > 1 ? 's' : ''}</span>
+            <span class="guia-tag guia-tag-intervalo">📅 ${v.intervalo}</span>
+            ${v.reforco ? '<span class="guia-tag guia-tag-reforco">✅ Tem reforço</span>' : ''}
+            ${v.idades.map(i => `<span class="badge-idade">${i}</span>`).join('')}
+          </div>
+          ${v.obs ? `<div style="margin-top:7px;font-size:12px;color:var(--gray-600);background:var(--gray-50);border-radius:6px;padding:6px 10px">${v.obs}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function filtrarGuia() {
+    const q = (document.getElementById('guia-busca').value || '').toLowerCase().trim();
+    const resultado = document.getElementById('guia-resultado-busca');
+    const lista = document.getElementById('guia-resultado-lista');
+    const paineis = document.getElementById('guia-paineis');
+
+    if (!q) {
+      resultado.style.display = 'none';
+      paineis.style.display = '';
+      document.getElementById('guia-tabs').style.display = '';
+      return;
+    }
+
+    document.getElementById('guia-tabs').style.display = 'none';
+    paineis.style.display = 'none';
+    resultado.style.display = 'block';
+
+    const found = VACINAS_PNI.filter(v =>
+      v.nome.toLowerCase().includes(q) ||
+      v.doenca.toLowerCase().includes(q) ||
+      v.obs.toLowerCase().includes(q) ||
+      v.idades.some(i => i.toLowerCase().includes(q))
+    );
+
+    if (!found.length) {
+      lista.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>Nenhuma vacina encontrada para "<strong>${q}</strong>"</p></div>`;
+    } else {
+      lista.innerHTML = found.map(v => renderCardVacina(v)).join('');
+    }
+  }
+
+  function renderEsquemaCompleto() {
+    const tbody = document.getElementById('guia-esquema-tbody');
+    if (!tbody) return;
+    // Vacinas únicas sem duplicatas (pelo nome base)
+    const unicas = [];
+    const vistas = new Set();
+    VACINAS_PNI.forEach(v => {
+      const chave = v.nome.split(' ')[0] + v.doses;
+      if (!vistas.has(v.nome)) { vistas.add(v.nome); unicas.push(v); }
+    });
+    tbody.innerHTML = unicas.map(v => `
+      <tr>
+        <td><strong>${v.icon} ${v.nome}</strong></td>
+        <td style="font-size:12px;color:var(--gray-600)">${v.doenca}</td>
+        <td>${v.idades.map(i => `<span class="badge-idade">${i}</span>`).join(' ')}</td>
+        <td style="text-align:center"><strong style="color:var(--orange-dark)">${v.doses}</strong></td>
+        <td style="font-size:12px;color:var(--gray-500)">${v.obs}</td>
+      </tr>
+    `).join('');
+  }
+
+  // Inicializar guia quando navegar para a página
+  const _navToWithGuia = window.navTo || navTo;
+  window.navTo = function(page) {
+    _navToWithGuia(page);
+    if (page === 'guia-vacinal') {
+      setTimeout(() => {
+        renderPainelGuia('nascimento');
+        renderEsquemaCompleto();
+      }, 30);
+    }
+  };
+
+  // ===== USUÁRIOS =====
+  let usuarios = [];
+
+  async function fetchUsuarios() {
+    try {
+      if (!db) return;
+      const { data, error } = await db.from('usuarios').select('id, nome, login, cargo, status, created_at').order('nome');
+      if (error) throw error;
+      usuarios = data || [];
+      renderUsuarios();
+    } catch(err) {
+      toast('Erro ao buscar usuários: ' + (err.message||err), 'error');
+    }
+  }
+
+  function renderUsuarios() {
+    const tbody = document.querySelector('#tabela-usuarios tbody');
+    if (!tbody) return;
+    if (!usuarios.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👥</div><p>Nenhum usuário cadastrado</p></div></td></tr>`;
+      return;
+    }
+    const cargoLabels = { adm: '👑 Administrador', atendente: '🪪 Atendente', tecnica_enfermagem: '🩺 Técnica de Enfermagem' };
+    const cargoBadge = { adm: 'badge-red', atendente: 'badge-orange', tecnica_enfermagem: 'badge-green' };
+    tbody.innerHTML = usuarios.map(u => {
+      const labelCargo = cargoLabels[u.cargo] || u.cargo;
+      const badgeCargo = cargoBadge[u.cargo] || 'badge-orange';
+      const statusBadge = u.status === 'ativo'
+        ? `<span class="badge badge-green">● Ativo</span>`
+        : `<span class="badge" style="background:#f4f4f5;color:#71717a">● Inativo</span>`;
+      const isMe = usuarioLogado && usuarioLogado.id === u.id;
+      return `<tr>
+        <td><strong>${esc(u.nome||'—')}</strong>${isMe ? ' <span style="font-size:11px;color:var(--orange-dark)">(você)</span>' : ''}</td>
+        <td>${esc(u.login||'—')}</td>
+        <td><span class="badge ${badgeCargo}">${labelCargo}</span></td>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="editarUsuario(${u.id})">✏️ Editar</button>
+            ${!isMe ? `<button class="btn btn-danger btn-sm" onclick="excluirUsuario(${u.id})">🗑️</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function abrirModalNovoUsuario() {
+    document.getElementById('edit_usuario_id').value = '';
+    document.getElementById('usuario_nome').value = '';
+    document.getElementById('usuario_login').value = '';
+    document.getElementById('usuario_senha').value = '';
+    document.getElementById('usuario_cargo').value = 'atendente';
+    document.getElementById('usuario_status').value = 'ativo';
+    document.getElementById('modal-usuario-title').textContent = 'Novo Usuário';
+    document.getElementById('senha-field-wrap').style.display = '';
+    document.getElementById('modal-usuario').classList.add('open');
+  }
+
+  function editarUsuario(id) {
+    const u = usuarios.find(x => Number(x.id) === Number(id));
+    if (!u) return;
+    document.getElementById('edit_usuario_id').value = u.id;
+    document.getElementById('usuario_nome').value = u.nome || '';
+    document.getElementById('usuario_login').value = u.login || '';
+    document.getElementById('usuario_senha').value = '';
+    document.getElementById('usuario_cargo').value = u.cargo || 'atendente';
+    document.getElementById('usuario_status').value = u.status || 'ativo';
+    document.getElementById('modal-usuario-title').textContent = 'Editar Usuário';
+    document.getElementById('senha-field-wrap').style.display = '';
+    document.getElementById('modal-usuario').classList.add('open');
+  }
+
+  function fecharModalUsuario() {
+    document.getElementById('modal-usuario').classList.remove('open');
+  }
+
+  async function salvarUsuario() {
+    const id = document.getElementById('edit_usuario_id').value;
+    const nome = document.getElementById('usuario_nome').value.trim();
+    const login = document.getElementById('usuario_login').value.trim().toLowerCase();
+    const senha = document.getElementById('usuario_senha').value;
+    const cargo = document.getElementById('usuario_cargo').value;
+    const status = document.getElementById('usuario_status').value;
+
+    if (!nome || !login) { toast('Preencha nome e usuário.', 'warning'); return; }
+    if (!id && !senha) { toast('Informe a senha para o novo usuário.', 'warning'); return; }
+    if (senha && senha.length < 4) { toast('A senha deve ter ao menos 4 caracteres.', 'warning'); return; }
+
+    try {
+      if (id) {
+        const campos = { nome, login, cargo, status };
+        if (senha) campos.senha = senha;
+        const { error } = await db.from('usuarios').update(campos).match({ id: Number(id) });
+        if (error) throw error;
+        toast('Usuário atualizado!', 'success');
+        // Atualiza sessão se for o próprio
+        if (usuarioLogado && usuarioLogado.id === Number(id)) {
+          usuarioLogado = { ...usuarioLogado, ...campos };
+          sessionStorage.setItem('previmune_usuario', JSON.stringify(usuarioLogado));
+          aplicarAcessosPerfil();
+        }
+      } else {
+        // Verifica se login já existe
+        const { data: existe } = await db.from('usuarios').select('id').eq('login', login).single();
+        if (existe) { toast('Este usuário já existe. Escolha outro login.', 'error'); return; }
+        const { error } = await db.from('usuarios').insert([{ nome, login, senha, cargo, status }]);
+        if (error) throw error;
+        toast('Usuário criado com sucesso!', 'success');
+      }
+      fecharModalUsuario();
+      await fetchUsuarios();
+    } catch(err) { toast('Erro ao salvar: ' + (err.message||err), 'error'); }
+  }
+
+  async function excluirUsuario(id) {
+    const ok = await confirm('Excluir usuário?', 'O usuário perderá o acesso ao sistema imediatamente.');
+    if (!ok) return;
+    try {
+      const { error } = await db.from('usuarios').delete().match({ id });
+      if (error) throw error;
+      toast('Usuário removido.', 'success');
+      await fetchUsuarios();
+    } catch(err) { toast('Erro: ' + (err.message||err), 'error'); }
+  }
+
   // Close modals on backdrop click
-  ['modal-historico','modal-aplicacao','modal-editar-vacina'].forEach(id => {
+  ['modal-historico','modal-aplicacao','modal-editar-vacina','modal-usuario'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
       if (e.target === this) this.classList.remove('open');
     });
@@ -1950,7 +3281,86 @@
   });
 
   // INIT
-  document.addEventListener('DOMContentLoaded', fetchAll);
+  // ===== INIT =====
+  document.addEventListener('DOMContentLoaded', function() {
+    const temSessao = verificarSessao();
+    if (temSessao) fetchAll();
+  });
+
+  // ===== PROTEÇÃO DE ROTAS =====
+  const _navToOriginal = navTo;
+  // Override navTo para bloquear rotas protegidas
+  const _navTo = navTo;
+  window.navTo = function(page) {
+    if (!usuarioLogado) return;
+    const cargo = usuarioLogado.cargo;
+    const isTecnica = cargo === 'tecnica_enfermagem';
+    const isAdm = cargo === 'adm';
+
+    // Páginas bloqueadas para técnica
+    if (isTecnica && (page === 'dashboard' || page === 'aplicacoes' || page === 'nova-aplicacao')) {
+      toast('Acesso não permitido para o seu perfil.', 'warning'); return;
+    }
+    // Página de usuários só para adm
+    if (!isAdm && page === 'usuarios') {
+      toast('Apenas administradores podem acessar esta área.', 'warning'); return;
+    }
+    _navTo(page);
+  };
 </script>
+
+<!-- MODAL: NOVO / EDITAR USUÁRIO -->
+<div id="modal-usuario" class="modal-backdrop">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <div>
+        <h3 id="modal-usuario-title">Novo Usuário</h3>
+        <p>Preencha os dados de acesso</p>
+      </div>
+      <button class="btn-close" onclick="fecharModalUsuario()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit_usuario_id">
+      <div class="form-group">
+        <label class="form-label">Nome completo <span class="req">*</span></label>
+        <input class="form-control" id="usuario_nome" placeholder="Ex: Maria da Silva">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Usuário (login) <span class="req">*</span></label>
+        <input class="form-control" id="usuario_login" placeholder="Ex: maria.silva">
+      </div>
+      <div class="form-group" id="senha-field-wrap">
+        <label class="form-label">Senha <span class="req">*</span></label>
+        <input class="form-control" type="password" id="usuario_senha" placeholder="Mínimo 4 caracteres">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cargo / Perfil <span class="req">*</span></label>
+        <select class="form-control" id="usuario_cargo">
+          <option value="adm">Administrador</option>
+          <option value="atendente">Atendente</option>
+          <option value="tecnica_enfermagem">Técnica de Enfermagem</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-control" id="usuario_status">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+      <div style="background:var(--orange-50);border-radius:8px;padding:12px;font-size:12px;color:var(--orange-dark);margin-top:4px">
+        <strong>📋 Permissões por perfil:</strong><br>
+        • <strong>Administrador:</strong> acesso total + gerenciar usuários<br>
+        • <strong>Atendente:</strong> pacientes, aplicações, estoque, lembretes<br>
+        • <strong>Técnica de Enfermagem:</strong> apenas pacientes, estoque e lembretes (sem valores)
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalUsuario()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
