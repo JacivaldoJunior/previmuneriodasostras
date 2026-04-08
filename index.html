@@ -1628,7 +1628,7 @@
     db = null;
   }
 
-  let pacientes = [], aplicacoes = [], vacinas = [];
+  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [];
   let confirmResolve = null;
 
   // ===== ESTADO DE LOGIN =====
@@ -3016,7 +3016,7 @@
   });
 
   // ===== LEMBRETES =====
-  let lembretes = [];
+
 
   async function fetchLembretes() {
     try {
@@ -3178,8 +3178,11 @@
   }
 
   // Fechar modal lembrete clicando fora
-  document.getElementById('modal-lembrete').addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('open');
+  document.addEventListener('DOMContentLoaded', function() {
+    var mlEl = document.getElementById('modal-lembrete');
+    if (mlEl) mlEl.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
   });
 
   // ===== ETIQUETA ZEBRA =====
