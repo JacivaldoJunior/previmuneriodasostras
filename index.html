@@ -2202,7 +2202,7 @@
         if (el) el.value = id === 'quantidade' ? 1 : '';
       });
       document.getElementById('alerta-estoque').style.display = 'none';
-      await fetchAplicacoes(); await fetchVacinas();
+      await fetchAplicacoes(); await fetchVacinas(); await fetchPacientes(); renderDashboard();
     } catch (err) {
       console.error(err); toast('Erro ao registrar: ' + (err.message||err), 'error');
     }
@@ -3022,8 +3022,10 @@
     try {
       if (!db) { renderLembretes(); return; }
       const { data, error } = await db.from('lembretes').select('*').order('proxima_dose', { ascending: true });
+      console.log('[Lembretes] data:', data, 'error:', error);
       if (error) throw error;
       lembretes = data || [];
+      console.log('[Lembretes] total carregados:', lembretes.length);
       renderLembretes();
       atualizarAlertaDashboard();
       const urgentes = lembretes.filter(l => {
@@ -3162,7 +3164,7 @@
     if (!vacina) { toast('Informe a vacina.', 'warning'); return; }
     if (!proxima_dose) { toast('Informe a data da próxima dose.', 'warning'); return; }
     try {
-      console.log('Salvando lembrete:', { paciente_id, vacina, proxima_dose });
+      console.log('[Lembrete] Salvando:', { paciente_id, paciente_id_raw, vacina, proxima_dose });
       const { data, error } = await db.from('lembretes').insert([{ paciente_id, vacina, proxima_dose, obs: obs||null, status: 'pendente' }]).select();
       console.log('Resultado insert:', data, error);
       if (error) throw error;
@@ -3181,7 +3183,7 @@
   });
 
   // ===== ETIQUETA ZEBRA =====
-  let ultimaAplicacao = null;
+  var ultimaAplicacao = null;
 
   function imprimirEtiqueta() {
     if (!ultimaAplicacao) { toast('Nenhuma aplicação registrada ainda.', 'warning'); return; }
