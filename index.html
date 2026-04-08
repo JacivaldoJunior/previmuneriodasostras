@@ -3055,7 +3055,7 @@
     if (!urgentes.length) { alertBox.style.display = 'none'; return; }
     alertBox.style.display = 'flex';
     listaEl.innerHTML = urgentes.map(l => {
-      const p = pacientes.find(x => x.id === l.paciente_id);
+      const p = pacientes.find(x => String(x.id) === String(l.paciente_id));
       const nome = p ? p.nome : 'Paciente';
       const dias = diasAte(l.proxima_dose);
       const dataFmt = new Date(l.proxima_dose + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -3073,7 +3073,7 @@
     const q = (document.getElementById('searchLembrete')?.value || '').toLowerCase().trim();
     const filtroStatus = document.getElementById('filtro-lembrete-status')?.value || '';
     let list = lembretes.filter(l => {
-      const p = pacientes.find(x => x.id === l.paciente_id);
+      const p = pacientes.find(x => String(x.id) === String(l.paciente_id));
       const nome = (p ? p.nome : '').toLowerCase();
       const matchQ = !q || nome.includes(q) || (l.vacina||'').toLowerCase().includes(q);
       const matchS = !filtroStatus || l.status === filtroStatus;
@@ -3084,7 +3084,7 @@
       return;
     }
     tbody.innerHTML = list.map(l => {
-      const p = pacientes.find(x => x.id === l.paciente_id);
+      const p = pacientes.find(x => String(x.id) === String(l.paciente_id));
       const nome = p ? p.nome : '—';
       const tel = p ? (p.telefone || '—') : '—';
       const dias = diasAte(l.proxima_dose);
@@ -3153,20 +3153,26 @@
   }
 
   async function salvarLembrete() {
-    const paciente_id = Number(document.getElementById('lembrete_paciente_id').value);
+    const paciente_id_raw = document.getElementById('lembrete_paciente_id').value;
+    const paciente_id = Number(paciente_id_raw) || paciente_id_raw;
     const vacina = document.getElementById('lembrete_vacina').value.trim();
     const proxima_dose = document.getElementById('lembrete_data').value;
     const obs = document.getElementById('lembrete_obs').value.trim();
-    if (!paciente_id) { toast('Selecione o paciente.', 'warning'); return; }
+    if (!paciente_id_raw) { toast('Selecione o paciente.', 'warning'); return; }
     if (!vacina) { toast('Informe a vacina.', 'warning'); return; }
     if (!proxima_dose) { toast('Informe a data da próxima dose.', 'warning'); return; }
     try {
-      const { error } = await db.from('lembretes').insert([{ paciente_id, vacina, proxima_dose, obs: obs||null, status: 'pendente' }]);
+      console.log('Salvando lembrete:', { paciente_id, vacina, proxima_dose });
+      const { data, error } = await db.from('lembretes').insert([{ paciente_id, vacina, proxima_dose, obs: obs||null, status: 'pendente' }]).select();
+      console.log('Resultado insert:', data, error);
       if (error) throw error;
       toast('Lembrete salvo com sucesso!', 'success');
       fecharModalLembrete();
       await fetchLembretes();
-    } catch(err) { toast('Erro ao salvar: ' + err.message, 'error'); }
+    } catch(err) {
+      console.error('Erro salvarLembrete:', err);
+      toast('Erro ao salvar: ' + (err.message || JSON.stringify(err)), 'error');
+    }
   }
 
   // Fechar modal lembrete clicando fora
