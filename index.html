@@ -3231,11 +3231,11 @@
 <div class="etiqueta-wrap">
   <div class="et-header">+ Previmune &#x2014; Sistema de Vacinação</div>
   <div class="et-body">
-    <div class="et-linha"><span class="et-lbl">Vac:</span><span class="et-val">\${vacina}</span></div>
-    <div class="et-linha"><span class="et-lbl">Lote:</span><span class="et-val">\${lote}</span></div>
-    <div class="et-linha"><span class="et-lbl">Val:</span><span class="et-val">\${valFmt}</span></div>
-    <div class="et-linha"><span class="et-lbl">Aplic.:</span><span class="et-val">\${profissional}</span></div>
-    <div class="et-linha"><span class="et-lbl">Data:</span><span class="et-val">\${hoje}</span></div>
+    <div class="et-linha"><span class="et-lbl">Vac:</span><span class="et-val">${vacina}</span></div>
+    <div class="et-linha"><span class="et-lbl">Lote:</span><span class="et-val">${lote}</span></div>
+    <div class="et-linha"><span class="et-lbl">Val:</span><span class="et-val">${valFmt}</span></div>
+    <div class="et-linha"><span class="et-lbl">Aplic.:</span><span class="et-val">${profissional}</span></div>
+    <div class="et-linha"><span class="et-lbl">Data:</span><span class="et-val">${hoje}</span></div>
   </div>
   <div class="et-footer"></div>
 </div>
@@ -3312,34 +3312,34 @@
   <div class="ficha-body">
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1F464; Paciente</div>
-      <div class="ficha-cell-val">\${nomeP}</div>
+      <div class="ficha-cell-val">${nomeP}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1FAAA; CPF</div>
-      <div class="ficha-cell-val">\${cpfFmt}</div>
+      <div class="ficha-cell-val">${cpfFmt}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1F489; Vacina</div>
-      <div class="ficha-cell-val">\${vacina}</div>
+      <div class="ficha-cell-val">${vacina}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1F4E6; Lote</div>
-      <div class="ficha-cell-val">\${lote}</div>
+      <div class="ficha-cell-val">${lote}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1F4C5; Validade</div>
-      <div class="ficha-cell-val">\${valFmt}</div>
+      <div class="ficha-cell-val">${valFmt}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">Aplic. Aplicador(a)</div>
-      <div class="ficha-cell-val">\${profissional}</div>
+      <div class="ficha-cell-val">${profissional}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1F5D3;&#xFE0F; Data de Aplicação</div>
-      <div class="ficha-cell-val">\${hoje}</div>
+      <div class="ficha-cell-val">${hoje}</div>
     </div>
   </div>
-  <div class="ficha-footer">Previmune &copy; \${new Date().getFullYear()} &#x2014; Documento gerado automaticamente</div>
+  <div class="ficha-footer">Previmune &copy; ${new Date().getFullYear()} &#x2014; Documento gerado automaticamente</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`);
