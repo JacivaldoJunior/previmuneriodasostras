@@ -1222,6 +1222,7 @@
             <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
               <button class="btn btn-ghost" onclick="navTo('aplicacoes')">Cancelar</button>
               <button class="btn btn-outline-orange" id="btn-imprimir-etiqueta" style="display:none" onclick="imprimirEtiqueta()">🖨️ Imprimir Etiqueta</button>
+              <button class="btn btn-outline-orange" id="btn-imprimir-ficha" style="display:none" onclick="imprimirFicha()">📋 Imprimir Ficha</button>
               <button class="btn btn-primary" onclick="registrarAplicacao()">💉 Registrar Aplicação</button>
             </div>
           </div>
@@ -2181,16 +2182,21 @@
       }
 
       toast('Aplicação registrada e estoque atualizado!', 'success');
-      // Salvar dados para imprimir etiqueta
+      // Salvar dados para imprimir etiqueta + ficha
+      const pacObj = (pacientes||[]).find(p=>Number(p.id)===Number(paciente_id)) || {};
       ultimaAplicacao = {
         vacina: v.nome || '',
         lote: v.lote || '',
         validade: v.validade || '',
         data: data_aplicacao,
-        profissional: profissional || ''
+        profissional: profissional || '',
+        paciente_nome: pacObj.nome || '',
+        paciente_cpf: pacObj.cpf || ''
       };
       const btnImpr = document.getElementById('btn-imprimir-etiqueta');
       if (btnImpr) btnImpr.style.display = 'inline-flex';
+      const btnFicha = document.getElementById('btn-imprimir-ficha');
+      if (btnFicha) btnFicha.style.display = 'inline-flex';
       ['quantidade','data_aplicacao','dose','valor'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = id === 'quantidade' ? 1 : '';
@@ -3173,100 +3179,162 @@
 
   function imprimirEtiqueta() {
     if (!ultimaAplicacao) { toast('Nenhuma aplicação registrada ainda.', 'warning'); return; }
-    const { vacina, lote, validade, data, profissional } = ultimaAplicacao;
+    const { vacina, lote, validade, profissional } = ultimaAplicacao;
 
-    // Formatar datas
-    const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
     const valFmt  = validade ? new Date(validade + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const hoje    = new Date().toLocaleDateString('pt-BR');
 
-    // Abrir janela de impressão com layout 62x30mm (zebra)
     const win = window.open('', '_blank', 'width=400,height=300');
     win.document.write(`<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
 <title>Etiqueta Previmune</title>
 <style>
-  @page {
-    size: 50mm 15mm;
-    margin: 0;
+  @page { size: 50mm 30mm; margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:50mm; height:30mm; font-family:Arial,sans-serif; background:#fff; color:#000; }
+  .etiqueta-wrap {
+    width:50mm; height:30mm;
+    display:flex; flex-direction:column;
+    border:0.5px solid #999; overflow:hidden;
   }
-  * { margin:0; padding:0; box-sizing:border-box; font-weight: 700; }
-  body {
-    width: 50mm;
-    height: 15mm;
-    font-family: Arial, sans-serif;
-    font-size: 5.5pt;
-    background: #fff;
-    color: #000;
+  .et-header {
+    background:#1a56a0; color:#fff; text-align:center;
+    font-size:7.5pt; font-weight:900; padding:1mm 0; letter-spacing:0.4px;
   }
-  .etiqueta {
-    width: 50mm;
-    height: 15mm;
-    padding: 0.3mm 1mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  .et-body {
+    flex:1; display:flex; flex-direction:column;
+    justify-content:space-around; padding:0.5mm 1.5mm;
   }
-  .header {
-    background: #1a56a0;
-    color: #fff;
-    text-align: center;
-    font-size: 6.5pt;
-    font-weight: 900;
-    padding: 0.2mm 0;
-    border-bottom: 1px solid #003080;
-    letter-spacing: 0.5px;
+  .et-linha {
+    display:flex; align-items:center; font-size:6pt; font-weight:700;
+    border-bottom:0.3px solid #ddd; padding:0.4mm 0; line-height:1.2; gap:2px;
   }
-  .linha {
-    display: flex;
-    align-items: center;
-    font-size: 5pt;
-    border-bottom: 0.3px solid #ccc;
-    padding: 0.1mm 0;
-    line-height: 1.1;
-    font-weight: 700;
-  }
-  .label { font-weight: 900; min-width: 6mm; color: #000; white-space: nowrap; }
-  .valor { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 38mm; }
-  .footer {
-    background: #1a56a0;
-    height: 1.5mm;
-  }
-
-    /* ===== BOTÃO OUTLINE ORANGE ===== */
-    .btn-outline-orange {
-      background: #fff;
-      color: var(--orange);
-      border: 2px solid var(--orange);
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.875rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-    .btn-outline-orange:hover {
-      background: var(--orange);
-      color: #fff;
-    }
-    </style>
+  .et-linha:last-child { border-bottom:none; }
+  .et-lbl { font-weight:900; min-width:9mm; color:#000; white-space:nowrap; }
+  .et-val { font-weight:700; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:36mm; }
+  .et-footer { background:#1a56a0; height:2mm; }
+  @media print { @page { margin:0; } }
+</style>
 </head><body>
-<div class="etiqueta">
-  <div class="header">Previmune</div>
-  <div class="linha"><span class="label">Vac:</span>&nbsp;<span class="valor">${vacina}</span></div>
-  <div class="linha"><span class="label">Data:</span>&nbsp;<span class="valor">${dataFmt}</span></div>
-  <div class="linha"><span class="label">L:</span>&nbsp;<span class="valor">${lote}</span></div>
-  <div class="linha"><span class="label">Val:</span>&nbsp;<span class="valor">${valFmt}</span></div>
-  <div class="linha"><span class="label">Ass:</span>&nbsp;<span class="valor">${profissional}</span></div>
-  <div class="footer"></div>
+<div class="etiqueta-wrap">
+  <div class="et-header">✚ Previmune — Sistema de Vacinação</div>
+  <div class="et-body">
+    <div class="et-linha"><span class="et-lbl">Vac:</span><span class="et-val">\${vacina}</span></div>
+    <div class="et-linha"><span class="et-lbl">Lote:</span><span class="et-val">\${lote}</span></div>
+    <div class="et-linha"><span class="et-lbl">Val:</span><span class="et-val">\${valFmt}</span></div>
+    <div class="et-linha"><span class="et-lbl">Aplic.:</span><span class="et-val">\${profissional}</span></div>
+    <div class="et-linha"><span class="et-lbl">Data:</span><span class="et-val">\${hoje}</span></div>
+  </div>
+  <div class="et-footer"></div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
-</body></html>`);
+</body></html>\`);
     win.document.close();
   }
+
+  function imprimirFicha() {
+    if (!ultimaAplicacao) { toast('Nenhuma aplicação registrada ainda.', 'warning'); return; }
+    const { vacina, lote, validade, data, profissional, paciente_nome, paciente_cpf } = ultimaAplicacao;
+
+    const dataFmt = data     ? new Date(data     + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const valFmt  = validade ? new Date(validade  + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+    const hoje    = new Date().toLocaleDateString('pt-BR');
+    const nomeP   = paciente_nome || '—';
+    const cpfFmt  = paciente_cpf  || '—';
+
+    const win = window.open('', '_blank', 'width=620,height=600');
+    win.document.write(`<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Ficha de Vacinação — Previmune</title>
+<style>
+  @page { size: A5 portrait; margin: 8mm; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:Arial,sans-serif; background:#fff; color:#000; padding:6mm; }
+  .ficha-wrap {
+    width:100%; font-size:9pt; color:#000;
+    border:1.5px solid #1a56a0; border-radius:2mm; overflow:hidden;
+  }
+  .ficha-header {
+    background:#1a56a0; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    padding:4mm 6mm; gap:8px;
+  }
+  .ficha-logo-txt  { font-size:16pt; font-weight:900; letter-spacing:1px; }
+  .ficha-logo-sub  { font-size:6.5pt; opacity:0.85; margin-top:1px; }
+  .ficha-titulo {
+    background:#e8f0fb; text-align:center; font-size:8pt; font-weight:700;
+    color:#1a56a0; padding:1.5mm 0; border-bottom:1px solid #c0d0ec;
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .ficha-body { padding:3mm 5mm; }
+  .ficha-row {
+    display:flex; align-items:stretch;
+    border-bottom:1px solid #e0e8f5; min-height:8mm;
+  }
+  .ficha-row:last-child { border-bottom:none; }
+  .ficha-cell-lbl {
+    background:#f0f4fb; color:#1a56a0; font-weight:900; font-size:7pt;
+    min-width:34mm; max-width:34mm; display:flex; align-items:center;
+    padding:1mm 2.5mm; border-right:1px solid #c0d0ec; white-space:nowrap;
+  }
+  .ficha-cell-val {
+    flex:1; font-size:8pt; font-weight:700;
+    display:flex; align-items:center; padding:1mm 3mm; word-break:break-word;
+  }
+  .ficha-footer {
+    background:#1a56a0; color:#fff; text-align:center;
+    font-size:6pt; padding:1.5mm 0; opacity:0.9;
+  }
+  @media print { @page { margin:8mm; } }
+</style>
+</head><body>
+<div class="ficha-wrap">
+  <div class="ficha-header">
+    <div>
+      <div class="ficha-logo-txt">✚ Previmune</div>
+      <div class="ficha-logo-sub">Sistema de Vacinação</div>
+    </div>
+  </div>
+  <div class="ficha-titulo">Comprovante de Aplicação de Vacina</div>
+  <div class="ficha-body">
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">👤 Paciente</div>
+      <div class="ficha-cell-val">\${nomeP}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">🪪 CPF</div>
+      <div class="ficha-cell-val">\${cpfFmt}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">💉 Vacina</div>
+      <div class="ficha-cell-val">\${vacina}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">📦 Lote</div>
+      <div class="ficha-cell-val">\${lote}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">📅 Validade</div>
+      <div class="ficha-cell-val">\${valFmt}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">👩‍⚕️ Aplicador(a)</div>
+      <div class="ficha-cell-val">\${profissional}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">🗓️ Data de Aplicação</div>
+      <div class="ficha-cell-val">\${hoje}</div>
+    </div>
+  </div>
+  <div class="ficha-footer">Previmune © \${new Date().getFullYear()} — Documento gerado automaticamente</div>
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>\`);
+    win.document.close();
+  }
+
 
   // Mostrar botão imprimir ao selecionar vacina (pré-visualização)
   document.addEventListener('DOMContentLoaded', function() {
