@@ -917,6 +917,12 @@
     </div>
     <div class="nav-section">
       <div class="nav-label">Consulta</div>
+      <button class="nav-item" onclick="navTo('retiradas')">
+        <span class="icon">📤</span> Retirada de Vacinas
+      </button>
+      <button class="nav-item" onclick="navTo('relatorios')">
+        <span class="icon">📊</span> Relatórios
+      </button>
       <button class="nav-item" onclick="navTo('guia-vacinal')">
         <span class="icon">📖</span> Guia Vacinal
       </button>
@@ -997,6 +1003,13 @@
             <div class="stat-label">Faturamento Total</div>
           </div>
         </div>
+        <div class="stat-card" style="cursor:pointer" onclick="navTo('retiradas')">
+          <div class="stat-icon" style="background:#ede9fe;color:#7c3aed">📤</div>
+          <div>
+            <div class="stat-value" id="stat-retiradas">—</div>
+            <div class="stat-label">Retiradas</div>
+          </div>
+        </div>
       </div>
 
       <div class="grid-2" style="gap:16px">
@@ -1034,6 +1047,131 @@
     </div>
 
     <!-- ===== PAGE: PACIENTES ===== -->
+    
+    <!-- ===== PAGE: RETIRADAS ===== -->
+    <div id="page-retiradas" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📤 Retirada de Vacinas</div>
+            <div class="card-subtitle">Registre vacinas retiradas para aplicação externa</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalRetirada()">+ Nova Retirada</button>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="filtro-retirada-de" class="form-control" style="max-width:160px" onchange="renderRetiradas()">
+            <input type="date" id="filtro-retirada-ate" class="form-control" style="max-width:160px" onchange="renderRetiradas()">
+            <input id="searchRetirada" class="form-control" style="max-width:220px" placeholder="🔍 Buscar nome ou CPF..." oninput="renderRetiradas()">
+            <button class="btn btn-ghost btn-sm" onclick="limparFiltrosRetirada()">Limpar</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="tabela-retiradas">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Nome</th>
+                  <th>CPF</th>
+                  <th>Vacina</th>
+                  <th>Lote</th>
+                  <th>Qtd</th>
+                  <th>Valor</th>
+                  <th>Pagamento</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: RELATÓRIOS ===== -->
+    <div id="page-relatorios" class="page">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📊 Relatório de Vendas</div>
+            <div class="card-subtitle">Filtre por período, forma de pagamento e tipo</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="gerarRelatorio()">🔍 Gerar Relatório</button>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">De</label>
+              <input type="date" id="rel-de" class="form-control" style="max-width:160px">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Até</label>
+              <input type="date" id="rel-ate" class="form-control" style="max-width:160px">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Forma de Pagamento</label>
+              <select id="rel-pagamento" class="form-control" style="max-width:180px">
+                <option value="">Todas</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao_credito">Cartão Crédito</option>
+                <option value="cartao_debito">Cartão Débito</option>
+                <option value="pix">PIX</option>
+                <option value="convenio">Convênio</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Tipo</label>
+              <select id="rel-tipo" class="form-control" style="max-width:160px">
+                <option value="">Todos</option>
+                <option value="aplicacao">Aplicações</option>
+                <option value="retirada">Retiradas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs do relatório -->
+      <div class="stats-grid" id="rel-kpis" style="display:none;margin-bottom:16px">
+        <div class="stat-card">
+          <div class="stat-icon green">💰</div>
+          <div><div class="stat-value" id="rel-total">R$ 0,00</div><div class="stat-label">Total Faturado</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange">💉</div>
+          <div><div class="stat-value" id="rel-qtd-aplic">0</div><div class="stat-label">Aplicações</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ede9fe;color:#7c3aed">📤</div>
+          <div><div class="stat-value" id="rel-qtd-retir">0</div><div class="stat-label">Retiradas</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">📊</div>
+          <div><div class="stat-value" id="rel-ticket">R$ 0,00</div><div class="stat-label">Ticket Médio</div></div>
+        </div>
+      </div>
+
+      <!-- Tabela resultado -->
+      <div class="card" id="rel-resultado" style="display:none">
+        <div class="card-header">
+          <div class="card-title">Resultado</div>
+          <button class="btn btn-ghost btn-sm" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <div class="table-wrapper">
+            <table class="data-table" id="tabela-relatorio">
+              <thead>
+                <tr><th>Data</th><th>Tipo</th><th>Nome</th><th>Vacina</th><th>Qtd</th><th>Pagamento</th><th style="text-align:right">Valor</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <!-- Agrupamento por forma de pagamento -->
+          <div id="rel-por-pagamento" style="margin-top:20px;display:flex;flex-wrap:wrap;gap:12px"></div>
+        </div>
+      </div>
+    </div>
+
+
     <div id="page-pacientes" class="page">
       <div class="card">
         <div class="card-header">
@@ -1750,6 +1888,8 @@
     'nova-vacina':     { id: 'page-nova-vacina',      title: 'Adicionar Vacina' },
     'lembretes':       { id: 'page-lembretes',        title: '🔔 Lembretes de Doses' },
     'usuarios':        { id: 'page-usuarios',          title: '👥 Gerenciar Usuários' },
+    'retiradas':       { id: 'page-retiradas',        title: '📤 Retirada de Vacinas' },
+    'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
     'guia-vacinal':    { id: 'page-guia-vacinal',      title: '📖 Guia Vacinal — Calendário PNI' },
   };
 
@@ -1817,6 +1957,7 @@
     await Promise.all([fetchPacientes(), fetchVacinas(), fetchAplicacoes()]);
     renderDashboard();
     await fetchLembretes();
+    await fetchRetiradas();
   }
 
   // ===== PACIENTES =====
@@ -3240,6 +3381,93 @@
   <div class="et-footer"></div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
+
+<!-- ===== MODAL RETIRADA ===== -->
+<div id="modal-retirada" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-head">
+      <div class="modal-title">📤 Registrar Retirada de Vacina</div>
+      <button class="modal-close" onclick="fecharModalRetirada()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Vacina *</label>
+          <select id="ret-vacina-id" class="form-control" onchange="preencherDadosVacinaRetirada()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lote</label>
+          <input id="ret-lote" class="form-control" readonly placeholder="Preenchido automaticamente">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Validade</label>
+          <input id="ret-validade" class="form-control" readonly placeholder="Preenchido automaticamente">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantidade *</label>
+          <input id="ret-quantidade" type="number" min="1" value="1" class="form-control">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Nome da Pessoa *</label>
+          <input id="ret-nome" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF *</label>
+          <input id="ret-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Data da Retirada *</label>
+          <input id="ret-data" type="date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Pago (R$)</label>
+          <input id="ret-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de Pagamento</label>
+        <select id="ret-pagamento" class="form-control">
+          <option value="">Selecione...</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao_credito">Cartão de Crédito</option>
+          <option value="cartao_debito">Cartão de Débito</option>
+          <option value="pix">PIX</option>
+          <option value="convenio">Convênio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea id="ret-obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalRetirada()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRetirada()">💾 Registrar Retirada</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMPROVANTE DE RETIRADA (hidden, para impressão) ===== -->
+<div id="comprovante-retirada" style="display:none">
+  <style>
+    @media print {
+      body > *:not(#comprovante-retirada) { display: none !important; }
+      #comprovante-retirada { display: block !important; }
+    }
+  </style>
+  <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
+    <!-- conteúdo preenchido via JS -->
+  </div>
+</div>
+
 </body></html>`);
     win.document.close();
   }
@@ -3342,6 +3570,93 @@
   <div class="ficha-footer">Previmune &copy; ${new Date().getFullYear()} &#x2014; Documento gerado automaticamente</div>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
+
+<!-- ===== MODAL RETIRADA ===== -->
+<div id="modal-retirada" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-head">
+      <div class="modal-title">📤 Registrar Retirada de Vacina</div>
+      <button class="modal-close" onclick="fecharModalRetirada()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Vacina *</label>
+          <select id="ret-vacina-id" class="form-control" onchange="preencherDadosVacinaRetirada()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lote</label>
+          <input id="ret-lote" class="form-control" readonly placeholder="Preenchido automaticamente">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Validade</label>
+          <input id="ret-validade" class="form-control" readonly placeholder="Preenchido automaticamente">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantidade *</label>
+          <input id="ret-quantidade" type="number" min="1" value="1" class="form-control">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Nome da Pessoa *</label>
+          <input id="ret-nome" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF *</label>
+          <input id="ret-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Data da Retirada *</label>
+          <input id="ret-data" type="date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Pago (R$)</label>
+          <input id="ret-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de Pagamento</label>
+        <select id="ret-pagamento" class="form-control">
+          <option value="">Selecione...</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao_credito">Cartão de Crédito</option>
+          <option value="cartao_debito">Cartão de Débito</option>
+          <option value="pix">PIX</option>
+          <option value="convenio">Convênio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea id="ret-obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalRetirada()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRetirada()">💾 Registrar Retirada</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMPROVANTE DE RETIRADA (hidden, para impressão) ===== -->
+<div id="comprovante-retirada" style="display:none">
+  <style>
+    @media print {
+      body > *:not(#comprovante-retirada) { display: none !important; }
+      #comprovante-retirada { display: block !important; }
+    }
+  </style>
+  <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
+    <!-- conteúdo preenchido via JS -->
+  </div>
+</div>
+
 </body></html>`);
     win.document.close();
   }
@@ -3386,6 +3701,368 @@
     }
     _navTo(page);
   };
+
+
+  // =============================================
+  // RETIRADAS
+  // =============================================
+  let retiradas = [];
+  let ultimaRetirada = null;
+
+  async function fetchRetiradas() {
+    try {
+      if (!db) { retiradas = []; renderRetiradas(); return; }
+      const { data, error } = await db.from('retiradas').select('*').order('id', { ascending: false });
+      if (error) throw error;
+      retiradas = data || [];
+    } catch(e) {
+      console.error('fetchRetiradas:', e);
+      retiradas = [];
+    }
+    renderRetiradas();
+    // Atualiza stat
+    const el = document.getElementById('stat-retiradas');
+    if (el) el.textContent = retiradas.length;
+  }
+
+  function renderRetiradas() {
+    const de = document.getElementById('filtro-retirada-de')?.value || '';
+    const ate = document.getElementById('filtro-retirada-ate')?.value || '';
+    const q = (document.getElementById('searchRetirada')?.value || '').toLowerCase();
+    let lista = retiradas.filter(r => {
+      if (de && r.data < de) return false;
+      if (ate && r.data > ate) return false;
+      if (q && !r.nome_pessoa?.toLowerCase().includes(q) && !r.cpf?.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const tbody = document.querySelector('#tabela-retiradas tbody');
+    if (!tbody) return;
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--gray-400)">Nenhuma retirada encontrada</td></tr>';
+      return;
+    }
+    const fmtPag = { dinheiro:'Dinheiro', cartao_credito:'Crédito', cartao_debito:'Débito', pix:'PIX', convenio:'Convênio' };
+    tbody.innerHTML = lista.map(r => {
+      const dt = r.data ? new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const val = r.valor ? 'R$ ' + Number(r.valor).toFixed(2).replace('.',',') : '—';
+      return `<tr>
+        <td>${dt}</td>
+        <td>${esc(r.nome_pessoa||'—')}</td>
+        <td>${esc(r.cpf||'—')}</td>
+        <td>${esc(r.vacina_nome||'—')}</td>
+        <td>${esc(r.lote||'—')}</td>
+        <td>${r.quantidade||1}</td>
+        <td>${val}</td>
+        <td>${fmtPag[r.forma_pagamento]||r.forma_pagamento||'—'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="imprimirComprovante(${r.id})" title="Imprimir comprovante">🖨️</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirRetirada(${r.id})" title="Excluir">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function limparFiltrosRetirada() {
+    ['filtro-retirada-de','filtro-retirada-ate','searchRetirada'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    renderRetiradas();
+  }
+
+  function abrirModalRetirada() {
+    // Popular select de vacinas
+    const sel = document.getElementById('ret-vacina-id');
+    if (sel) {
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        (vacinas||[]).filter(v=>Number(v.stock||0)>0).map(v =>
+          `<option value="${v.id}">${esc(v.nome)} (Estoque: ${v.stock})</option>`
+        ).join('');
+    }
+    // Data de hoje
+    const hoje = new Date().toISOString().slice(0,10);
+    const retData = document.getElementById('ret-data');
+    if (retData) retData.value = hoje;
+    // Limpar campos
+    ['ret-lote','ret-validade','ret-nome','ret-cpf','ret-valor','ret-obs'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const retQtd = document.getElementById('ret-quantidade');
+    if (retQtd) retQtd.value = 1;
+    const retPag = document.getElementById('ret-pagamento');
+    if (retPag) retPag.value = '';
+    document.getElementById('modal-retirada').style.display = 'flex';
+  }
+
+  function fecharModalRetirada() {
+    document.getElementById('modal-retirada').style.display = 'none';
+  }
+
+  function preencherDadosVacinaRetirada() {
+    const id = Number(document.getElementById('ret-vacina-id').value || 0);
+    const v = findVacina(id);
+    if (!v) {
+      document.getElementById('ret-lote').value = '';
+      document.getElementById('ret-validade').value = '';
+      return;
+    }
+    document.getElementById('ret-lote').value = v.lote || '';
+    if (v.validade) {
+      const parts = v.validade.split('-');
+      document.getElementById('ret-validade').value = parts.length === 3
+        ? parts[2]+'/'+parts[1]+'/'+parts[0]
+        : v.validade;
+    } else {
+      document.getElementById('ret-validade').value = '';
+    }
+    const retValor = document.getElementById('ret-valor');
+    if (retValor && v.preco) retValor.value = Number(v.preco).toFixed(2);
+  }
+
+  function mascaraCPF(el) {
+    let v = el.value.replace(/\D/g,'');
+    if (v.length > 11) v = v.slice(0,11);
+    v = v.replace(/(\d{3})(\d)/,'$1.$2');
+    v = v.replace(/(\d{3})(\d)/,'$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    el.value = v;
+  }
+
+  async function salvarRetirada() {
+    const vacina_id = Number(document.getElementById('ret-vacina-id').value || 0);
+    const nome_pessoa = document.getElementById('ret-nome').value.trim();
+    const cpf = document.getElementById('ret-cpf').value.trim();
+    const data = document.getElementById('ret-data').value;
+    const quantidade = Number(document.getElementById('ret-quantidade').value || 1);
+    const valor = Number(document.getElementById('ret-valor').value || 0);
+    const forma_pagamento = document.getElementById('ret-pagamento').value;
+    const obs = document.getElementById('ret-obs').value.trim();
+
+    if (!vacina_id) { toast('Selecione uma vacina.', 'warning'); return; }
+    if (!nome_pessoa) { toast('Informe o nome da pessoa.', 'warning'); return; }
+    if (!cpf) { toast('Informe o CPF.', 'warning'); return; }
+    if (!data) { toast('Informe a data.', 'warning'); return; }
+    if (quantidade <= 0) { toast('Quantidade inválida.', 'warning'); return; }
+
+    const v = findVacina(vacina_id);
+    if (!v) { toast('Vacina não encontrada.', 'error'); return; }
+    if (Number(v.stock||0) < quantidade) {
+      toast('Estoque insuficiente! Disponível: ' + v.stock + ' unidade(s).', 'error');
+      return;
+    }
+
+    try {
+      // Inserir na tabela retiradas
+      const payload = {
+        vacina_id, vacina_nome: v.nome, lote: v.lote||null,
+        validade: v.validade||null, nome_pessoa, cpf, data, quantidade,
+        valor: valor||0, forma_pagamento: forma_pagamento||null, obs: obs||null
+      };
+      const { data: inserted, error: e1 } = await db.from('retiradas').insert([payload]).select().single();
+      if (e1) throw e1;
+
+      // Abater no estoque
+      const novoStock = Number(v.stock||0) - quantidade;
+      const { error: e2 } = await db.from('vacinas').update({ stock: novoStock }).match({ id: vacina_id });
+      if (e2) throw e2;
+
+      ultimaRetirada = { ...payload, id: inserted?.id };
+      fecharModalRetirada();
+      toast('Retirada registrada com sucesso!', 'success');
+      await fetchVacinas();
+      await fetchRetiradas();
+      renderDashboard();
+
+      // Perguntar se quer imprimir
+      setTimeout(() => {
+        if (window.confirm('Deseja imprimir o comprovante de retirada?')) {
+          imprimirComprovanteObj(ultimaRetirada);
+        }
+      }, 400);
+    } catch(err) {
+      console.error(err);
+      toast('Erro ao registrar retirada: ' + (err.message||err), 'error');
+    }
+  }
+
+  async function excluirRetirada(id) {
+    if (!await confirm('Excluir esta retirada?')) return;
+    try {
+      const { error } = await db.from('retiradas').delete().match({ id });
+      if (error) throw error;
+      toast('Retirada excluída.', 'success');
+      await fetchRetiradas();
+    } catch(e) { toast('Erro ao excluir: ' + e.message, 'error'); }
+  }
+
+  function imprimirComprovante(id) {
+    const r = retiradas.find(x => x.id === id);
+    if (!r) return;
+    imprimirComprovanteObj(r);
+  }
+
+  function imprimirComprovanteObj(r) {
+    const dt = r.data ? new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const agora = new Date().toLocaleString('pt-BR');
+    const fmtPag = { dinheiro:'Dinheiro', cartao_credito:'Cartão de Crédito', cartao_debito:'Cartão de Débito', pix:'PIX', convenio:'Convênio' };
+    const valFmt = r.valor ? 'R$ ' + Number(r.valor).toFixed(2).replace('.',',') : 'R$ 0,00';
+
+    document.getElementById('comprovante-conteudo').innerHTML = `
+      <div style="text-align:center;margin-bottom:24px;border-bottom:2px solid #e76b1f;padding-bottom:20px">
+        <div style="font-size:2.5rem;margin-bottom:4px">💉</div>
+        <div style="font-size:1.6rem;font-weight:800;color:#e76b1f;letter-spacing:-0.5px">Previmune</div>
+        <div style="font-size:0.85rem;color:#71717a;margin-top:4px">Sistema de Vacinação</div>
+      </div>
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:1.1rem;font-weight:700;color:#27272a;text-transform:uppercase;letter-spacing:1px">Comprovante de Retirada de Vacina</div>
+        <div style="font-size:0.8rem;color:#71717a;margin-top:4px">Emitido em: ${agora}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+        ${[
+          ['Vacina', r.vacina_nome||'—'],
+          ['Lote', r.lote||'—'],
+          ['Validade', r.validade ? (() => { const p=r.validade.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:r.validade; })() : '—'],
+          ['Quantidade', r.quantidade||1],
+          ['',''],
+          ['Nome', r.nome_pessoa||'—'],
+          ['CPF', r.cpf||'—'],
+          ['Data da Retirada', dt],
+          ['',''],
+          ['Valor Pago', valFmt],
+          ['Forma de Pagamento', fmtPag[r.forma_pagamento]||r.forma_pagamento||'—'],
+        ].map(([k,v]) => k ? `<tr style="border-bottom:1px solid #f4f4f5">
+          <td style="padding:8px 0;font-size:0.85rem;color:#71717a;width:45%;font-weight:500">${k}</td>
+          <td style="padding:8px 0;font-size:0.9rem;color:#27272a;font-weight:600">${v}</td>
+        </tr>` : '<tr><td colspan="2" style="padding:4px 0"></td></tr>').join('')}
+      </table>
+      ${r.obs ? `<div style="background:#f4f4f5;border-radius:8px;padding:12px;font-size:0.85rem;color:#52525b;margin-bottom:20px"><strong>Observações:</strong> ${esc(r.obs)}</div>` : ''}
+      <div style="border-top:2px dashed #e4e4e7;padding-top:16px;text-align:center">
+        <div style="font-size:0.75rem;color:#a1a1aa">Este comprovante confirma a retirada da vacina acima identificada.</div>
+        <div style="font-size:0.75rem;color:#a1a1aa;margin-top:4px">Previmune — Sistema de Vacinação</div>
+      </div>
+    `;
+    const el = document.getElementById('comprovante-retirada');
+    el.style.display = 'block';
+    window.print();
+    el.style.display = 'none';
+  }
+
+  // =============================================
+  // RELATÓRIOS
+  // =============================================
+  async function gerarRelatorio() {
+    const de = document.getElementById('rel-de').value;
+    const ate = document.getElementById('rel-ate').value;
+    const pagamento = document.getElementById('rel-pagamento').value;
+    const tipo = document.getElementById('rel-tipo').value;
+
+    if (!de || !ate) { toast('Selecione o período (de / até).', 'warning'); return; }
+
+    let itens = [];
+
+    // Aplicações
+    if (!tipo || tipo === 'aplicacao') {
+      let filtAplic = aplicacoes.filter(a => {
+        if (a.data_aplicacao < de || a.data_aplicacao > ate) return false;
+        if (pagamento && a.forma_pagamento !== pagamento) return false;
+        return true;
+      });
+      itens = itens.concat(filtAplic.map(a => ({
+        data: a.data_aplicacao,
+        tipo_label: 'Aplicação',
+        tipo_key: 'aplicacao',
+        nome: (() => { const p = findPaciente(a.paciente_id); return p ? p.nome : 'ID:'+a.paciente_id; })(),
+        vacina: a.vacina_text || a.vacina || '—',
+        quantidade: a.quantidade || 1,
+        forma_pagamento: a.forma_pagamento,
+        valor: Number(a.valor || 0)
+      })));
+    }
+
+    // Retiradas
+    if (!tipo || tipo === 'retirada') {
+      let filtRetir = retiradas.filter(r => {
+        if (r.data < de || r.data > ate) return false;
+        if (pagamento && r.forma_pagamento !== pagamento) return false;
+        return true;
+      });
+      itens = itens.concat(filtRetir.map(r => ({
+        data: r.data,
+        tipo_label: 'Retirada',
+        tipo_key: 'retirada',
+        nome: r.nome_pessoa || '—',
+        vacina: r.vacina_nome || '—',
+        quantidade: r.quantidade || 1,
+        forma_pagamento: r.forma_pagamento,
+        valor: Number(r.valor || 0)
+      })));
+    }
+
+    // Ordenar por data
+    itens.sort((a,b) => a.data > b.data ? -1 : 1);
+
+    const totalFaturado = itens.reduce((s,i) => s+i.valor, 0);
+    const qtdAplic = itens.filter(i=>i.tipo_key==='aplicacao').length;
+    const qtdRetir = itens.filter(i=>i.tipo_key==='retirada').length;
+    const ticketMedio = itens.length ? totalFaturado / itens.length : 0;
+
+    const fmt = v => 'R$ ' + v.toFixed(2).replace('.',',');
+    const fmtPag = { dinheiro:'Dinheiro', cartao_credito:'Crédito', cartao_debito:'Débito', pix:'PIX', convenio:'Convênio' };
+
+    document.getElementById('rel-total').textContent = fmt(totalFaturado);
+    document.getElementById('rel-qtd-aplic').textContent = qtdAplic;
+    document.getElementById('rel-qtd-retir').textContent = qtdRetir;
+    document.getElementById('rel-ticket').textContent = fmt(ticketMedio);
+    document.getElementById('rel-kpis').style.display = 'grid';
+
+    const tbody = document.querySelector('#tabela-relatorio tbody');
+    if (tbody) {
+      tbody.innerHTML = itens.length
+        ? itens.map(i => {
+            const dt = i.data ? new Date(i.data+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+            const badge = i.tipo_key === 'aplicacao'
+              ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">💉 Aplicação</span>'
+              : '<span style="background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">📤 Retirada</span>';
+            return `<tr>
+              <td>${dt}</td>
+              <td>${badge}</td>
+              <td>${esc(i.nome)}</td>
+              <td>${esc(i.vacina)}</td>
+              <td>${i.quantidade}</td>
+              <td>${fmtPag[i.forma_pagamento]||i.forma_pagamento||'—'}</td>
+              <td style="text-align:right;font-weight:600">${fmt(i.valor)}</td>
+            </tr>`;
+          }).join('')
+        : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--gray-400)">Nenhum resultado encontrado</td></tr>';
+    }
+
+    // Agrupamento por forma de pagamento
+    const grupos = {};
+    itens.forEach(i => {
+      const k = i.forma_pagamento || 'nao_informado';
+      if (!grupos[k]) grupos[k] = { total: 0, qtd: 0 };
+      grupos[k].total += i.valor;
+      grupos[k].qtd++;
+    });
+    const divPag = document.getElementById('rel-por-pagamento');
+    if (divPag) {
+      divPag.innerHTML = Object.entries(grupos).map(([k,v]) =>
+        `<div style="background:var(--gray-100);border-radius:10px;padding:12px 16px;min-width:150px">
+          <div style="font-size:0.8rem;color:var(--gray-500);font-weight:500">${fmtPag[k]||k}</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--gray-900);margin-top:2px">${fmt(v.total)}</div>
+          <div style="font-size:0.75rem;color:var(--gray-400)">${v.qtd} transação(ões)</div>
+        </div>`
+      ).join('');
+    }
+
+    document.getElementById('rel-resultado').style.display = 'block';
+  }
+
+  function imprimirRelatorio() {
+    window.print();
+  }
+
+
 </script>
 
 <!-- MODAL: NOVO / EDITAR USUÁRIO -->
@@ -3438,6 +4115,93 @@
       <button class="btn btn-ghost" onclick="fecharModalUsuario()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
     </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL RETIRADA ===== -->
+<div id="modal-retirada" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-head">
+      <div class="modal-title">📤 Registrar Retirada de Vacina</div>
+      <button class="modal-close" onclick="fecharModalRetirada()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Vacina *</label>
+          <select id="ret-vacina-id" class="form-control" onchange="preencherDadosVacinaRetirada()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lote</label>
+          <input id="ret-lote" class="form-control" readonly placeholder="Preenchido automaticamente">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Validade</label>
+          <input id="ret-validade" class="form-control" readonly placeholder="Preenchido automaticamente">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantidade *</label>
+          <input id="ret-quantidade" type="number" min="1" value="1" class="form-control">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Nome da Pessoa *</label>
+          <input id="ret-nome" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF *</label>
+          <input id="ret-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Data da Retirada *</label>
+          <input id="ret-data" type="date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Pago (R$)</label>
+          <input id="ret-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de Pagamento</label>
+        <select id="ret-pagamento" class="form-control">
+          <option value="">Selecione...</option>
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao_credito">Cartão de Crédito</option>
+          <option value="cartao_debito">Cartão de Débito</option>
+          <option value="pix">PIX</option>
+          <option value="convenio">Convênio</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea id="ret-obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalRetirada()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarRetirada()">💾 Registrar Retirada</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMPROVANTE DE RETIRADA (hidden, para impressão) ===== -->
+<div id="comprovante-retirada" style="display:none">
+  <style>
+    @media print {
+      body > *:not(#comprovante-retirada) { display: none !important; }
+      #comprovante-retirada { display: block !important; }
+    }
+  </style>
+  <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
+    <!-- conteúdo preenchido via JS -->
   </div>
 </div>
 
