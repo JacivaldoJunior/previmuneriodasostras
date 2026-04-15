@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Previmune — Sistema de Vacinação</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -1150,13 +1151,25 @@
         </div>
       </div>
 
-      <!-- Tabela resultado -->
+      <!-- Gráfico + Tabela resultado -->
       <div class="card" id="rel-resultado" style="display:none">
         <div class="card-header">
           <div class="card-title">Resultado</div>
           <button class="btn btn-ghost btn-sm" onclick="imprimirRelatorio()">🖨️ Imprimir</button>
         </div>
         <div class="card-body" style="padding-top:0">
+
+          <!-- Gráfico de colunas por dia -->
+          <div style="background:var(--gray-50);border-radius:12px;padding:16px;margin-bottom:20px">
+            <div style="font-weight:600;color:var(--gray-800);font-size:0.9rem;margin-bottom:12px">📊 Faturamento por Dia</div>
+            <div style="position:relative;height:220px">
+              <canvas id="grafico-relatorio"></canvas>
+            </div>
+          </div>
+
+          <!-- Agrupamento por forma de pagamento -->
+          <div id="rel-por-pagamento" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:12px"></div>
+
           <div class="table-wrapper">
             <table class="data-table" id="tabela-relatorio">
               <thead>
@@ -1165,8 +1178,6 @@
               <tbody></tbody>
             </table>
           </div>
-          <!-- Agrupamento por forma de pagamento -->
-          <div id="rel-por-pagamento" style="margin-top:20px;display:flex;flex-wrap:wrap;gap:12px"></div>
         </div>
       </div>
     </div>
@@ -1766,7 +1777,7 @@
     db = null;
   }
 
-  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [];
+  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [];
   let confirmResolve = null;
 
   // ===== ESTADO DE LOGIN =====
@@ -3706,7 +3717,6 @@
   // =============================================
   // RETIRADAS
   // =============================================
-  let retiradas = [];
   let ultimaRetirada = null;
 
   async function fetchRetiradas() {
@@ -4056,6 +4066,77 @@
     }
 
     document.getElementById('rel-resultado').style.display = 'block';
+
+    // ===== GRÁFICO DE COLUNAS POR DIA =====
+    // Agrupar faturamento por data
+    const porDia = {};
+    itens.forEach(i => {
+      if (!porDia[i.data]) porDia[i.data] = { aplicacao: 0, retirada: 0 };
+      porDia[i.data][i.tipo_key] += i.valor;
+    });
+    const dias = Object.keys(porDia).sort();
+    const labelsChart = dias.map(d => {
+      const p = d.split('-');
+      return p.length === 3 ? p[2]+'/'+p[1] : d;
+    });
+    const dataAplic  = dias.map(d => porDia[d].aplicacao || 0);
+    const dataRetir  = dias.map(d => porDia[d].retirada || 0);
+
+    const ctx = document.getElementById('grafico-relatorio').getContext('2d');
+    if (window._chartRelatorio) {
+      window._chartRelatorio.destroy();
+    }
+    window._chartRelatorio = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labelsChart,
+        datasets: [
+          {
+            label: 'Aplicações (R$)',
+            data: dataAplic,
+            backgroundColor: 'rgba(231,107,31,0.80)',
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Retiradas (R$)',
+            data: dataRetir,
+            backgroundColor: 'rgba(124,58,237,0.75)',
+            borderRadius: 6,
+            borderSkipped: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 12 }, padding: 16 }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' R$ ' + ctx.parsed.y.toFixed(2).replace('.',',')
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: {
+              font: { size: 11 },
+              callback: v => 'R$ ' + v.toFixed(0)
+            }
+          }
+        }
+      }
+    });
   }
 
   function imprimirRelatorio() {
