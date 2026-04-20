@@ -1363,15 +1363,46 @@
     <!-- ===== PAGE: PLANOS VACINAIS ===== -->
     <div id="page-planos-vacinais" class="page">
 
-      <!-- Seletor de faixa etária -->
+      <!-- Seletor de modo: faixa única ou intervalo -->
       <div class="card" style="margin-bottom:20px">
         <div class="card-body" style="padding:20px 24px">
-          <div style="font-weight:700;font-size:0.95rem;color:var(--gray-800);margin-bottom:14px">🗓️ Selecione a faixa etária do paciente</div>
-          <div id="planos-faixas" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+            <div style="font-weight:700;font-size:0.95rem;color:var(--gray-800)">🗓️ Plano Vacinal</div>
+            <div style="display:flex;gap:8px">
+              <button id="btn-modo-unico" class="btn btn-primary btn-sm" onclick="setModoPlano('unico')" style="font-size:0.8rem">📌 Faixa única</button>
+              <button id="btn-modo-intervalo" class="btn btn-outline-orange btn-sm" onclick="setModoPlano('intervalo')" style="font-size:0.8rem">📅 Intervalo de faixas</button>
+            </div>
+          </div>
+
+          <!-- Modo faixa única -->
+          <div id="planos-modo-unico">
+            <div style="font-size:0.82rem;color:var(--gray-500);margin-bottom:10px">Selecione a faixa etária do paciente:</div>
+            <div id="planos-faixas" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          </div>
+
+          <!-- Modo intervalo -->
+          <div id="planos-modo-intervalo" style="display:none">
+            <div style="font-size:0.82rem;color:var(--gray-500);margin-bottom:12px">Selecione o intervalo de faixas para o plano vacinal completo:</div>
+            <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap">
+              <div style="flex:1;min-width:180px">
+                <label style="font-size:0.78rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">De (faixa inicial)</label>
+                <select id="planos-de" class="form-control" style="font-size:0.85rem" onchange="renderIntervalo()">
+                </select>
+              </div>
+              <div style="flex:1;min-width:180px">
+                <label style="font-size:0.78rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px">Até (faixa final)</label>
+                <select id="planos-ate" class="form-control" style="font-size:0.85rem" onchange="renderIntervalo()">
+                </select>
+              </div>
+              <div>
+                <button class="btn btn-primary btn-sm" onclick="renderIntervalo()" style="font-size:0.85rem;white-space:nowrap">🔍 Ver Plano</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Vacinas da faixa selecionada -->
+      <!-- Vacinas da faixa selecionada (modo único) -->
       <div id="planos-detalhe" style="display:none">
         <div class="card">
           <div class="card-header" style="background:linear-gradient(135deg,var(--orange-50),var(--orange-100));border-bottom:2px solid var(--orange-200)">
@@ -1385,6 +1416,27 @@
           </div>
           <div class="card-body" style="padding:0">
             <div id="planos-vacinas-lista"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vacinas do intervalo (modo intervalo) -->
+      <div id="planos-intervalo-detalhe" style="display:none">
+        <div class="card">
+          <div class="card-header" style="background:linear-gradient(135deg,var(--orange-50),var(--orange-100));border-bottom:2px solid var(--orange-200)">
+            <div>
+              <div class="card-title" id="planos-intervalo-titulo" style="font-size:1.1rem;color:var(--orange-dark)">—</div>
+              <div class="card-subtitle" id="planos-intervalo-subtitulo">—</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="gerarOrcamentoIntervalo()">
+              📄 Gerar Orçamento Completo
+            </button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div id="planos-intervalo-lista"></div>
+            <!-- Totalizador -->
+            <div id="planos-intervalo-total" style="padding:16px 20px;border-top:2px solid var(--orange-200);background:var(--orange-50);display:flex;justify-content:flex-end;align-items:center;gap:24px">
+            </div>
           </div>
         </div>
       </div>
@@ -1602,7 +1654,10 @@
             <div class="card-title">Estoque de Vacinas</div>
             <div class="card-subtitle">Gerencie lotes, quantidades e validades</div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button id="btn-mostrar-zeradas" class="btn btn-ghost btn-sm" onclick="toggleZeradas()" style="font-size:0.78rem;color:var(--gray-500);border:1px dashed var(--gray-300);padding:4px 10px;white-space:nowrap">
+              👁️ Mostrar zeradas
+            </button>
             <div class="search-wrap">
               <span class="icon-search">🔍</span>
               <input class="form-control" style="width:240px" id="searchEstoque" placeholder="Buscar vacina, lote, fornecedor..." oninput="renderVacinas()">
@@ -1993,6 +2048,7 @@
   }
 
   let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [], agendamentos = [], orcamentos = [];
+  let _mostrarZeradas = false;
 
   const CALENDARIO_VACINAL = [{"faixa": "Ao nascer", "desc": "Recém-nascido", "vacinas": [{"nome": "BCG", "doses": "Dose única", "obs": "Proteção contra formas graves de tuberculose"}, {"nome": "Hepatite B", "doses": "1ª dose", "obs": "Primeira dose ao nascer"}]}, {"faixa": "1 mês", "desc": "1 mês de vida", "vacinas": [{"nome": "Hepatite B", "doses": "2ª dose", "obs": "Segunda dose"}]}, {"faixa": "2 meses", "desc": "2 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "1ª dose", "obs": "Difteria, Tétano, Coqueluche, Hib, Hepatite B"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "1ª dose", "obs": "Pólio injetável"}, {"nome": "Pneumocócica 13-valente", "doses": "1ª dose", "obs": "Previne pneumonia, meningite, otite"}, {"nome": "Rotavírus", "doses": "1ª dose", "obs": "Previne diarreia grave por rotavírus"}]}, {"faixa": "3 meses", "desc": "3 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "1ª dose", "obs": "Previne meningite meningocócica C"}, {"nome": "Meningocócica ACWY", "doses": "1ª dose", "obs": "Sorogrupos A, C, W e Y (particular)"}]}, {"faixa": "4 meses", "desc": "4 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Pneumocócica 13-valente", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Rotavírus", "doses": "2ª dose", "obs": "Segunda e última dose"}]}, {"faixa": "5 meses", "desc": "5 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Meningocócica ACWY", "doses": "2ª dose", "obs": "Segunda dose (particular)"}]}, {"faixa": "6 meses", "desc": "6 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "Influenza", "doses": "1ª dose", "obs": "Anual — 2 doses no 1º ano (intervalo 30 dias)"}, {"nome": "Hepatite B", "doses": "3ª dose", "obs": "Apenas se não fez esquema pentavalente completo"}]}, {"faixa": "7 meses", "desc": "7 meses de vida", "vacinas": [{"nome": "Influenza", "doses": "2ª dose", "obs": "Somente no primeiro ano de vacinação, 30 dias após a 1ª"}]}, {"faixa": "9 meses", "desc": "9 meses de vida", "vacinas": [{"nome": "Febre Amarela", "doses": "1ª dose", "obs": "Dose inicial (reforço aos 4 anos)"}, {"nome": "Meningocócica B", "doses": "3ª dose", "obs": "Esquema 2+1 (particular)"}]}, {"faixa": "12 meses", "desc": "1 ano de vida", "vacinas": [{"nome": "Tríplice Viral (SCR)", "doses": "1ª dose", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Pneumocócica 13-valente", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica C conjugada", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Dose de reforço (particular)"}, {"nome": "Varicela", "doses": "1ª dose", "obs": "Primeira dose da Catapora"}, {"nome": "Hepatite A", "doses": "1ª dose", "obs": "Dose única no calendário público; 2 doses no particular"}]}, {"faixa": "15 meses", "desc": "15 meses de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "1º Reforço", "obs": "Reforço de Difteria, Tétano, Coqueluche"}, {"nome": "VOP (Poliomielite Oral)", "doses": "1º Reforço", "obs": "Gotinhas de reforço"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Segunda dose (calendário particular)"}, {"nome": "Tetra Viral (SCRV)", "doses": "Dose única", "obs": "SCR + Varicela (alternativa à SCR + Varicela separados)"}]}, {"faixa": "18 meses", "desc": "18 meses de vida", "vacinas": [{"nome": "Meningocócica B", "doses": "Reforço", "obs": "Reforço (particular)"}, {"nome": "Meningocócica ACWY", "doses": "Reforço adicional", "obs": "Conforme indicação médica"}]}, {"faixa": "4 anos", "desc": "4 anos de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "2º Reforço", "obs": "Último reforço da DTP"}, {"nome": "VOP (Poliomielite Oral)", "doses": "2º Reforço", "obs": "Último reforço da Pólio"}, {"nome": "Varicela", "doses": "2ª dose", "obs": "Segunda dose da Catapora"}, {"nome": "Tríplice Viral (SCR)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Febre Amarela", "doses": "Reforço", "obs": "Reforço (se fez a 1ª antes dos 5 anos)"}]}, {"faixa": "5 anos", "desc": "5 anos de vida", "vacinas": [{"nome": "Pneumocócica 23-valente", "doses": "Dose única", "obs": "Apenas grupos de risco"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Repetir todo ano"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Se não completou o esquema"}]}, {"faixa": "9 anos", "desc": "9 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "1ª dose", "obs": "Meninas — Previne HPV tipos 6,11,16,18"}, {"nome": "HPV Nonavalente", "doses": "1ª dose", "obs": "Particular — 9 tipos de HPV"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Reforço a cada 5 anos"}]}, {"faixa": "11 anos", "desc": "11 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "2ª dose", "obs": "Meninos também (particular/público conforme calendário)"}, {"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "Reforço", "obs": "Proteção reforçada contra Coqueluche"}, {"nome": "Meningocócica B", "doses": "Reforço", "obs": "Particular — reforço adolescente"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Particular"}]}, {"faixa": "Gestantes", "desc": "Durante a gestação", "vacinas": [{"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "A cada gestação", "obs": "A partir da 20ª semana — protege o bebê contra Coqueluche"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Qualquer trimestre"}, {"nome": "Hepatite B", "doses": "Conforme esquema", "obs": "Se não vacinada anteriormente"}, {"nome": "COVID-19", "doses": "Conforme protocolo", "obs": "Segura e recomendada na gestação"}]}, {"faixa": "Adultos (20–59 anos)", "desc": "Adultos de 20 a 59 anos", "vacinas": [{"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Tríplice Viral (SCR)", "doses": "2 doses (se não vacinado)", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Febre Amarela", "doses": "Dose única vitalícia", "obs": "Reforço único se necessário"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Todo ano"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}, {"faixa": "Idosos (60+ anos)", "desc": "60 anos ou mais", "vacinas": [{"nome": "Influenza", "doses": "Dose anual", "obs": "Alta prioridade"}, {"nome": "Pneumocócica 23-valente", "doses": "1 a 2 doses", "obs": "Prevenção de pneumonia grave"}, {"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Herpes Zóster", "doses": "2 doses", "obs": "Intervalo de 2–6 meses (a partir de 50 anos)"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}];
   let _faixaSelecionada = null;
@@ -2327,17 +2383,26 @@
     }
   }
 
+  function toggleZeradas() {
+    _mostrarZeradas = !_mostrarZeradas;
+    const btn = document.getElementById('btn-mostrar-zeradas');
+    if (btn) btn.innerHTML = _mostrarZeradas ? '🙈 Ocultar zeradas' : '👁️ Mostrar zeradas';
+    renderVacinas();
+  }
+
   function renderVacinas() {
     const tbody = document.querySelector('#tabela-vacinas tbody');
     const q = (document.getElementById('searchEstoque')?.value || '').toLowerCase().trim();
+    // Filtro base: se não está mostrando zeradas, oculta stock <= 0
+    let listaFiltrada = _mostrarZeradas ? vacinas : vacinas.filter(v => Number(v.stock||0) > 0);
     const lista = q
-      ? vacinas.filter(v =>
+      ? listaFiltrada.filter(v =>
           (v.nome||'').toLowerCase().includes(q) ||
           (v.lote||'').toLowerCase().includes(q) ||
           (v.fornecedor||'').toLowerCase().includes(q) ||
           (v.nota_fiscal||'').toLowerCase().includes(q)
         )
-      : vacinas;
+      : listaFiltrada;
     if (!lista.length) {
       tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><p>${q ? 'Nenhuma vacina encontrada para "' + q + '"' : 'Nenhuma vacina no estoque'}</p></div></td></tr>`;
       return;
@@ -5390,13 +5455,169 @@
   // =============================================
 
   function initPlanosVacinais() {
+    // Popular botões de faixa única
     const cont = document.getElementById('planos-faixas');
-    if (!cont) return;
-    cont.innerHTML = CALENDARIO_VACINAL.map((faixa, idx) => `
-      <button class="faixa-btn" onclick="selecionarFaixa(${idx})" id="faixa-btn-${idx}">
-        ${faixa.faixa}
-      </button>
-    `).join('');
+    if (cont) {
+      cont.innerHTML = CALENDARIO_VACINAL.map((faixa, idx) => `
+        <button class="faixa-btn" onclick="selecionarFaixa(${idx})" id="faixa-btn-${idx}">
+          ${faixa.faixa}
+        </button>
+      `).join('');
+    }
+    // Popular selects de intervalo
+    const selDe  = document.getElementById('planos-de');
+    const selAte = document.getElementById('planos-ate');
+    if (selDe && selAte) {
+      const opts = CALENDARIO_VACINAL.map((f, i) => `<option value="${i}">${f.faixa}</option>`).join('');
+      selDe.innerHTML  = opts;
+      selAte.innerHTML = opts;
+      selAte.selectedIndex = Math.min(5, CALENDARIO_VACINAL.length - 1); // padrão: até 6 meses
+    }
+  }
+
+  function setModoPlano(modo) {
+    const btnUnico     = document.getElementById('btn-modo-unico');
+    const btnIntervalo = document.getElementById('btn-modo-intervalo');
+    const modoUnico    = document.getElementById('planos-modo-unico');
+    const modoInt      = document.getElementById('planos-modo-intervalo');
+    const detalhe      = document.getElementById('planos-detalhe');
+    const detInt       = document.getElementById('planos-intervalo-detalhe');
+    const empty        = document.getElementById('planos-empty');
+    if (modo === 'unico') {
+      btnUnico.className     = 'btn btn-primary btn-sm';
+      btnIntervalo.className = 'btn btn-outline-orange btn-sm';
+      modoUnico.style.display = '';
+      modoInt.style.display   = 'none';
+      detInt.style.display    = 'none';
+      empty.style.display     = '';
+      detalhe.style.display   = 'none';
+    } else {
+      btnIntervalo.className = 'btn btn-primary btn-sm';
+      btnUnico.className     = 'btn btn-outline-orange btn-sm';
+      modoUnico.style.display = 'none';
+      modoInt.style.display   = '';
+      detalhe.style.display   = 'none';
+      empty.style.display     = 'none';
+      renderIntervalo();
+    }
+  }
+
+  function renderIntervalo() {
+    const selDe  = document.getElementById('planos-de');
+    const selAte = document.getElementById('planos-ate');
+    if (!selDe || !selAte) return;
+    const idxDe  = parseInt(selDe.value);
+    const idxAte = parseInt(selAte.value);
+    if (isNaN(idxDe) || isNaN(idxAte)) return;
+    const de  = Math.min(idxDe, idxAte);
+    const ate = Math.max(idxDe, idxAte);
+
+    const faixasDe  = CALENDARIO_VACINAL[de].faixa;
+    const faixasAte = CALENDARIO_VACINAL[ate].faixa;
+
+    // Coletar todas as vacinas do intervalo agrupadas por faixa
+    let totalVacinas = 0, totalValor = 0, totalComEstoque = 0;
+    const gruposHtml = [];
+
+    for (let i = de; i <= ate; i++) {
+      const faixa = CALENDARIO_VACINAL[i];
+      const linhas = faixa.vacinas.map(v => {
+        const vEstoque = (vacinas||[]).find(vv => _matchVacina2(vv.nome, v.nome));
+        const hasEstoque = vEstoque && vEstoque.stock > 0;
+        const valor = vEstoque && vEstoque.preco ? Number(vEstoque.preco) : 0;
+        if (valor > 0) totalValor += valor;
+        if (vEstoque) totalComEstoque++;
+        totalVacinas++;
+        const estoqueTag = !vEstoque
+          ? '<span style="font-size:0.73rem;color:var(--gray-400)">—</span>'
+          : hasEstoque
+            ? `<span style="background:#dcfce7;color:#166534;padding:2px 7px;border-radius:20px;font-size:0.73rem;font-weight:600">✅ ${vEstoque.stock} un.</span>`
+            : '<span style="background:var(--red-light);color:var(--red);padding:2px 7px;border-radius:20px;font-size:0.73rem;font-weight:600">⚠️ Sem estoque</span>';
+        const valorStr = valor > 0 ? 'R$ ' + valor.toFixed(2).replace('.',',') : '<span style="color:var(--gray-400)">—</span>';
+        return `<div class="vacina-row" style="padding-left:12px">
+          <div>
+            <div style="font-weight:600;font-size:0.88rem;color:var(--gray-900)">${esc(v.nome)}</div>
+            <div style="font-size:0.75rem;color:var(--gray-400);margin-top:1px">${esc(v.obs||'')}</div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--gray-700);font-weight:500">${esc(v.doses)}</div>
+          <div style="text-align:center">${estoqueTag}</div>
+          <div style="text-align:right;font-weight:700;font-size:0.88rem;color:var(--orange-dark)">${valorStr}</div>
+        </div>`;
+      }).join('');
+
+      gruposHtml.push(`
+        <div style="background:var(--orange-50);padding:10px 16px 6px;border-bottom:1px solid var(--orange-200);display:flex;align-items:center;gap:10px">
+          <span style="font-weight:800;font-size:0.88rem;color:var(--orange-dark)">📅 ${esc(faixa.faixa)}</span>
+          <span style="font-size:0.75rem;color:var(--gray-500)">${esc(faixa.desc)}</span>
+          <span style="margin-left:auto;font-size:0.73rem;background:var(--orange-100);color:var(--orange-dark);padding:1px 8px;border-radius:20px;font-weight:600">${faixa.vacinas.length} vacina(s)</span>
+        </div>
+        <div class="vacina-row-header" style="padding-left:12px">
+          <div style="font-size:0.7rem;font-weight:700;color:var(--gray-400);text-transform:uppercase">Vacina</div>
+          <div style="font-size:0.7rem;font-weight:700;color:var(--gray-400);text-transform:uppercase">Dose</div>
+          <div style="font-size:0.7rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;text-align:center">Estoque</div>
+          <div style="font-size:0.7rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;text-align:right">Valor Unit.</div>
+        </div>
+        ${linhas}
+      `);
+    }
+
+    // Atualizar container
+    const det = document.getElementById('planos-intervalo-detalhe');
+    det.style.display = 'block';
+
+    document.getElementById('planos-intervalo-titulo').textContent =
+      '💉 Plano Vacinal: ' + faixasDe + ' até ' + faixasAte;
+    document.getElementById('planos-intervalo-subtitulo').textContent =
+      totalVacinas + ' dose(s) no total — ' + (ate - de + 1) + ' faixa(s) etária(s)';
+
+    document.getElementById('planos-intervalo-lista').innerHTML = gruposHtml.join('');
+
+    document.getElementById('planos-intervalo-total').innerHTML = `
+      <div style="font-size:0.82rem;color:var(--gray-600)">
+        <strong>${totalComEstoque}</strong> de <strong>${totalVacinas}</strong> vacinas no estoque
+      </div>
+      <div style="font-size:1.1rem;font-weight:800;color:var(--orange-dark)">
+        Total estimado: R$ ${totalValor.toFixed(2).replace('.',',')}
+      </div>
+    `;
+  }
+
+  function gerarOrcamentoIntervalo() {
+    const selDe  = document.getElementById('planos-de');
+    const selAte = document.getElementById('planos-ate');
+    if (!selDe || !selAte) return;
+    const de  = Math.min(parseInt(selDe.value), parseInt(selAte.value));
+    const ate = Math.max(parseInt(selDe.value), parseInt(selAte.value));
+
+    const faixasDe  = CALENDARIO_VACINAL[de].faixa;
+    const faixasAte = CALENDARIO_VACINAL[ate].faixa;
+
+    _orcItens = [];
+    for (let i = de; i <= ate; i++) {
+      const faixa = CALENDARIO_VACINAL[i];
+      faixa.vacinas.forEach(v => {
+        const vEstoque = (vacinas||[]).find(vv => _matchVacina2(vv.nome, v.nome));
+        _orcItens.push({
+          vacina_id: vEstoque ? vEstoque.id : '',
+          nome: vEstoque ? vEstoque.nome : v.nome + ' (' + v.doses + ')',
+          quantidade: 1,
+          valor: vEstoque && vEstoque.preco ? Number(vEstoque.preco) : 0
+        });
+      });
+    }
+
+    // Pré-preencher modal de orçamento
+    document.getElementById('modal-orcamento').querySelector('.modal-title').textContent =
+      '📄 Orçamento — Plano ' + faixasDe + ' a ' + faixasAte;
+    document.getElementById('orc-paciente').value = '';
+    document.getElementById('orc-data').value     = new Date().toISOString().slice(0,10);
+    const v30 = new Date(); v30.setDate(v30.getDate()+30);
+    document.getElementById('orc-validade').value = v30.toISOString().slice(0,10);
+    document.getElementById('orc-status').value   = 'pendente';
+    document.getElementById('orc-obs').value      = 'Plano vacinal completo — ' + faixasDe + ' até ' + faixasAte;
+    orcEditId = null;
+    renderItensOrcamento();
+    document.getElementById('modal-orcamento').style.display = 'flex';
   }
 
   function selecionarFaixa(idx) {
