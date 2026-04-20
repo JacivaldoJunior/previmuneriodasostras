@@ -855,6 +855,45 @@
       transition: max-height 0.25s ease;
     }
     .nav-group-items.open { max-height: 400px; }
+
+    /* ===== PLANOS VACINAIS ===== */
+    .faixa-btn {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 2px solid var(--gray-200);
+      background: var(--white);
+      font-size: 13px; font-weight: 600;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .faixa-btn:hover { border-color: var(--orange); color: var(--orange-dark); background: var(--orange-50); }
+    .faixa-btn.selected { border-color: var(--orange); background: var(--orange); color: white; box-shadow: 0 2px 8px rgba(231,107,31,0.35); }
+    .vacina-row {
+      display: grid;
+      grid-template-columns: 1fr 130px 110px 120px;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--gray-100);
+      gap: 12px;
+      transition: background 0.1s;
+    }
+    .vacina-row:last-child { border-bottom: none; }
+    .vacina-row:hover { background: var(--orange-50); }
+    .vacina-row-header {
+      display: grid;
+      grid-template-columns: 1fr 130px 110px 120px;
+      padding: 10px 20px;
+      gap: 12px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+    }
+    @media (max-width: 640px) {
+      .vacina-row, .vacina-row-header { grid-template-columns: 1fr 90px; }
+      .vacina-row > *:nth-child(3), .vacina-row > *:nth-child(4),
+      .vacina-row-header > *:nth-child(3), .vacina-row-header > *:nth-child(4) { display:none; }
+    }
 </style>
 </head>
 <body>
@@ -966,6 +1005,9 @@
         </button>
         <button class="nav-item" onclick="navTo('relatorios')">
           <span class="icon">📊</span> Relatórios
+        </button>
+        <button class="nav-item" onclick="navTo('planos-vacinais')">
+          <span class="icon">🗓️</span> Planos Vacinais
         </button>
         <button class="nav-item" onclick="navTo('guia-vacinal')">
           <span class="icon">📖</span> Guia Vacinal
@@ -1315,6 +1357,45 @@
           </div>
         </div>
       </div>
+    </div>
+
+    
+    <!-- ===== PAGE: PLANOS VACINAIS ===== -->
+    <div id="page-planos-vacinais" class="page">
+
+      <!-- Seletor de faixa etária -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body" style="padding:20px 24px">
+          <div style="font-weight:700;font-size:0.95rem;color:var(--gray-800);margin-bottom:14px">🗓️ Selecione a faixa etária do paciente</div>
+          <div id="planos-faixas" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- Vacinas da faixa selecionada -->
+      <div id="planos-detalhe" style="display:none">
+        <div class="card">
+          <div class="card-header" style="background:linear-gradient(135deg,var(--orange-50),var(--orange-100));border-bottom:2px solid var(--orange-200)">
+            <div>
+              <div class="card-title" id="planos-titulo" style="font-size:1.1rem;color:var(--orange-dark)">—</div>
+              <div class="card-subtitle" id="planos-subtitulo">—</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="gerarOrcamentoDoPlano()">
+              📄 Gerar Orçamento
+            </button>
+          </div>
+          <div class="card-body" style="padding:0">
+            <div id="planos-vacinas-lista"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado vazio -->
+      <div id="planos-empty" style="text-align:center;padding:60px 20px;color:var(--gray-400)">
+        <div style="font-size:3rem;margin-bottom:12px">🗓️</div>
+        <div style="font-size:1rem;font-weight:600;margin-bottom:6px">Selecione uma faixa etária</div>
+        <div style="font-size:0.875rem">As vacinas recomendadas e os valores do seu estoque serão exibidos aqui</div>
+      </div>
+
     </div>
 
     <div id="page-pacientes" class="page">
@@ -1915,6 +1996,7 @@
   let ultimaRetirada = null;
   let agendEditId = null;
   let orcEditId = null;
+  let _orcItens = [];
   let confirmResolve = null;
 
   // ===== ESTADO DE LOGIN =====
@@ -2040,10 +2122,12 @@
     'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
     'agendamentos':    { id: 'page-agendamentos',    title: '📅 Agendamentos' },
     'orcamentos':      { id: 'page-orcamentos',       title: '📄 Orçamentos' },
+    'planos-vacinais': { id: 'page-planos-vacinais',  title: '🗓️ Planos Vacinais' },
     'guia-vacinal':    { id: 'page-guia-vacinal',      title: '📖 Guia Vacinal — Calendário PNI' },
   };
 
   function navTo(page) {
+    if (page === 'planos-vacinais') { setTimeout(initPlanosVacinais, 50); }
     // hide all
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -5015,7 +5099,6 @@
     }).join('');
   }
 
-  let _orcItens = [];
 
   function abrirModalOrcamento(id = null) {
     orcEditId = id;
@@ -5294,6 +5377,103 @@
     el.style.display = 'block';
     window.print();
     el.style.display = 'none';
+  }
+
+
+
+
+  // =============================================
+  // PLANOS VACINAIS
+  // =============================================
+  const CALENDARIO_VACINAL = [{"faixa": "Ao nascer", "desc": "Recém-nascido", "vacinas": [{"nome": "BCG", "doses": "Dose única", "obs": "Proteção contra formas graves de tuberculose"}, {"nome": "Hepatite B", "doses": "1ª dose", "obs": "Primeira dose ao nascer"}]}, {"faixa": "1 mês", "desc": "1 mês de vida", "vacinas": [{"nome": "Hepatite B", "doses": "2ª dose", "obs": "Segunda dose"}]}, {"faixa": "2 meses", "desc": "2 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "1ª dose", "obs": "Difteria, Tétano, Coqueluche, Hib, Hepatite B"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "1ª dose", "obs": "Pólio injetável"}, {"nome": "Pneumocócica 13-valente", "doses": "1ª dose", "obs": "Previne pneumonia, meningite, otite"}, {"nome": "Rotavírus", "doses": "1ª dose", "obs": "Previne diarreia grave por rotavírus"}]}, {"faixa": "3 meses", "desc": "3 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "1ª dose", "obs": "Previne meningite meningocócica C"}, {"nome": "Meningocócica ACWY", "doses": "1ª dose", "obs": "Sorogrupos A, C, W e Y (particular)"}]}, {"faixa": "4 meses", "desc": "4 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Pneumocócica 13-valente", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Rotavírus", "doses": "2ª dose", "obs": "Segunda e última dose"}]}, {"faixa": "5 meses", "desc": "5 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Meningocócica ACWY", "doses": "2ª dose", "obs": "Segunda dose (particular)"}]}, {"faixa": "6 meses", "desc": "6 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "Influenza", "doses": "1ª dose", "obs": "Anual — 2 doses no 1º ano (intervalo 30 dias)"}, {"nome": "Hepatite B", "doses": "3ª dose", "obs": "Apenas se não fez esquema pentavalente completo"}]}, {"faixa": "7 meses", "desc": "7 meses de vida", "vacinas": [{"nome": "Influenza", "doses": "2ª dose", "obs": "Somente no primeiro ano de vacinação, 30 dias após a 1ª"}]}, {"faixa": "9 meses", "desc": "9 meses de vida", "vacinas": [{"nome": "Febre Amarela", "doses": "1ª dose", "obs": "Dose inicial (reforço aos 4 anos)"}, {"nome": "Meningocócica B", "doses": "3ª dose", "obs": "Esquema 2+1 (particular)"}]}, {"faixa": "12 meses", "desc": "1 ano de vida", "vacinas": [{"nome": "Tríplice Viral (SCR)", "doses": "1ª dose", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Pneumocócica 13-valente", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica C conjugada", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Dose de reforço (particular)"}, {"nome": "Varicela", "doses": "1ª dose", "obs": "Primeira dose da Catapora"}, {"nome": "Hepatite A", "doses": "1ª dose", "obs": "Dose única no calendário público; 2 doses no particular"}]}, {"faixa": "15 meses", "desc": "15 meses de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "1º Reforço", "obs": "Reforço de Difteria, Tétano, Coqueluche"}, {"nome": "VOP (Poliomielite Oral)", "doses": "1º Reforço", "obs": "Gotinhas de reforço"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Segunda dose (calendário particular)"}, {"nome": "Tetra Viral (SCRV)", "doses": "Dose única", "obs": "SCR + Varicela (alternativa à SCR + Varicela separados)"}]}, {"faixa": "18 meses", "desc": "18 meses de vida", "vacinas": [{"nome": "Meningocócica B", "doses": "Reforço", "obs": "Reforço (particular)"}, {"nome": "Meningocócica ACWY", "doses": "Reforço adicional", "obs": "Conforme indicação médica"}]}, {"faixa": "4 anos", "desc": "4 anos de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "2º Reforço", "obs": "Último reforço da DTP"}, {"nome": "VOP (Poliomielite Oral)", "doses": "2º Reforço", "obs": "Último reforço da Pólio"}, {"nome": "Varicela", "doses": "2ª dose", "obs": "Segunda dose da Catapora"}, {"nome": "Tríplice Viral (SCR)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Febre Amarela", "doses": "Reforço", "obs": "Reforço (se fez a 1ª antes dos 5 anos)"}]}, {"faixa": "5 anos", "desc": "5 anos de vida", "vacinas": [{"nome": "Pneumocócica 23-valente", "doses": "Dose única", "obs": "Apenas grupos de risco"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Repetir todo ano"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Se não completou o esquema"}]}, {"faixa": "9 anos", "desc": "9 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "1ª dose", "obs": "Meninas — Previne HPV tipos 6,11,16,18"}, {"nome": "HPV Nonavalente", "doses": "1ª dose", "obs": "Particular — 9 tipos de HPV"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Reforço a cada 5 anos"}]}, {"faixa": "11 anos", "desc": "11 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "2ª dose", "obs": "Meninos também (particular/público conforme calendário)"}, {"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "Reforço", "obs": "Proteção reforçada contra Coqueluche"}, {"nome": "Meningocócica B", "doses": "Reforço", "obs": "Particular — reforço adolescente"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Particular"}]}, {"faixa": "Gestantes", "desc": "Durante a gestação", "vacinas": [{"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "A cada gestação", "obs": "A partir da 20ª semana — protege o bebê contra Coqueluche"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Qualquer trimestre"}, {"nome": "Hepatite B", "doses": "Conforme esquema", "obs": "Se não vacinada anteriormente"}, {"nome": "COVID-19", "doses": "Conforme protocolo", "obs": "Segura e recomendada na gestação"}]}, {"faixa": "Adultos (20–59 anos)", "desc": "Adultos de 20 a 59 anos", "vacinas": [{"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Tríplice Viral (SCR)", "doses": "2 doses (se não vacinado)", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Febre Amarela", "doses": "Dose única vitalícia", "obs": "Reforço único se necessário"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Todo ano"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}, {"faixa": "Idosos (60+ anos)", "desc": "60 anos ou mais", "vacinas": [{"nome": "Influenza", "doses": "Dose anual", "obs": "Alta prioridade"}, {"nome": "Pneumocócica 23-valente", "doses": "1 a 2 doses", "obs": "Prevenção de pneumonia grave"}, {"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Herpes Zóster", "doses": "2 doses", "obs": "Intervalo de 2–6 meses (a partir de 50 anos)"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}];
+
+  let _faixaSelecionada = null;
+
+  function initPlanosVacinais() {
+    const cont = document.getElementById('planos-faixas');
+    if (!cont) return;
+    cont.innerHTML = CALENDARIO_VACINAL.map((faixa, idx) => `
+      <button class="faixa-btn" onclick="selecionarFaixa(${idx})" id="faixa-btn-${idx}">
+        ${faixa.faixa}
+      </button>
+    `).join('');
+  }
+
+  function selecionarFaixa(idx) {
+    _faixaSelecionada = idx;
+    // Resetar seleção visual
+    document.querySelectorAll('.faixa-btn').forEach(b => b.classList.remove('selected'));
+    const btn = document.getElementById('faixa-btn-'+idx);
+    if (btn) btn.classList.add('selected');
+
+    const faixa = CALENDARIO_VACINAL[idx];
+    document.getElementById('planos-titulo').textContent = '💉 ' + faixa.faixa + ' — ' + faixa.desc;
+    document.getElementById('planos-subtitulo').textContent = faixa.vacinas.length + ' vacina(s) recomendada(s) nesta faixa';
+    document.getElementById('planos-empty').style.display = 'none';
+    document.getElementById('planos-detalhe').style.display = 'block';
+
+    // Renderizar lista de vacinas cruzando com estoque
+    const lista = document.getElementById('planos-vacinas-lista');
+    if (!lista) return;
+
+    lista.innerHTML = `
+      <div class="vacina-row-header">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase">Vacina</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase">Dose</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;text-align:center">Estoque</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;text-align:right">Valor Unit.</div>
+      </div>
+    ` + faixa.vacinas.map(v => {
+      // Tentar cruzar com vacinas do estoque (match por nome parcial)
+      const vEstoque = (vacinas||[]).find(vv =>
+        vv.nome && v.nome && vv.nome.toLowerCase().includes(v.nome.split(' ')[0].toLowerCase())
+      );
+      const hasEstoque = vEstoque && vEstoque.stock > 0;
+      const semEstoque = vEstoque && vEstoque.stock <= 0;
+      const valor = vEstoque && vEstoque.preco ? 'R$ ' + Number(vEstoque.preco).toFixed(2).replace('.',',') : '—';
+      const estoqueTag = !vEstoque
+        ? '<span style="font-size:0.75rem;color:var(--gray-400)">—</span>'
+        : hasEstoque
+          ? `<span style="background:var(--green-light);color:#166534;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">✅ ${vEstoque.stock} un.</span>`
+          : '<span style="background:var(--red-light);color:var(--red);padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">⚠️ Sem estoque</span>';
+      return `<div class="vacina-row">
+        <div>
+          <div style="font-weight:600;font-size:0.9rem;color:var(--gray-900)">${esc(v.nome)}</div>
+          <div style="font-size:0.78rem;color:var(--gray-400);margin-top:2px">${esc(v.obs||'')}</div>
+        </div>
+        <div style="font-size:0.85rem;color:var(--gray-700);font-weight:500">${esc(v.doses)}</div>
+        <div style="text-align:center">${estoqueTag}</div>
+        <div style="text-align:right;font-weight:700;font-size:0.9rem;color:var(--orange-dark)">${valor}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function gerarOrcamentoDoPlano() {
+    if (_faixaSelecionada === null) return;
+    const faixa = CALENDARIO_VACINAL[_faixaSelecionada];
+    // Montar itens com vacinas do estoque correspondentes
+    _orcItens = faixa.vacinas.map(v => {
+      const vEstoque = (vacinas||[]).find(vv =>
+        vv.nome && v.nome && vv.nome.toLowerCase().includes(v.nome.split(' ')[0].toLowerCase())
+      );
+      return {
+        vacina_id: vEstoque ? vEstoque.id : '',
+        nome: vEstoque ? vEstoque.nome : v.nome,
+        quantidade: 1,
+        valor: vEstoque && vEstoque.preco ? Number(vEstoque.preco) : 0
+      };
+    });
+    // Pré-preencher o modal de orçamento
+    document.getElementById('modal-orcamento').querySelector('.modal-title').textContent = '📄 Orçamento — ' + faixa.faixa;
+    document.getElementById('orc-paciente').value = '';
+    document.getElementById('orc-data').value     = new Date().toISOString().slice(0,10);
+    const v30 = new Date(); v30.setDate(v30.getDate()+30);
+    document.getElementById('orc-validade').value = v30.toISOString().slice(0,10);
+    document.getElementById('orc-status').value   = 'pendente';
+    document.getElementById('orc-obs').value      = 'Plano vacinal — ' + faixa.faixa + ' (' + faixa.desc + ')';
+    orcEditId = null;
+    renderItensOrcamento();
+    document.getElementById('modal-orcamento').style.display = 'flex';
   }
 
 
