@@ -5424,10 +5424,50 @@
         <div style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;text-align:right">Valor Unit.</div>
       </div>
     ` + faixa.vacinas.map(v => {
-      // Tentar cruzar com vacinas do estoque (match por nome parcial)
-      const vEstoque = (vacinas||[]).find(vv =>
-        vv.nome && v.nome && vv.nome.toLowerCase().includes(v.nome.split(' ')[0].toLowerCase())
-      );
+      // Cruzar com estoque por palavras-chave múltiplas
+      const _matchVacina = (nomeEstoque, nomeCalendario) => {
+        if (!nomeEstoque || !nomeCalendario) return false;
+        const ne = nomeEstoque.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        const nc = nomeCalendario.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        // Mapa de equivalências para nomes técnicos vs comerciais
+        const aliases = {
+          'pentavalente': ['penta', 'dtp+hib', 'dtphib', 'pentaxim', 'hexaxim', 'hexa ', 'hexa-'],
+          'vip': ['poliomielite inativ', 'polio inativ', 'refortrix ipv', 'dtpa+ipv'],
+          'vop': ['poliomielite oral', 'polio oral'],
+          'pneumococica': ['pneumo', 'prevenar', 'pnc'],
+          'rotavirus': ['rota', 'rotateq', 'rotarix'],
+          'meningococica c': ['mening', 'meningo c', 'bexsero'],
+          'meningococica b': ['mening b', 'bexsero'],
+          'meningococica acwy': ['mening acwy', 'mening a+c', 'mening ac', 'meningite a+c', 'meningite acwy', 'nimenrix', 'menveo'],
+          'tríplice viral': ['scr', 'sarampo', 'triplice viral', 'mmr'],
+          'tetra viral': ['scrv', 'tetra viral', 'priorix'],
+          'varicela': ['varicela', 'catapora', 'varilrix', 'varilix'],
+          'hepatite a': ['hep a', 'hepatite a', 'havrix', 'vaqta'],
+          'hepatite b': ['hep b', 'hepatite b', 'engerix', 'recombivax'],
+          'influenza': ['influenz', 'gripe', 'fluarix', 'vaxigrip'],
+          'febre amarela': ['febre amarela', 'amarílica', 'stamaril', 'amaril'],
+          'dtp': ['dtp', 'dtpa', 'tríplice bacteriana', 'triplice bact', 'refortrix', 'infanrix'],
+          'dt': ['dupla adulto', 'difteria tetano'],
+          'dtpa': ['dtpa', 'refortrix', 'triplice acelular', 'boostrix'],
+          'bcg': ['bcg'],
+          'hpv': ['hpv', 'gardasil', 'cervarix', 'silgard'],
+          'dengue': ['dengue', 'qdenga'],
+          'herpes zoster': ['zoster', 'herpes z', 'shingrix', 'zostavax']
+        };
+        // Verificar match direto
+        if (ne.includes(nc) || nc.includes(ne)) return true;
+        // Verificar aliases
+        for (const [key, syns] of Object.entries(aliases)) {
+          const matchKey = nc.includes(key) || key.includes(nc) || syns.some(s => nc.includes(s));
+          if (matchKey) {
+            if (ne.includes(key) || syns.some(s => ne.includes(s))) return true;
+          }
+        }
+        // Match por palavras significativas (>4 letras)
+        const palavras = nc.split(/[\s\-\(\)+,]+/).filter(p => p.length > 4);
+        return palavras.some(p => ne.includes(p));
+      };
+      const vEstoque = (vacinas||[]).find(vv => _matchVacina(vv.nome, v.nome));
       const hasEstoque = vEstoque && vEstoque.stock > 0;
       const semEstoque = vEstoque && vEstoque.stock <= 0;
       const valor = vEstoque && vEstoque.preco ? 'R$ ' + Number(vEstoque.preco).toFixed(2).replace('.',',') : '—';
@@ -5448,14 +5488,49 @@
     }).join('');
   }
 
+  function _matchVacina2(nomeEstoque, nomeCalendario) {
+    if (!nomeEstoque || !nomeCalendario) return false;
+    const ne = nomeEstoque.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const nc = nomeCalendario.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const aliases = {
+      'pentavalente': ['penta', 'dtp+hib', 'dtphib', 'pentaxim', 'hexaxim', 'hexa ', 'hexa-'],
+      'vip': ['poliomielite inativ', 'polio inativ', 'refortrix ipv', 'dtpa+ipv'],
+      'vop': ['poliomielite oral', 'polio oral'],
+      'pneumococica': ['pneumo', 'prevenar', 'pnc'],
+      'rotavirus': ['rota', 'rotateq', 'rotarix'],
+      'meningococica c': ['mening', 'meningo c', 'bexsero'],
+      'meningococica b': ['mening b', 'bexsero'],
+      'meningococica acwy': ['mening acwy', 'mening a+c', 'mening ac', 'meningite a+c', 'meningite acwy', 'nimenrix', 'menveo'],
+      'triplice viral': ['scr', 'sarampo', 'triplice viral', 'mmr'],
+      'tetra viral': ['scrv', 'tetra viral', 'priorix'],
+      'varicela': ['varicela', 'catapora', 'varilrix', 'varilix'],
+      'hepatite a': ['hep a', 'hepatite a', 'havrix', 'vaqta'],
+      'hepatite b': ['hep b', 'hepatite b', 'engerix', 'recombivax'],
+      'influenza': ['influenz', 'gripe', 'fluarix', 'vaxigrip'],
+      'febre amarela': ['febre amarela', 'amarilica', 'stamaril', 'amaril'],
+      'dtp': ['dtp', 'dtpa', 'triplice bacteriana', 'triplice bact', 'refortrix', 'infanrix'],
+      'dt': ['dupla adulto', 'difteria tetano'],
+      'dtpa': ['dtpa', 'refortrix', 'triplice acelular', 'boostrix'],
+      'bcg': ['bcg'],
+      'hpv': ['hpv', 'gardasil', 'cervarix', 'silgard'],
+      'dengue': ['dengue', 'qdenga'],
+      'herpes zoster': ['zoster', 'herpes z', 'shingrix', 'zostavax']
+    };
+    if (ne.includes(nc) || nc.includes(ne)) return true;
+    for (const [key, syns] of Object.entries(aliases)) {
+      const matchKey = nc.includes(key) || key.includes(nc) || syns.some(s => nc.includes(s));
+      if (matchKey && (ne.includes(key) || syns.some(s => ne.includes(s)))) return true;
+    }
+    const palavras = nc.split(/[\s\-\(\)+,]+/).filter(p => p.length > 4);
+    return palavras.some(p => ne.includes(p));
+  }
+
   function gerarOrcamentoDoPlano() {
     if (_faixaSelecionada === null) return;
     const faixa = CALENDARIO_VACINAL[_faixaSelecionada];
     // Montar itens com vacinas do estoque correspondentes
     _orcItens = faixa.vacinas.map(v => {
-      const vEstoque = (vacinas||[]).find(vv =>
-        vv.nome && v.nome && vv.nome.toLowerCase().includes(v.nome.split(' ')[0].toLowerCase())
-      );
+      const vEstoque = (vacinas||[]).find(vv => _matchVacina2(vv.nome, v.nome));
       return {
         vacina_id: vEstoque ? vEstoque.id : '',
         nome: vEstoque ? vEstoque.nome : v.nome,
