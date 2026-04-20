@@ -827,7 +827,35 @@
       margin-right: 4px; margin-bottom: 2px;
     }
 
-    </style>
+    
+    /* ===== NAV GROUPS COLAPSÁVEIS ===== */
+    .nav-group-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 8px 4px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .nav-group-toggle:hover { background: var(--gray-100); }
+    .nav-group-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--gray-400);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .nav-group-arrow {
+      font-size: 10px; color: var(--gray-400);
+      transition: transform 0.2s;
+    }
+    .nav-group-arrow.open { transform: rotate(180deg); }
+    .nav-group-items {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.25s ease;
+    }
+    .nav-group-items.open { max-height: 400px; }
+</style>
 </head>
 <body>
 
@@ -905,34 +933,52 @@
       </button>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Ações rápidas</div>
-      <button class="nav-item" onclick="navTo('novo-paciente')">
-        <span class="icon">➕</span> Novo Paciente
-      </button>
-      <button class="nav-item nav-aplicacoes-btn" onclick="navTo('nova-aplicacao')">
-        <span class="icon">📋</span> Registrar Aplicação
-      </button>
-      <button class="nav-item" onclick="navTo('nova-vacina')">
-        <span class="icon">📦</span> Adicionar Vacina
-      </button>
+      <div class="nav-group-toggle" onclick="toggleNavGroup('group-acoes')">
+        <span class="nav-group-label">Ações Rápidas</span>
+        <span class="nav-group-arrow" id="arrow-group-acoes">▼</span>
+      </div>
+      <div class="nav-group-items" id="group-acoes">
+        <button class="nav-item" onclick="navTo('novo-paciente')">
+          <span class="icon">➕</span> Novo Paciente
+        </button>
+        <button class="nav-item nav-aplicacoes-btn" onclick="navTo('nova-aplicacao')">
+          <span class="icon">📋</span> Registrar Aplicação
+        </button>
+        <button class="nav-item" onclick="navTo('nova-vacina')">
+          <span class="icon">📦</span> Adicionar Vacina
+        </button>
+        <button class="nav-item" onclick="navTo('agendamentos')">
+          <span class="icon">📅</span> Agendar Vacina
+        </button>
+      </div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Consulta</div>
-      <button class="nav-item" onclick="navTo('retiradas')">
-        <span class="icon">📤</span> Retirada de Vacinas
-      </button>
-      <button class="nav-item" onclick="navTo('relatorios')">
-        <span class="icon">📊</span> Relatórios
-      </button>
-      <button class="nav-item" onclick="navTo('guia-vacinal')">
-        <span class="icon">📖</span> Guia Vacinal
-      </button>
+      <div class="nav-group-toggle" onclick="toggleNavGroup('group-consulta')">
+        <span class="nav-group-label">Consulta</span>
+        <span class="nav-group-arrow" id="arrow-group-consulta">▼</span>
+      </div>
+      <div class="nav-group-items" id="group-consulta">
+        <button class="nav-item" onclick="navTo('retiradas')">
+          <span class="icon">📤</span> Retirada de Vacinas
+        </button>
+        <button class="nav-item" onclick="navTo('relatorios')">
+          <span class="icon">📊</span> Relatórios
+        </button>
+        <button class="nav-item" onclick="navTo('guia-vacinal')">
+          <span class="icon">📖</span> Guia Vacinal
+        </button>
+      </div>
     </div>
     <div class="nav-section nav-admin-only" style="display:none">
-      <div class="nav-label">Administração</div>
-      <button class="nav-item" onclick="navTo('usuarios')">
-        <span class="icon">👥</span> Usuários
-      </button>
+      <div class="nav-group-toggle" onclick="toggleNavGroup('group-admin')">
+        <span class="nav-group-label">Administração</span>
+        <span class="nav-group-arrow" id="arrow-group-admin">▼</span>
+      </div>
+      <div class="nav-group-items" id="group-admin">
+        <button class="nav-item" onclick="navTo('usuarios')">
+          <span class="icon">👥</span> Usuários
+        </button>
+      </div>
     </div>
   </div>
   <div class="sidebar-footer">
@@ -1182,6 +1228,51 @@
       </div>
     </div>
 
+
+    
+    <!-- ===== PAGE: AGENDAMENTOS ===== -->
+    <div id="page-agendamentos" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📅 Agendamentos de Vacina</div>
+            <div class="card-subtitle">Agende aplicações domiciliares ou externas</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalAgendamento()">+ Novo Agendamento</button>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+            <input type="date" id="filtro-agend-de" class="form-control" style="max-width:155px" onchange="renderAgendamentos()">
+            <input type="date" id="filtro-agend-ate" class="form-control" style="max-width:155px" onchange="renderAgendamentos()">
+            <select id="filtro-agend-status" class="form-control" style="max-width:160px" onchange="renderAgendamentos()">
+              <option value="">Todos os status</option>
+              <option value="agendado">Agendado</option>
+              <option value="realizado">Realizado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <input id="searchAgend" class="form-control" style="max-width:210px" placeholder="🔍 Buscar nome ou CPF..." oninput="renderAgendamentos()">
+            <button class="btn btn-ghost btn-sm" onclick="limparFiltrosAgend()">Limpar</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="tabela-agendamentos">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Nome</th>
+                  <th>CPF</th>
+                  <th>Vacina</th>
+                  <th>Local Aplicação</th>
+                  <th>Aplicador</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div id="page-pacientes" class="page">
       <div class="card">
@@ -1901,6 +1992,7 @@
     'usuarios':        { id: 'page-usuarios',          title: '👥 Gerenciar Usuários' },
     'retiradas':       { id: 'page-retiradas',        title: '📤 Retirada de Vacinas' },
     'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
+    'agendamentos':    { id: 'page-agendamentos',    title: '📅 Agendamentos' },
     'guia-vacinal':    { id: 'page-guia-vacinal',      title: '📖 Guia Vacinal — Calendário PNI' },
   };
 
@@ -1969,6 +2061,7 @@
     renderDashboard();
     await fetchLembretes();
     await fetchRetiradas();
+    await fetchAgendamentos();
   }
 
   // ===== PACIENTES =====
@@ -3479,6 +3572,157 @@
   </div>
 </div>
 
+
+<!-- ===== MODAL AGENDAMENTO ===== -->
+<div id="modal-agendamento" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:620px;max-height:90vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">📅 Novo Agendamento de Vacina</div>
+      <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+
+      <!-- Linha 1: Nome + CPF -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Nome Completo <span class="req">*</span></label>
+          <input id="agend-nome" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">CPF <span class="req">*</span></label>
+          <input id="agend-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+        </div>
+      </div>
+
+      <!-- Linha 2: Data nascimento + Data agendamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data de Nascimento <span class="req">*</span></label>
+          <input id="agend-nascimento" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data do Agendamento <span class="req">*</span></label>
+          <input id="agend-data" type="date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Linha 3: Endereço -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Endereço Completo <span class="req">*</span></label>
+        <input id="agend-endereco" class="form-control" placeholder="Rua, número, bairro, cidade — CEP">
+      </div>
+
+      <!-- Linha 4: Vacina + Dose -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Vacina <span class="req">*</span></label>
+          <select id="agend-vacina-id" class="form-control" onchange="preencherDadosVacinaAgend()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Dose</label>
+          <select id="agend-dose" class="form-control">
+            <option value="">—</option>
+            <option value="1ª dose">1ª Dose</option>
+            <option value="2ª dose">2ª Dose</option>
+            <option value="3ª dose">3ª Dose</option>
+            <option value="dose única">Dose Única</option>
+            <option value="reforço">Reforço</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 5: Lote + Validade -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Lote</label>
+          <input id="agend-lote" class="form-control" placeholder="Preenchido automaticamente" readonly>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Validade</label>
+          <input id="agend-validade" class="form-control" placeholder="Preenchido automaticamente" readonly>
+        </div>
+      </div>
+
+      <!-- Linha 6: Local da aplicação (parte do corpo) -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Local da Aplicação (parte do corpo)</label>
+        <select id="agend-local" class="form-control">
+          <option value="">Selecione...</option>
+          <optgroup label="Braço">
+            <option value="Deltoide direito">Deltoide Direito</option>
+            <option value="Deltoide esquerdo">Deltoide Esquerdo</option>
+            <option value="Vasto lateral do braço direito">Vasto Lateral do Braço Direito</option>
+            <option value="Vasto lateral do braço esquerdo">Vasto Lateral do Braço Esquerdo</option>
+          </optgroup>
+          <optgroup label="Coxa">
+            <option value="Vasto lateral da coxa direita">Vasto Lateral da Coxa Direita</option>
+            <option value="Vasto lateral da coxa esquerda">Vasto Lateral da Coxa Esquerda</option>
+          </optgroup>
+          <optgroup label="Glúteo">
+            <option value="Glúteo direito (ventroglúteo)">Glúteo Direito (Ventroglúteo)</option>
+            <option value="Glúteo esquerdo (ventroglúteo)">Glúteo Esquerdo (Ventroglúteo)</option>
+          </optgroup>
+          <optgroup label="Outros">
+            <option value="Subcutâneo — abdome">Subcutâneo — Abdome</option>
+            <option value="Intradérmico — antebraço direito">Intradérmico — Antebraço Direito</option>
+            <option value="Intradérmico — antebraço esquerdo">Intradérmico — Antebraço Esquerdo</option>
+            <option value="Oral">Oral</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Linha 7: Aplicador + Forma de Pagamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Aplicador</label>
+          <input id="agend-aplicador" class="form-control" placeholder="Nome do profissional">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Forma de Pagamento</label>
+          <select id="agend-pagamento" class="form-control">
+            <option value="">Selecione...</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão de Crédito</option>
+            <option value="cartao_debito">Cartão de Débito</option>
+            <option value="pix">PIX</option>
+            <option value="convenio">Convênio</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 8: Valor + Obs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Valor (R$)</label>
+          <input id="agend-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Status</label>
+          <select id="agend-status" class="form-control">
+            <option value="agendado">Agendado</option>
+            <option value="realizado">Realizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Obs -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Observações</label>
+        <textarea id="agend-obs" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalAgendamento()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar Agendamento</button>
+    </div>
+  </div>
+</div>
+
 </body></html>`);
     win.document.close();
   }
@@ -3665,6 +3909,157 @@
   </style>
   <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
     <!-- conteúdo preenchido via JS -->
+  </div>
+</div>
+
+
+<!-- ===== MODAL AGENDAMENTO ===== -->
+<div id="modal-agendamento" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:620px;max-height:90vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">📅 Novo Agendamento de Vacina</div>
+      <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+
+      <!-- Linha 1: Nome + CPF -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Nome Completo <span class="req">*</span></label>
+          <input id="agend-nome" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">CPF <span class="req">*</span></label>
+          <input id="agend-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+        </div>
+      </div>
+
+      <!-- Linha 2: Data nascimento + Data agendamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data de Nascimento <span class="req">*</span></label>
+          <input id="agend-nascimento" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data do Agendamento <span class="req">*</span></label>
+          <input id="agend-data" type="date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Linha 3: Endereço -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Endereço Completo <span class="req">*</span></label>
+        <input id="agend-endereco" class="form-control" placeholder="Rua, número, bairro, cidade — CEP">
+      </div>
+
+      <!-- Linha 4: Vacina + Dose -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Vacina <span class="req">*</span></label>
+          <select id="agend-vacina-id" class="form-control" onchange="preencherDadosVacinaAgend()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Dose</label>
+          <select id="agend-dose" class="form-control">
+            <option value="">—</option>
+            <option value="1ª dose">1ª Dose</option>
+            <option value="2ª dose">2ª Dose</option>
+            <option value="3ª dose">3ª Dose</option>
+            <option value="dose única">Dose Única</option>
+            <option value="reforço">Reforço</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 5: Lote + Validade -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Lote</label>
+          <input id="agend-lote" class="form-control" placeholder="Preenchido automaticamente" readonly>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Validade</label>
+          <input id="agend-validade" class="form-control" placeholder="Preenchido automaticamente" readonly>
+        </div>
+      </div>
+
+      <!-- Linha 6: Local da aplicação (parte do corpo) -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Local da Aplicação (parte do corpo)</label>
+        <select id="agend-local" class="form-control">
+          <option value="">Selecione...</option>
+          <optgroup label="Braço">
+            <option value="Deltoide direito">Deltoide Direito</option>
+            <option value="Deltoide esquerdo">Deltoide Esquerdo</option>
+            <option value="Vasto lateral do braço direito">Vasto Lateral do Braço Direito</option>
+            <option value="Vasto lateral do braço esquerdo">Vasto Lateral do Braço Esquerdo</option>
+          </optgroup>
+          <optgroup label="Coxa">
+            <option value="Vasto lateral da coxa direita">Vasto Lateral da Coxa Direita</option>
+            <option value="Vasto lateral da coxa esquerda">Vasto Lateral da Coxa Esquerda</option>
+          </optgroup>
+          <optgroup label="Glúteo">
+            <option value="Glúteo direito (ventroglúteo)">Glúteo Direito (Ventroglúteo)</option>
+            <option value="Glúteo esquerdo (ventroglúteo)">Glúteo Esquerdo (Ventroglúteo)</option>
+          </optgroup>
+          <optgroup label="Outros">
+            <option value="Subcutâneo — abdome">Subcutâneo — Abdome</option>
+            <option value="Intradérmico — antebraço direito">Intradérmico — Antebraço Direito</option>
+            <option value="Intradérmico — antebraço esquerdo">Intradérmico — Antebraço Esquerdo</option>
+            <option value="Oral">Oral</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Linha 7: Aplicador + Forma de Pagamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Aplicador</label>
+          <input id="agend-aplicador" class="form-control" placeholder="Nome do profissional">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Forma de Pagamento</label>
+          <select id="agend-pagamento" class="form-control">
+            <option value="">Selecione...</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão de Crédito</option>
+            <option value="cartao_debito">Cartão de Débito</option>
+            <option value="pix">PIX</option>
+            <option value="convenio">Convênio</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 8: Valor + Obs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Valor (R$)</label>
+          <input id="agend-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Status</label>
+          <select id="agend-status" class="form-control">
+            <option value="agendado">Agendado</option>
+            <option value="realizado">Realizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Obs -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Observações</label>
+        <textarea id="agend-obs" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalAgendamento()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar Agendamento</button>
+    </div>
   </div>
 </div>
 
@@ -4144,6 +4539,234 @@
   }
 
 
+
+
+  // =============================================
+  // NAV GROUPS — Colapsável
+  // =============================================
+  function toggleNavGroup(groupId) {
+    const items = document.getElementById(groupId);
+    const arrow = document.getElementById('arrow-' + groupId);
+    if (!items) return;
+    const isOpen = items.classList.contains('open');
+    items.classList.toggle('open', !isOpen);
+    if (arrow) arrow.classList.toggle('open', !isOpen);
+  }
+
+  // =============================================
+  // AGENDAMENTOS
+  // =============================================
+  let agendamentos = [];
+  let agendEditId = null;
+
+  async function fetchAgendamentos() {
+    try {
+      if (!db) { agendamentos = []; renderAgendamentos(); return; }
+      const { data, error } = await db.from('agendamentos').select('*').order('data_agendamento', { ascending: false });
+      if (error) throw error;
+      agendamentos = data || [];
+    } catch(e) {
+      console.error('fetchAgendamentos:', e);
+      agendamentos = [];
+    }
+    renderAgendamentos();
+  }
+
+  function renderAgendamentos() {
+    const de  = document.getElementById('filtro-agend-de')?.value || '';
+    const ate = document.getElementById('filtro-agend-ate')?.value || '';
+    const st  = document.getElementById('filtro-agend-status')?.value || '';
+    const q   = (document.getElementById('searchAgend')?.value || '').toLowerCase();
+
+    let lista = agendamentos.filter(a => {
+      if (de  && a.data_agendamento < de)  return false;
+      if (ate && a.data_agendamento > ate) return false;
+      if (st  && a.status !== st)          return false;
+      if (q   && !a.nome_completo?.toLowerCase().includes(q) && !a.cpf?.toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    const tbody = document.querySelector('#tabela-agendamentos tbody');
+    if (!tbody) return;
+
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--gray-400)">Nenhum agendamento encontrado</td></tr>';
+      return;
+    }
+
+    const statusBadge = {
+      agendado:  '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">📅 Agendado</span>',
+      realizado: '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">✅ Realizado</span>',
+      cancelado: '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">❌ Cancelado</span>',
+    };
+
+    tbody.innerHTML = lista.map(a => {
+      const dt = a.data_agendamento ? new Date(a.data_agendamento+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      return `<tr>
+        <td>${dt}</td>
+        <td>${esc(a.nome_completo||'—')}</td>
+        <td>${esc(a.cpf||'—')}</td>
+        <td>${esc(a.vacina_nome||'—')}</td>
+        <td>${esc(a.local_aplicacao||'—')}</td>
+        <td>${esc(a.aplicador||'—')}</td>
+        <td>${statusBadge[a.status] || a.status || '—'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="editarAgendamento(${a.id})" title="Editar">✏️</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirAgendamento(${a.id})" title="Excluir">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function limparFiltrosAgend() {
+    ['filtro-agend-de','filtro-agend-ate','filtro-agend-status','searchAgend'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    renderAgendamentos();
+  }
+
+  function abrirModalAgendamento(id = null) {
+    agendEditId = id;
+
+    // Popular select de vacinas
+    const sel = document.getElementById('agend-vacina-id');
+    if (sel) {
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        (vacinas||[]).map(v =>
+          `<option value="${v.id}">${esc(v.nome)}${v.stock > 0 ? ' (Estoque: '+v.stock+')' : ' ⚠️ sem estoque'}</option>`
+        ).join('');
+    }
+
+    if (id) {
+      // Modo edição
+      const a = agendamentos.find(x => x.id === id);
+      if (!a) return;
+      document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '✏️ Editar Agendamento';
+      document.getElementById('agend-nome').value       = a.nome_completo || '';
+      document.getElementById('agend-cpf').value        = a.cpf || '';
+      document.getElementById('agend-nascimento').value = a.data_nascimento || '';
+      document.getElementById('agend-data').value       = a.data_agendamento || '';
+      document.getElementById('agend-endereco').value   = a.endereco || '';
+      document.getElementById('agend-vacina-id').value  = a.vacina_id || '';
+      document.getElementById('agend-dose').value       = a.dose || '';
+      document.getElementById('agend-lote').value       = a.lote || '';
+      document.getElementById('agend-validade').value   = a.validade_display || '';
+      document.getElementById('agend-local').value      = a.local_aplicacao || '';
+      document.getElementById('agend-aplicador').value  = a.aplicador || '';
+      document.getElementById('agend-pagamento').value  = a.forma_pagamento || '';
+      document.getElementById('agend-valor').value      = a.valor || '';
+      document.getElementById('agend-status').value     = a.status || 'agendado';
+      document.getElementById('agend-obs').value        = a.obs || '';
+    } else {
+      // Modo novo
+      document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '📅 Novo Agendamento de Vacina';
+      ['agend-nome','agend-cpf','agend-nascimento','agend-endereco','agend-lote','agend-validade','agend-aplicador','agend-obs'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      document.getElementById('agend-data').value      = new Date().toISOString().slice(0,10);
+      document.getElementById('agend-vacina-id').value = '';
+      document.getElementById('agend-dose').value      = '';
+      document.getElementById('agend-local').value     = '';
+      document.getElementById('agend-pagamento').value = '';
+      document.getElementById('agend-valor').value     = '';
+      document.getElementById('agend-status').value    = 'agendado';
+    }
+
+    document.getElementById('modal-agendamento').style.display = 'flex';
+  }
+
+  function fecharModalAgendamento() {
+    document.getElementById('modal-agendamento').style.display = 'none';
+    agendEditId = null;
+  }
+
+  function preencherDadosVacinaAgend() {
+    const id = Number(document.getElementById('agend-vacina-id').value || 0);
+    const v = findVacina(id);
+    if (!v) {
+      document.getElementById('agend-lote').value = '';
+      document.getElementById('agend-validade').value = '';
+      return;
+    }
+    document.getElementById('agend-lote').value = v.lote || '';
+    if (v.validade) {
+      const p = v.validade.split('-');
+      document.getElementById('agend-validade').value = p.length === 3 ? p[2]+'/'+p[1]+'/'+p[0] : v.validade;
+    } else {
+      document.getElementById('agend-validade').value = '';
+    }
+    if (v.preco) document.getElementById('agend-valor').value = Number(v.preco).toFixed(2);
+  }
+
+  async function salvarAgendamento() {
+    const nome_completo    = document.getElementById('agend-nome').value.trim();
+    const cpf              = document.getElementById('agend-cpf').value.trim();
+    const data_nascimento  = document.getElementById('agend-nascimento').value;
+    const data_agendamento = document.getElementById('agend-data').value;
+    const endereco         = document.getElementById('agend-endereco').value.trim();
+    const vacina_id        = Number(document.getElementById('agend-vacina-id').value || 0);
+    const dose             = document.getElementById('agend-dose').value;
+    const local_aplicacao  = document.getElementById('agend-local').value;
+    const aplicador        = document.getElementById('agend-aplicador').value.trim();
+    const forma_pagamento  = document.getElementById('agend-pagamento').value;
+    const valor            = Number(document.getElementById('agend-valor').value || 0);
+    const status           = document.getElementById('agend-status').value || 'agendado';
+    const obs              = document.getElementById('agend-obs').value.trim();
+
+    if (!nome_completo)    { toast('Informe o nome completo.', 'warning'); return; }
+    if (!cpf)              { toast('Informe o CPF.', 'warning'); return; }
+    if (!data_nascimento)  { toast('Informe a data de nascimento.', 'warning'); return; }
+    if (!data_agendamento) { toast('Informe a data do agendamento.', 'warning'); return; }
+    if (!endereco)         { toast('Informe o endereço.', 'warning'); return; }
+    if (!vacina_id)        { toast('Selecione uma vacina.', 'warning'); return; }
+
+    const v = findVacina(vacina_id);
+    const vacina_nome = v ? v.nome : '';
+    const lote = v ? (v.lote || '') : '';
+    const validade_display = document.getElementById('agend-validade').value;
+
+    const payload = {
+      nome_completo, cpf, data_nascimento, data_agendamento, endereco,
+      vacina_id, vacina_nome, lote, validade_display,
+      dose: dose || null, local_aplicacao: local_aplicacao || null,
+      aplicador: aplicador || null, forma_pagamento: forma_pagamento || null,
+      valor: valor || 0, status, obs: obs || null
+    };
+
+    try {
+      if (agendEditId) {
+        const { error } = await db.from('agendamentos').update(payload).match({ id: agendEditId });
+        if (error) throw error;
+        toast('Agendamento atualizado!', 'success');
+      } else {
+        const { error } = await db.from('agendamentos').insert([payload]);
+        if (error) throw error;
+        toast('Agendamento registrado!', 'success');
+      }
+      fecharModalAgendamento();
+      await fetchAgendamentos();
+    } catch(err) {
+      console.error(err);
+      toast('Erro ao salvar: ' + (err.message||err), 'error');
+    }
+  }
+
+  function editarAgendamento(id) {
+    abrirModalAgendamento(id);
+  }
+
+  async function excluirAgendamento(id) {
+    if (!await confirm('Excluir este agendamento?')) return;
+    try {
+      const { error } = await db.from('agendamentos').delete().match({ id });
+      if (error) throw error;
+      toast('Agendamento excluído.', 'success');
+      await fetchAgendamentos();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  }
+
+
 </script>
 
 <!-- MODAL: NOVO / EDITAR USUÁRIO -->
@@ -4283,6 +4906,157 @@
   </style>
   <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
     <!-- conteúdo preenchido via JS -->
+  </div>
+</div>
+
+
+<!-- ===== MODAL AGENDAMENTO ===== -->
+<div id="modal-agendamento" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:620px;max-height:90vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">📅 Novo Agendamento de Vacina</div>
+      <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+
+      <!-- Linha 1: Nome + CPF -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Nome Completo <span class="req">*</span></label>
+          <input id="agend-nome" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">CPF <span class="req">*</span></label>
+          <input id="agend-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+        </div>
+      </div>
+
+      <!-- Linha 2: Data nascimento + Data agendamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data de Nascimento <span class="req">*</span></label>
+          <input id="agend-nascimento" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data do Agendamento <span class="req">*</span></label>
+          <input id="agend-data" type="date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Linha 3: Endereço -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Endereço Completo <span class="req">*</span></label>
+        <input id="agend-endereco" class="form-control" placeholder="Rua, número, bairro, cidade — CEP">
+      </div>
+
+      <!-- Linha 4: Vacina + Dose -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Vacina <span class="req">*</span></label>
+          <select id="agend-vacina-id" class="form-control" onchange="preencherDadosVacinaAgend()">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Dose</label>
+          <select id="agend-dose" class="form-control">
+            <option value="">—</option>
+            <option value="1ª dose">1ª Dose</option>
+            <option value="2ª dose">2ª Dose</option>
+            <option value="3ª dose">3ª Dose</option>
+            <option value="dose única">Dose Única</option>
+            <option value="reforço">Reforço</option>
+            <option value="anual">Anual</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 5: Lote + Validade -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Lote</label>
+          <input id="agend-lote" class="form-control" placeholder="Preenchido automaticamente" readonly>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Validade</label>
+          <input id="agend-validade" class="form-control" placeholder="Preenchido automaticamente" readonly>
+        </div>
+      </div>
+
+      <!-- Linha 6: Local da aplicação (parte do corpo) -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Local da Aplicação (parte do corpo)</label>
+        <select id="agend-local" class="form-control">
+          <option value="">Selecione...</option>
+          <optgroup label="Braço">
+            <option value="Deltoide direito">Deltoide Direito</option>
+            <option value="Deltoide esquerdo">Deltoide Esquerdo</option>
+            <option value="Vasto lateral do braço direito">Vasto Lateral do Braço Direito</option>
+            <option value="Vasto lateral do braço esquerdo">Vasto Lateral do Braço Esquerdo</option>
+          </optgroup>
+          <optgroup label="Coxa">
+            <option value="Vasto lateral da coxa direita">Vasto Lateral da Coxa Direita</option>
+            <option value="Vasto lateral da coxa esquerda">Vasto Lateral da Coxa Esquerda</option>
+          </optgroup>
+          <optgroup label="Glúteo">
+            <option value="Glúteo direito (ventroglúteo)">Glúteo Direito (Ventroglúteo)</option>
+            <option value="Glúteo esquerdo (ventroglúteo)">Glúteo Esquerdo (Ventroglúteo)</option>
+          </optgroup>
+          <optgroup label="Outros">
+            <option value="Subcutâneo — abdome">Subcutâneo — Abdome</option>
+            <option value="Intradérmico — antebraço direito">Intradérmico — Antebraço Direito</option>
+            <option value="Intradérmico — antebraço esquerdo">Intradérmico — Antebraço Esquerdo</option>
+            <option value="Oral">Oral</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Linha 7: Aplicador + Forma de Pagamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Aplicador</label>
+          <input id="agend-aplicador" class="form-control" placeholder="Nome do profissional">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Forma de Pagamento</label>
+          <select id="agend-pagamento" class="form-control">
+            <option value="">Selecione...</option>
+            <option value="dinheiro">Dinheiro</option>
+            <option value="cartao_credito">Cartão de Crédito</option>
+            <option value="cartao_debito">Cartão de Débito</option>
+            <option value="pix">PIX</option>
+            <option value="convenio">Convênio</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Linha 8: Valor + Obs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Valor (R$)</label>
+          <input id="agend-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Status</label>
+          <select id="agend-status" class="form-control">
+            <option value="agendado">Agendado</option>
+            <option value="realizado">Realizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Obs -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Observações</label>
+        <textarea id="agend-obs" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalAgendamento()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar Agendamento</button>
+    </div>
   </div>
 </div>
 
