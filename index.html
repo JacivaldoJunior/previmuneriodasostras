@@ -1868,7 +1868,7 @@
     db = null;
   }
 
-  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [];
+  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [], agendamentos = [];
   let confirmResolve = null;
 
   // ===== ESTADO DE LOGIN =====
@@ -4556,7 +4556,6 @@
   // =============================================
   // AGENDAMENTOS
   // =============================================
-  let agendamentos = [];
   let agendEditId = null;
 
   async function fetchAgendamentos() {
