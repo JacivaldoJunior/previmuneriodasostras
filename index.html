@@ -958,6 +958,9 @@
         <span class="nav-group-arrow" id="arrow-group-consulta">▼</span>
       </div>
       <div class="nav-group-items" id="group-consulta">
+        <button class="nav-item" onclick="navTo('orcamentos')">
+          <span class="icon">📄</span> Orçamentos
+        </button>
         <button class="nav-item" onclick="navTo('retiradas')">
           <span class="icon">📤</span> Retirada de Vacinas
         </button>
@@ -1263,6 +1266,46 @@
                   <th>Vacina</th>
                   <th>Local Aplicação</th>
                   <th>Aplicador</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- ===== PAGE: ORÇAMENTOS ===== -->
+    <div id="page-orcamentos" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📄 Orçamentos</div>
+            <div class="card-subtitle">Crie orçamentos de vacinas para enviar ao paciente</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalOrcamento()">+ Novo Orçamento</button>
+        </div>
+        <div class="card-body" style="padding-top:0">
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+            <input id="searchOrc" class="form-control" style="max-width:260px" placeholder="🔍 Buscar paciente..." oninput="renderOrcamentos()">
+            <select id="filtro-orc-status" class="form-control" style="max-width:160px" onchange="renderOrcamentos()">
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="recusado">Recusado</option>
+            </select>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="tabela-orcamentos">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Paciente</th>
+                  <th>Vacinas</th>
+                  <th>Total</th>
                   <th>Status</th>
                   <th style="text-align:right">Ações</th>
                 </tr>
@@ -1868,7 +1911,10 @@
     db = null;
   }
 
-  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [], agendamentos = [];
+  let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [], agendamentos = [], orcamentos = [];
+  let ultimaRetirada = null;
+  let agendEditId = null;
+  let orcEditId = null;
   let confirmResolve = null;
 
   // ===== ESTADO DE LOGIN =====
@@ -1993,6 +2039,7 @@
     'retiradas':       { id: 'page-retiradas',        title: '📤 Retirada de Vacinas' },
     'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
     'agendamentos':    { id: 'page-agendamentos',    title: '📅 Agendamentos' },
+    'orcamentos':      { id: 'page-orcamentos',       title: '📄 Orçamentos' },
     'guia-vacinal':    { id: 'page-guia-vacinal',      title: '📖 Guia Vacinal — Calendário PNI' },
   };
 
@@ -2062,6 +2109,7 @@
     await fetchLembretes();
     await fetchRetiradas();
     await fetchAgendamentos();
+    await fetchOrcamentos();
   }
 
   // ===== PACIENTES =====
@@ -3723,6 +3771,77 @@
   </div>
 </div>
 
+
+<!-- ===== MODAL ORÇAMENTO ===== -->
+<div id="modal-orcamento" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">📄 Novo Orçamento</div>
+      <button class="modal-close" onclick="fecharModalOrcamento()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+
+      <!-- Paciente + Data -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Nome do Paciente <span class="req">*</span></label>
+          <input id="orc-paciente" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data</label>
+          <input id="orc-data" type="date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Validade do orçamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Válido até</label>
+          <input id="orc-validade" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Status</label>
+          <select id="orc-status" class="form-control">
+            <option value="pendente">Pendente</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="recusado">Recusado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Itens de vacina -->
+      <div>
+        <label class="form-label">Vacinas do Orçamento <span class="req">*</span></label>
+        <div id="orc-itens-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="adicionarItemOrcamento()">➕ Adicionar vacina</button>
+      </div>
+
+      <!-- Total -->
+      <div style="background:var(--orange-50);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:var(--gray-700)">Total do Orçamento</span>
+        <span id="orc-total-display" style="font-size:1.3rem;font-weight:800;color:var(--orange-dark)">R$ 0,00</span>
+      </div>
+
+      <!-- Observações -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Observações</label>
+        <textarea id="orc-obs" class="form-control" rows="2" placeholder="Condições, validade, informações adicionais..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalOrcamento()">Cancelar</button>
+      <button class="btn btn-ghost" onclick="gerarPDFOrcamento()" style="color:var(--orange-dark)">🖨️ Salvar PDF</button>
+      <button class="btn btn-primary" onclick="salvarOrcamento()">💾 Salvar Orçamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF ORÇAMENTO (hidden) -->
+<div id="pdf-orcamento" style="display:none">
+  <div id="pdf-orc-conteudo" style="font-family:'Inter',sans-serif;max-width:680px;margin:0 auto;padding:40px 36px;color:#18181b"></div>
+</div>
+
 </body></html>`);
     win.document.close();
   }
@@ -4063,6 +4182,77 @@
   </div>
 </div>
 
+
+<!-- ===== MODAL ORÇAMENTO ===== -->
+<div id="modal-orcamento" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">📄 Novo Orçamento</div>
+      <button class="modal-close" onclick="fecharModalOrcamento()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+
+      <!-- Paciente + Data -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Nome do Paciente <span class="req">*</span></label>
+          <input id="orc-paciente" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data</label>
+          <input id="orc-data" type="date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Validade do orçamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Válido até</label>
+          <input id="orc-validade" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Status</label>
+          <select id="orc-status" class="form-control">
+            <option value="pendente">Pendente</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="recusado">Recusado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Itens de vacina -->
+      <div>
+        <label class="form-label">Vacinas do Orçamento <span class="req">*</span></label>
+        <div id="orc-itens-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="adicionarItemOrcamento()">➕ Adicionar vacina</button>
+      </div>
+
+      <!-- Total -->
+      <div style="background:var(--orange-50);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:var(--gray-700)">Total do Orçamento</span>
+        <span id="orc-total-display" style="font-size:1.3rem;font-weight:800;color:var(--orange-dark)">R$ 0,00</span>
+      </div>
+
+      <!-- Observações -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Observações</label>
+        <textarea id="orc-obs" class="form-control" rows="2" placeholder="Condições, validade, informações adicionais..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalOrcamento()">Cancelar</button>
+      <button class="btn btn-ghost" onclick="gerarPDFOrcamento()" style="color:var(--orange-dark)">🖨️ Salvar PDF</button>
+      <button class="btn btn-primary" onclick="salvarOrcamento()">💾 Salvar Orçamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF ORÇAMENTO (hidden) -->
+<div id="pdf-orcamento" style="display:none">
+  <div id="pdf-orc-conteudo" style="font-family:'Inter',sans-serif;max-width:680px;margin:0 auto;padding:40px 36px;color:#18181b"></div>
+</div>
+
 </body></html>`);
     win.document.close();
   }
@@ -4112,7 +4302,7 @@
   // =============================================
   // RETIRADAS
   // =============================================
-  let ultimaRetirada = null;
+  
 
   async function fetchRetiradas() {
     try {
@@ -4556,7 +4746,7 @@
   // =============================================
   // AGENDAMENTOS
   // =============================================
-  let agendEditId = null;
+  
 
   async function fetchAgendamentos() {
     try {
@@ -4763,6 +4953,347 @@
       toast('Agendamento excluído.', 'success');
       await fetchAgendamentos();
     } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  }
+
+
+
+
+  // =============================================
+  // ORÇAMENTOS
+  // =============================================
+
+  async function fetchOrcamentos() {
+    try {
+      if (!db) { orcamentos = []; renderOrcamentos(); return; }
+      const { data, error } = await db.from('orcamentos').select('*').order('id', { ascending: false });
+      if (error) throw error;
+      orcamentos = data || [];
+    } catch(e) {
+      console.error('fetchOrcamentos:', e);
+      orcamentos = [];
+    }
+    renderOrcamentos();
+  }
+
+  function renderOrcamentos() {
+    const q  = (document.getElementById('searchOrc')?.value || '').toLowerCase();
+    const st = document.getElementById('filtro-orc-status')?.value || '';
+    let lista = orcamentos.filter(o => {
+      if (st && o.status !== st) return false;
+      if (q  && !o.paciente?.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const tbody = document.querySelector('#tabela-orcamentos tbody');
+    if (!tbody) return;
+    if (!lista.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--gray-400)">Nenhum orçamento encontrado</td></tr>';
+      return;
+    }
+    const stBadge = {
+      pendente: '<span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">⏳ Pendente</span>',
+      aprovado: '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">✅ Aprovado</span>',
+      recusado: '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:20px;font-size:0.75rem;font-weight:600">❌ Recusado</span>',
+    };
+    tbody.innerHTML = lista.map(o => {
+      const dt  = o.data ? new Date(o.data+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const itens = (o.itens || []);
+      const vacinasNomes = itens.map(i => i.nome).join(', ') || '—';
+      const total = itens.reduce((s,i) => s + Number(i.valor||0) * Number(i.quantidade||1), 0);
+      const totalFmt = 'R$ ' + total.toFixed(2).replace('.',',');
+      return `<tr>
+        <td>${dt}</td>
+        <td><strong>${esc(o.paciente||'—')}</strong></td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(vacinasNomes)}">${esc(vacinasNomes)}</td>
+        <td><strong>${totalFmt}</strong></td>
+        <td>${stBadge[o.status]||o.status||'—'}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="gerarPDFOrcamentoById(${o.id})" title="Salvar PDF">📄</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalOrcamento(${o.id})" title="Editar">✏️</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="excluirOrcamento(${o.id})" title="Excluir">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  let _orcItens = [];
+
+  function abrirModalOrcamento(id = null) {
+    orcEditId = id;
+    _orcItens = [];
+
+    if (id) {
+      const o = orcamentos.find(x => x.id === id);
+      if (!o) return;
+      document.getElementById('modal-orcamento').querySelector('.modal-title').textContent = '✏️ Editar Orçamento';
+      document.getElementById('orc-paciente').value = o.paciente || '';
+      document.getElementById('orc-data').value     = o.data || '';
+      document.getElementById('orc-validade').value = o.validade || '';
+      document.getElementById('orc-status').value   = o.status || 'pendente';
+      document.getElementById('orc-obs').value      = o.obs || '';
+      _orcItens = JSON.parse(JSON.stringify(o.itens || []));
+    } else {
+      document.getElementById('modal-orcamento').querySelector('.modal-title').textContent = '📄 Novo Orçamento';
+      document.getElementById('orc-paciente').value = '';
+      document.getElementById('orc-data').value     = new Date().toISOString().slice(0,10);
+      // validade padrão: 30 dias
+      const v30 = new Date(); v30.setDate(v30.getDate()+30);
+      document.getElementById('orc-validade').value = v30.toISOString().slice(0,10);
+      document.getElementById('orc-status').value   = 'pendente';
+      document.getElementById('orc-obs').value      = '';
+      _orcItens = [];
+      // Adicionar uma linha de vacina padrão
+      _orcItens.push({ vacina_id: '', nome: '', quantidade: 1, valor: 0 });
+    }
+
+    renderItensOrcamento();
+    document.getElementById('modal-orcamento').style.display = 'flex';
+  }
+
+  function fecharModalOrcamento() {
+    document.getElementById('modal-orcamento').style.display = 'none';
+    orcEditId = null;
+  }
+
+  function renderItensOrcamento() {
+    const lista = document.getElementById('orc-itens-lista');
+    if (!lista) return;
+    lista.innerHTML = _orcItens.map((item, idx) => `
+      <div style="display:grid;grid-template-columns:2fr 80px 120px 36px;gap:8px;align-items:end">
+        <div>
+          ${idx === 0 ? '<label class="form-label">Vacina</label>' : ''}
+          <select class="form-control" onchange="onOrcVacinaChange(${idx}, this.value)">
+            <option value="">Selecione...</option>
+            ${(vacinas||[]).map(v =>
+              `<option value="${v.id}" ${Number(item.vacina_id)===v.id?'selected':''}>${esc(v.nome)}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div>
+          ${idx === 0 ? '<label class="form-label">Qtd</label>' : ''}
+          <input type="number" min="1" value="${item.quantidade||1}" class="form-control"
+            oninput="onOrcQtdChange(${idx}, this.value)">
+        </div>
+        <div>
+          ${idx === 0 ? '<label class="form-label">Valor (R$)</label>' : ''}
+          <input type="number" step="0.01" min="0" value="${item.valor||''}" class="form-control"
+            placeholder="0,00" oninput="onOrcValorChange(${idx}, this.value)">
+        </div>
+        <div style="padding-bottom:2px">
+          ${idx === 0 ? '<div style="height:22px"></div>' : ''}
+          <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:6px 8px" 
+            onclick="removerItemOrcamento(${idx})" title="Remover">✕</button>
+        </div>
+      </div>
+    `).join('');
+    atualizarTotalOrcamento();
+  }
+
+  function onOrcVacinaChange(idx, vacinaId) {
+    _orcItens[idx].vacina_id = Number(vacinaId) || '';
+    const v = findVacina(Number(vacinaId));
+    if (v) {
+      _orcItens[idx].nome  = v.nome;
+      _orcItens[idx].valor = v.preco ? Number(v.preco) : _orcItens[idx].valor;
+    } else {
+      _orcItens[idx].nome = '';
+    }
+    renderItensOrcamento();
+  }
+
+  function onOrcQtdChange(idx, val) {
+    _orcItens[idx].quantidade = Number(val) || 1;
+    atualizarTotalOrcamento();
+  }
+
+  function onOrcValorChange(idx, val) {
+    _orcItens[idx].valor = Number(val) || 0;
+    atualizarTotalOrcamento();
+  }
+
+  function adicionarItemOrcamento() {
+    _orcItens.push({ vacina_id: '', nome: '', quantidade: 1, valor: 0 });
+    renderItensOrcamento();
+  }
+
+  function removerItemOrcamento(idx) {
+    _orcItens.splice(idx, 1);
+    renderItensOrcamento();
+  }
+
+  function atualizarTotalOrcamento() {
+    const total = _orcItens.reduce((s,i) => s + Number(i.valor||0) * Number(i.quantidade||1), 0);
+    const el = document.getElementById('orc-total-display');
+    if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+  }
+
+  async function salvarOrcamento() {
+    const paciente = document.getElementById('orc-paciente').value.trim();
+    const data     = document.getElementById('orc-data').value;
+    const validade = document.getElementById('orc-validade').value;
+    const status   = document.getElementById('orc-status').value || 'pendente';
+    const obs      = document.getElementById('orc-obs').value.trim();
+
+    if (!paciente) { toast('Informe o nome do paciente.', 'warning'); return; }
+    if (!_orcItens.length || !_orcItens.some(i => i.nome || i.vacina_id)) {
+      toast('Adicione ao menos uma vacina.', 'warning'); return;
+    }
+
+    // Garantir nomes preenchidos
+    _orcItens.forEach(i => {
+      if (!i.nome && i.vacina_id) {
+        const v = findVacina(Number(i.vacina_id));
+        if (v) i.nome = v.nome;
+      }
+    });
+
+    const payload = { paciente, data, validade, status, obs: obs||null, itens: _orcItens };
+
+    try {
+      if (orcEditId) {
+        const { error } = await db.from('orcamentos').update(payload).match({ id: orcEditId });
+        if (error) throw error;
+        toast('Orçamento atualizado!', 'success');
+      } else {
+        const { error } = await db.from('orcamentos').insert([payload]);
+        if (error) throw error;
+        toast('Orçamento salvo!', 'success');
+      }
+      fecharModalOrcamento();
+      await fetchOrcamentos();
+    } catch(err) {
+      console.error(err);
+      toast('Erro ao salvar: ' + (err.message||err), 'error');
+    }
+  }
+
+  async function excluirOrcamento(id) {
+    if (!await confirm('Excluir este orçamento?')) return;
+    try {
+      const { error } = await db.from('orcamentos').delete().match({ id });
+      if (error) throw error;
+      toast('Orçamento excluído.', 'success');
+      await fetchOrcamentos();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  }
+
+  function gerarPDFOrcamentoById(id) {
+    const o = orcamentos.find(x => x.id === id);
+    if (!o) return;
+    _renderPDFOrcamento(o);
+  }
+
+  function gerarPDFOrcamento() {
+    // Chamado do modal — usa dados atuais
+    const paciente = document.getElementById('orc-paciente').value.trim() || 'Paciente';
+    const data     = document.getElementById('orc-data').value;
+    const validade = document.getElementById('orc-validade').value;
+    const obs      = document.getElementById('orc-obs').value.trim();
+    _orcItens.forEach(i => {
+      if (!i.nome && i.vacina_id) {
+        const v = findVacina(Number(i.vacina_id)); if (v) i.nome = v.nome;
+      }
+    });
+    _renderPDFOrcamento({ paciente, data, validade, obs, itens: _orcItens });
+  }
+
+  function _renderPDFOrcamento(o) {
+    const itens  = o.itens || [];
+    const total  = itens.reduce((s,i) => s + Number(i.valor||0)*Number(i.quantidade||1), 0);
+    const fmt    = v => 'R$ ' + Number(v).toFixed(2).replace('.',',');
+    const fmtDt  = d => d ? new Date(d+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const agora  = new Date().toLocaleString('pt-BR');
+    const orcNum = o.id ? String(o.id).padStart(4,'0') : new Date().getTime().toString().slice(-4);
+
+    const linhasItens = itens.filter(i => i.nome || i.vacina_id).map((i,idx) => {
+      const subtotal = Number(i.valor||0) * Number(i.quantidade||1);
+      return `<tr style="border-bottom:1px solid #f4f4f5">
+        <td style="padding:10px 8px;font-size:0.9rem;color:#27272a">${idx+1}</td>
+        <td style="padding:10px 8px;font-size:0.9rem;font-weight:600;color:#27272a">${esc(i.nome||'—')}</td>
+        <td style="padding:10px 8px;font-size:0.9rem;color:#52525b;text-align:center">${i.quantidade||1}</td>
+        <td style="padding:10px 8px;font-size:0.9rem;color:#52525b;text-align:right">${fmt(i.valor||0)}</td>
+        <td style="padding:10px 8px;font-size:0.9rem;font-weight:700;color:#e76b1f;text-align:right">${fmt(subtotal)}</td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('pdf-orc-conteudo').innerHTML = `
+      <!-- Cabeçalho -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:3px solid #e76b1f">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div style="width:56px;height:56px;background:linear-gradient(135deg,#ff8c42,#e76b1f);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 12px rgba(231,107,31,0.3)">💉</div>
+          <div>
+            <div style="font-size:1.7rem;font-weight:800;color:#e76b1f;letter-spacing:-0.5px;line-height:1">Previmune</div>
+            <div style="font-size:0.8rem;color:#71717a;margin-top:3px;font-weight:500">Sistema de Vacinação</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.1rem;font-weight:800;color:#18181b;text-transform:uppercase;letter-spacing:1px">Orçamento</div>
+          <div style="font-size:1.4rem;font-weight:800;color:#e76b1f;margin-top:2px">#${orcNum}</div>
+          <div style="font-size:0.78rem;color:#71717a;margin-top:4px">Emitido em: ${agora}</div>
+        </div>
+      </div>
+
+      <!-- Dados do paciente e datas -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px">
+        <div style="background:#fff7f1;border-radius:10px;padding:16px 18px;border:1px solid #ffdcc2">
+          <div style="font-size:0.72rem;font-weight:700;color:#c85a10;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Paciente</div>
+          <div style="font-size:1rem;font-weight:700;color:#18181b">${esc(o.paciente||'—')}</div>
+        </div>
+        <div style="background:#f4f4f5;border-radius:10px;padding:16px 18px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:0.78rem;color:#71717a;font-weight:500">Data de emissão</span>
+              <span style="font-size:0.85rem;font-weight:600;color:#18181b">${fmtDt(o.data)}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-size:0.78rem;color:#71717a;font-weight:500">Válido até</span>
+              <span style="font-size:0.85rem;font-weight:600;color:#18181b">${fmtDt(o.validade)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de itens -->
+      <div style="margin-bottom:24px">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:#f4f4f5;border-radius:8px">
+              <th style="padding:10px 8px;font-size:0.72rem;font-weight:700;color:#71717a;text-transform:uppercase;text-align:left;width:32px">#</th>
+              <th style="padding:10px 8px;font-size:0.72rem;font-weight:700;color:#71717a;text-transform:uppercase;text-align:left">Vacina</th>
+              <th style="padding:10px 8px;font-size:0.72rem;font-weight:700;color:#71717a;text-transform:uppercase;text-align:center;width:60px">Qtd</th>
+              <th style="padding:10px 8px;font-size:0.72rem;font-weight:700;color:#71717a;text-transform:uppercase;text-align:right;width:110px">Unit.</th>
+              <th style="padding:10px 8px;font-size:0.72rem;font-weight:700;color:#71717a;text-transform:uppercase;text-align:right;width:120px">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${linhasItens || '<tr><td colspan="5" style="padding:16px;text-align:center;color:#a1a1aa">Nenhum item</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Total -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:24px">
+        <div style="background:linear-gradient(135deg,#fff7f1,#ffedd5);border:2px solid #ffdcc2;border-radius:12px;padding:16px 24px;text-align:right;min-width:220px">
+          <div style="font-size:0.78rem;color:#c85a10;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Total do Orçamento</div>
+          <div style="font-size:1.8rem;font-weight:800;color:#e76b1f;margin-top:4px;line-height:1">${fmt(total)}</div>
+        </div>
+      </div>
+
+      ${o.obs ? `<div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:10px;padding:14px 16px;margin-bottom:24px">
+        <div style="font-size:0.75rem;font-weight:700;color:#52525b;text-transform:uppercase;margin-bottom:6px">Observações</div>
+        <div style="font-size:0.88rem;color:#52525b;line-height:1.5">${esc(o.obs)}</div>
+      </div>` : ''}
+
+      <!-- Rodapé -->
+      <div style="border-top:2px dashed #e4e4e7;padding-top:16px;text-align:center">
+        <div style="font-size:0.75rem;color:#a1a1aa">Este orçamento é válido até ${fmtDt(o.validade)} e não constitui garantia de disponibilidade.</div>
+        <div style="font-size:0.75rem;color:#a1a1aa;margin-top:3px;font-weight:600">Previmune — Sistema de Vacinação</div>
+      </div>
+    `;
+
+    const el = document.getElementById('pdf-orcamento');
+    el.style.display = 'block';
+    window.print();
+    el.style.display = 'none';
   }
 
 
@@ -5057,6 +5588,77 @@
       <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar Agendamento</button>
     </div>
   </div>
+</div>
+
+
+<!-- ===== MODAL ORÇAMENTO ===== -->
+<div id="modal-orcamento" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">📄 Novo Orçamento</div>
+      <button class="modal-close" onclick="fecharModalOrcamento()">✕</button>
+    </div>
+    <div class="modal-body" style="display:grid;gap:14px">
+
+      <!-- Paciente + Data -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Nome do Paciente <span class="req">*</span></label>
+          <input id="orc-paciente" class="form-control" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Data</label>
+          <input id="orc-data" type="date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Validade do orçamento -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Válido até</label>
+          <input id="orc-validade" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Status</label>
+          <select id="orc-status" class="form-control">
+            <option value="pendente">Pendente</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="recusado">Recusado</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Itens de vacina -->
+      <div>
+        <label class="form-label">Vacinas do Orçamento <span class="req">*</span></label>
+        <div id="orc-itens-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="adicionarItemOrcamento()">➕ Adicionar vacina</button>
+      </div>
+
+      <!-- Total -->
+      <div style="background:var(--orange-50);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:600;color:var(--gray-700)">Total do Orçamento</span>
+        <span id="orc-total-display" style="font-size:1.3rem;font-weight:800;color:var(--orange-dark)">R$ 0,00</span>
+      </div>
+
+      <!-- Observações -->
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Observações</label>
+        <textarea id="orc-obs" class="form-control" rows="2" placeholder="Condições, validade, informações adicionais..."></textarea>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharModalOrcamento()">Cancelar</button>
+      <button class="btn btn-ghost" onclick="gerarPDFOrcamento()" style="color:var(--orange-dark)">🖨️ Salvar PDF</button>
+      <button class="btn btn-primary" onclick="salvarOrcamento()">💾 Salvar Orçamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF ORÇAMENTO (hidden) -->
+<div id="pdf-orcamento" style="display:none">
+  <div id="pdf-orc-conteudo" style="font-family:'Inter',sans-serif;max-width:680px;margin:0 auto;padding:40px 36px;color:#18181b"></div>
 </div>
 
 </body>
