@@ -1302,7 +1302,7 @@
             <table class="data-table" id="tabela-agendamentos">
               <thead>
                 <tr>
-                  <th>Data</th>
+                  <th>Data / Hora</th>
                   <th>Nome</th>
                   <th>CPF</th>
                   <th>Vacina</th>
@@ -3794,8 +3794,8 @@
         </div>
       </div>
 
-      <!-- Linha 2: Data nascimento + Data agendamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <!-- Linha 2: Data nascimento + Data agendamento + Horário -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:12px">
         <div class="form-group" style="margin:0">
           <label class="form-label">Data de Nascimento <span class="req">*</span></label>
           <input id="agend-nascimento" type="date" class="form-control">
@@ -3803,6 +3803,10 @@
         <div class="form-group" style="margin:0">
           <label class="form-label">Data do Agendamento <span class="req">*</span></label>
           <input id="agend-data" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Horário</label>
+          <input id="agend-hora" type="time" class="form-control" placeholder="08:00">
         </div>
       </div>
 
@@ -4205,8 +4209,8 @@
         </div>
       </div>
 
-      <!-- Linha 2: Data nascimento + Data agendamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <!-- Linha 2: Data nascimento + Data agendamento + Horário -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:12px">
         <div class="form-group" style="margin:0">
           <label class="form-label">Data de Nascimento <span class="req">*</span></label>
           <input id="agend-nascimento" type="date" class="form-control">
@@ -4214,6 +4218,10 @@
         <div class="form-group" style="margin:0">
           <label class="form-label">Data do Agendamento <span class="req">*</span></label>
           <input id="agend-data" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Horário</label>
+          <input id="agend-hora" type="time" class="form-control" placeholder="08:00">
         </div>
       </div>
 
@@ -4943,8 +4951,9 @@
 
     tbody.innerHTML = lista.map(a => {
       const dt = a.data_agendamento ? new Date(a.data_agendamento+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const hr = a.hora_agendamento ? `<span style="font-size:0.78rem;color:var(--gray-500);margin-left:4px">🕐 ${a.hora_agendamento}</span>` : '';
       return `<tr>
-        <td>${dt}</td>
+        <td>${dt}${hr}</td>
         <td>${esc(a.nome_completo||'—')}</td>
         <td>${esc(a.cpf||'—')}</td>
         <td>${esc(a.vacina_nome||'—')}</td>
@@ -4999,10 +5008,11 @@
       document.getElementById('agend-valor').value      = a.valor || '';
       document.getElementById('agend-status').value     = a.status || 'agendado';
       document.getElementById('agend-obs').value        = a.obs || '';
+      const hEl = document.getElementById('agend-hora'); if (hEl) hEl.value = a.hora_agendamento || '';
     } else {
       // Modo novo
       document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '📅 Novo Agendamento de Vacina';
-      ['agend-nome','agend-cpf','agend-nascimento','agend-endereco','agend-lote','agend-validade','agend-aplicador','agend-obs'].forEach(id => {
+      ['agend-nome','agend-cpf','agend-nascimento','agend-endereco','agend-lote','agend-validade','agend-aplicador','agend-obs','agend-hora'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       document.getElementById('agend-data').value      = new Date().toISOString().slice(0,10);
@@ -5054,6 +5064,7 @@
     const valor            = Number(document.getElementById('agend-valor').value || 0);
     const status           = document.getElementById('agend-status').value || 'agendado';
     const obs              = document.getElementById('agend-obs').value.trim();
+    const hora_agendamento = document.getElementById('agend-hora')?.value || null;
 
     if (!nome_completo)    { toast('Informe o nome completo.', 'warning'); return; }
     if (!cpf)              { toast('Informe o CPF.', 'warning'); return; }
@@ -5068,7 +5079,7 @@
     const validade_display = document.getElementById('agend-validade').value;
 
     const payload = {
-      nome_completo, cpf, data_nascimento, data_agendamento, endereco,
+      nome_completo, cpf, data_nascimento, data_agendamento, hora_agendamento, endereco,
       vacina_id, vacina_nome, lote, validade_display,
       dose: dose || null, local_aplicacao: local_aplicacao || null,
       aplicador: aplicador || null, forma_pagamento: forma_pagamento || null,
@@ -5909,6 +5920,415 @@
       body > *:not(#comprovante-retirada) { display: none !important; }
       #comprovante-retirada { display: block !important; }
     }
+
+    /* ================================================================
+       REDESIGN PREVIMUNE — Visual Upgrade
+    ================================================================ */
+
+    /* --- ROOT: paleta atualizada com mais profundidade --- */
+    :root {
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.10), 0 4px 10px rgba(0,0,0,0.05);
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --sidebar-width: 220px;
+      --transition: all 0.18s ease;
+    }
+
+    /* --- BODY --- */
+    body {
+      background: #f0f2f5 !important;
+      font-feature-settings: 'liga' 1, 'kern' 1;
+    }
+
+    /* --- SIDEBAR redesenhada --- */
+    .sidebar {
+      background: linear-gradient(175deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%) !important;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.18) !important;
+      border-right: none !important;
+    }
+
+    .sidebar-brand {
+      background: rgba(255,255,255,0.04) !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+      padding: 20px 18px !important;
+    }
+
+    .brand-name {
+      color: #ffffff !important;
+      font-size: 1.15rem !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-sub {
+      color: rgba(255,255,255,0.45) !important;
+      font-size: 0.72rem !important;
+      margin-top: 1px;
+    }
+
+    .nav-item {
+      color: rgba(255,255,255,0.62) !important;
+      border-radius: 10px !important;
+      margin: 2px 10px !important;
+      padding: 9px 12px !important;
+      font-size: 0.855rem !important;
+      font-weight: 500 !important;
+      transition: var(--transition) !important;
+      border: none !important;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.09) !important;
+      color: #ffffff !important;
+      transform: translateX(2px);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(231,107,31,0.40) !important;
+      font-weight: 700 !important;
+    }
+
+    .nav-section {
+      font-size: 0.67rem !important;
+      font-weight: 700 !important;
+      color: rgba(255,255,255,0.30) !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      padding: 14px 22px 4px !important;
+    }
+
+    /* Usuário logado na sidebar */
+    .sidebar-user {
+      background: rgba(255,255,255,0.05) !important;
+      border-top: 1px solid rgba(255,255,255,0.08) !important;
+    }
+
+    .sidebar-user .user-name {
+      color: rgba(255,255,255,0.85) !important;
+    }
+
+    .sidebar-user .user-role {
+      color: rgba(255,255,255,0.40) !important;
+    }
+
+    .btn-logout {
+      background: rgba(239,68,68,0.15) !important;
+      color: #fca5a5 !important;
+      border: 1px solid rgba(239,68,68,0.25) !important;
+      border-radius: 8px !important;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239,68,68,0.30) !important;
+      color: #ffffff !important;
+    }
+
+    /* --- TOPBAR --- */
+    .topbar {
+      background: #ffffff !important;
+      border-bottom: 1px solid #e8eaf0 !important;
+      box-shadow: var(--shadow-sm) !important;
+      height: 58px !important;
+    }
+
+    .topbar-title {
+      font-size: 1.05rem !important;
+      font-weight: 700 !important;
+      color: var(--gray-900) !important;
+    }
+
+    /* --- CARDS --- */
+    .card {
+      border-radius: var(--radius-lg) !important;
+      box-shadow: var(--shadow-md) !important;
+      border: 1px solid rgba(0,0,0,0.04) !important;
+      transition: var(--transition) !important;
+      background: #ffffff !important;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg) !important;
+    }
+
+    .card-header {
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+      padding: 18px 22px !important;
+      border-bottom: 1px solid #f1f1f4 !important;
+      background: #ffffff !important;
+    }
+
+    .card-title {
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      color: var(--gray-900) !important;
+      letter-spacing: -0.2px !important;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem !important;
+      color: var(--gray-400) !important;
+      margin-top: 2px !important;
+    }
+
+    /* KPI / stat cards no dashboard */
+    .stat-card {
+      border-radius: var(--radius-lg) !important;
+      box-shadow: var(--shadow-md) !important;
+      border: none !important;
+      transition: var(--transition) !important;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: var(--shadow-lg) !important;
+    }
+
+    /* --- BOTÕES --- */
+    .btn {
+      border-radius: 9px !important;
+      font-weight: 600 !important;
+      font-size: 0.855rem !important;
+      transition: var(--transition) !important;
+      letter-spacing: 0.01em !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%) !important;
+      border: none !important;
+      box-shadow: 0 3px 10px rgba(231,107,31,0.30) !important;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 5px 16px rgba(231,107,31,0.40) !important;
+    }
+
+    .btn-primary:active {
+      transform: translateY(0) !important;
+    }
+
+    .btn-ghost {
+      background: transparent !important;
+      color: var(--gray-600) !important;
+      border: 1px solid var(--gray-200) !important;
+    }
+
+    .btn-ghost:hover {
+      background: var(--gray-100) !important;
+      border-color: var(--gray-300) !important;
+    }
+
+    .btn-danger, .btn-sm[style*="color:var(--red)"] {
+      color: var(--red) !important;
+    }
+
+    /* --- TABELAS --- */
+    .data-table {
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+    }
+
+    .data-table thead th {
+      background: #f8f9fc !important;
+      color: var(--gray-500) !important;
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.06em !important;
+      padding: 10px 14px !important;
+      border-bottom: 2px solid #eef0f6 !important;
+    }
+
+    .data-table tbody tr {
+      transition: var(--transition) !important;
+    }
+
+    .data-table tbody tr:hover {
+      background: #fdf5ef !important;
+    }
+
+    .data-table tbody td {
+      padding: 11px 14px !important;
+      border-bottom: 1px solid #f3f4f8 !important;
+      font-size: 0.875rem !important;
+      color: var(--gray-800) !important;
+      vertical-align: middle !important;
+    }
+
+    /* --- FORMULÁRIOS --- */
+    .form-control {
+      border-radius: 9px !important;
+      border: 1.5px solid #e4e4e7 !important;
+      font-size: 0.875rem !important;
+      padding: 9px 13px !important;
+      transition: var(--transition) !important;
+      background: #fafafa !important;
+    }
+
+    .form-control:focus {
+      border-color: var(--orange) !important;
+      background: #ffffff !important;
+      box-shadow: 0 0 0 3px rgba(231,107,31,0.12) !important;
+      outline: none !important;
+    }
+
+    .form-label {
+      font-size: 0.78rem !important;
+      font-weight: 600 !important;
+      color: var(--gray-600) !important;
+      margin-bottom: 5px !important;
+      display: block !important;
+    }
+
+    /* --- BADGES --- */
+    .badge {
+      border-radius: 20px !important;
+      font-size: 0.73rem !important;
+      font-weight: 700 !important;
+      padding: 3px 10px !important;
+      letter-spacing: 0.02em !important;
+    }
+
+    .badge-green {
+      background: #dcfce7 !important;
+      color: #15803d !important;
+    }
+
+    .badge-yellow {
+      background: #fef9c3 !important;
+      color: #854d0e !important;
+    }
+
+    .badge-red {
+      background: #fee2e2 !important;
+      color: #991b1b !important;
+    }
+
+    /* --- MODAIS --- */
+    .modal-box {
+      border-radius: var(--radius-lg) !important;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.20) !important;
+      border: none !important;
+    }
+
+    .modal-head {
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+      background: linear-gradient(135deg, #fff7f1 0%, #ffe8d4 100%) !important;
+      border-bottom: 2px solid var(--orange-200) !important;
+      padding: 18px 22px !important;
+    }
+
+    .modal-title {
+      font-size: 1rem !important;
+      font-weight: 800 !important;
+      color: var(--orange-dark) !important;
+    }
+
+    .modal-foot {
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
+      background: #f9fafb !important;
+      border-top: 1px solid #f1f1f4 !important;
+      padding: 14px 22px !important;
+    }
+
+    .modal-body {
+      padding: 20px 22px !important;
+    }
+
+    .modal-close {
+      background: rgba(0,0,0,0.06) !important;
+      border-radius: 8px !important;
+      border: none !important;
+      padding: 4px 8px !important;
+      cursor: pointer !important;
+      font-size: 1rem !important;
+      color: var(--gray-600) !important;
+      transition: var(--transition) !important;
+    }
+
+    .modal-close:hover {
+      background: rgba(231,107,31,0.12) !important;
+      color: var(--orange-dark) !important;
+    }
+
+    /* --- TOAST --- */
+    .toast-container {
+      border-radius: 12px !important;
+      box-shadow: var(--shadow-lg) !important;
+    }
+
+    /* --- MAIN CONTENT --- */
+    .main-content {
+      background: #f0f2f5 !important;
+    }
+
+    .page {
+      padding: 24px !important;
+      max-width: 1200px;
+    }
+
+    /* --- FAIXA BUTTONS (planos vacinais) --- */
+    .faixa-btn {
+      border-radius: 22px !important;
+      font-size: 0.8rem !important;
+      font-weight: 600 !important;
+      padding: 6px 14px !important;
+      border: 1.5px solid var(--orange-200) !important;
+      background: #fff !important;
+      color: var(--orange-dark) !important;
+      transition: var(--transition) !important;
+      cursor: pointer !important;
+    }
+
+    .faixa-btn:hover {
+      background: var(--orange-100) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    .faixa-btn.selected {
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%) !important;
+      color: #fff !important;
+      border-color: transparent !important;
+      box-shadow: 0 3px 10px rgba(231,107,31,0.35) !important;
+    }
+
+    /* --- LOGIN screen --- */
+    .login-card {
+      border-radius: 20px !important;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important;
+    }
+
+    .login-btn {
+      border-radius: 10px !important;
+    }
+
+    /* --- Scroll table wrapper --- */
+    .scroll-table, .table-wrapper {
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
+      overflow: hidden !important;
+    }
+
+    /* --- Highlight bar / alerts --- */
+    .highlight-bar {
+      border-radius: 10px !important;
+    }
+
+    /* --- Btn outline orange --- */
+    .btn-outline-orange {
+      background: transparent !important;
+      border: 1.5px solid var(--orange) !important;
+      color: var(--orange-dark) !important;
+      border-radius: 9px !important;
+    }
+
+    .btn-outline-orange:hover {
+      background: var(--orange-50) !important;
+    }
+
   </style>
   <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
     <!-- conteúdo preenchido via JS -->
@@ -5937,8 +6357,8 @@
         </div>
       </div>
 
-      <!-- Linha 2: Data nascimento + Data agendamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <!-- Linha 2: Data nascimento + Data agendamento + Horário -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:12px">
         <div class="form-group" style="margin:0">
           <label class="form-label">Data de Nascimento <span class="req">*</span></label>
           <input id="agend-nascimento" type="date" class="form-control">
@@ -5946,6 +6366,10 @@
         <div class="form-group" style="margin:0">
           <label class="form-label">Data do Agendamento <span class="req">*</span></label>
           <input id="agend-data" type="date" class="form-control">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Horário</label>
+          <input id="agend-hora" type="time" class="form-control" placeholder="08:00">
         </div>
       </div>
 
