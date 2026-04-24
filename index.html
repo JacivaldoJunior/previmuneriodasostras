@@ -1490,6 +1490,8 @@
           </div>
           <div class="card-body">
             <input type="hidden" id="paciente_edit_id">
+
+            <!-- Nome + CPF -->
             <div class="form-group">
               <label class="form-label">Nome completo <span class="req">*</span></label>
               <input class="form-control" id="nome" placeholder="Ex: Maria da Silva">
@@ -1497,21 +1499,86 @@
             <div class="grid-2">
               <div class="form-group">
                 <label class="form-label">CPF <span class="req">*</span></label>
-                <input class="form-control" id="cpf" placeholder="000.000.000-00">
+                <input class="form-control" id="cpf" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
               </div>
               <div class="form-group">
                 <label class="form-label">Data de Nascimento</label>
                 <input class="form-control" id="nascimento" type="date">
               </div>
             </div>
+
+            <!-- Telefone -->
             <div class="form-group">
               <label class="form-label">Telefone</label>
               <input class="form-control" id="telefone" placeholder="(00) 00000-0000">
             </div>
+
+            <!-- CEP + botão buscar -->
             <div class="form-group">
-              <label class="form-label">Endereço</label>
-              <input class="form-control" id="endereco" placeholder="Rua, Número, Bairro, Cidade">
+              <label class="form-label">CEP</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="form-control" id="cep" placeholder="00000-000" maxlength="9"
+                  oninput="mascaraCEP(this)" onblur="buscarCEP()"
+                  style="max-width:160px">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="buscarCEP()" id="btn-buscar-cep"
+                  style="white-space:nowrap">🔍 Buscar</button>
+                <span id="cep-status" style="font-size:0.78rem;color:var(--gray-400)"></span>
+              </div>
             </div>
+
+            <!-- Endereço (preenchido automaticamente) -->
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Rua / Logradouro</label>
+                <input class="form-control" id="endereco-rua" placeholder="Preenchido pelo CEP">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Número</label>
+                <input class="form-control" id="endereco-numero" placeholder="Nº">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Bairro</label>
+                <input class="form-control" id="endereco-bairro" placeholder="Preenchido pelo CEP">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cidade / UF</label>
+                <input class="form-control" id="endereco-cidade" placeholder="Preenchido pelo CEP" readonly>
+              </div>
+            </div>
+            <div class="form-group" style="display:none">
+              <input class="form-control" id="endereco" placeholder="">
+            </div>
+
+            <!-- Divisor Responsável Legal -->
+            <div style="margin:18px 0 14px;border-top:1px solid var(--gray-200);padding-top:16px">
+              <div style="font-size:0.8rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">
+                👤 Responsável Legal <span style="font-size:0.72rem;font-weight:400;color:var(--gray-400)">(obrigatório para menores de idade)</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nome do Responsável</label>
+                <input class="form-control" id="resp-nome" placeholder="Ex: João da Silva">
+              </div>
+              <div class="grid-2">
+                <div class="form-group">
+                  <label class="form-label">CPF do Responsável</label>
+                  <input class="form-control" id="resp-cpf" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Parentesco</label>
+                  <select class="form-control" id="resp-parentesco">
+                    <option value="">Selecione...</option>
+                    <option value="Mãe">Mãe</option>
+                    <option value="Pai">Pai</option>
+                    <option value="Avó/Avô">Avó/Avô</option>
+                    <option value="Tutor(a)">Tutor(a)</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
               <button class="btn btn-ghost" onclick="cancelarPaciente()">Cancelar</button>
               <button class="btn btn-primary" id="btn-salvar-paciente" onclick="cadastrarOuAtualizarPaciente()">💾 Salvar Paciente</button>
@@ -2305,23 +2372,78 @@
     if (!hiddenVal) limparSelecaoPaciente();
   }
 
+
+  // ===== CEP / VIACEP =====
+  function mascaraCEP(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5);
+    el.value = v;
+  }
+
+  async function buscarCEP() {
+    const cepRaw = (document.getElementById('cep')?.value || '').replace(/\D/g,'');
+    if (cepRaw.length !== 8) return;
+    const status = document.getElementById('cep-status');
+    if (status) status.textContent = '⏳ Buscando...';
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cepRaw}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        if (status) status.textContent = '❌ CEP não encontrado';
+        return;
+      }
+      const rua  = document.getElementById('endereco-rua');
+      const bairro = document.getElementById('endereco-bairro');
+      const cidade = document.getElementById('endereco-cidade');
+      const end  = document.getElementById('endereco');
+      if (rua)    rua.value    = data.logradouro || '';
+      if (bairro) bairro.value = data.bairro     || '';
+      if (cidade) cidade.value = (data.localidade || '') + (data.uf ? ' — ' + data.uf : '');
+      // montar campo endereco composto
+      if (end) end.value = [data.logradouro, data.bairro, data.localidade, data.uf].filter(Boolean).join(', ');
+      if (status) status.textContent = '✅ Endereço encontrado!';
+      setTimeout(() => { if (status) status.textContent = ''; }, 3000);
+      document.getElementById('endereco-numero')?.focus();
+    } catch(e) {
+      if (status) status.textContent = '❌ Erro ao buscar CEP';
+    }
+  }
+
+  // Sincronizar campos de endereço no campo hidden "endereco"
+  function sincronizarEndereco() {
+    const rua    = document.getElementById('endereco-rua')?.value.trim()    || '';
+    const num    = document.getElementById('endereco-numero')?.value.trim() || '';
+    const bairro = document.getElementById('endereco-bairro')?.value.trim() || '';
+    const cidade = document.getElementById('endereco-cidade')?.value.trim() || '';
+    const cep    = document.getElementById('cep')?.value.trim()             || '';
+    const parts  = [rua, num ? 'Nº '+num : '', bairro, cidade, cep].filter(Boolean);
+    const el = document.getElementById('endereco');
+    if (el) el.value = parts.join(', ');
+  }
+
   async function cadastrarOuAtualizarPaciente() {
-    const id = document.getElementById('paciente_edit_id').value;
-    const nome = document.getElementById('nome').value.trim();
-    const cpf = document.getElementById('cpf').value.trim();
-    const nascimento = document.getElementById('nascimento').value;
-    const telefone = document.getElementById('telefone').value.trim();
-    const endereco = document.getElementById('endereco').value.trim();
+    sincronizarEndereco();
+    const id          = document.getElementById('paciente_edit_id').value;
+    const nome        = document.getElementById('nome').value.trim();
+    const cpf         = document.getElementById('cpf').value.trim();
+    const nascimento  = document.getElementById('nascimento').value;
+    const telefone    = document.getElementById('telefone').value.trim();
+    const endereco    = document.getElementById('endereco').value.trim();
+    const resp_nome      = document.getElementById('resp-nome')?.value.trim()      || null;
+    const resp_cpf       = document.getElementById('resp-cpf')?.value.trim()       || null;
+    const resp_parentesco= document.getElementById('resp-parentesco')?.value       || null;
     if (!nome || !cpf) { toast('Preencha ao menos nome e CPF.', 'warning'); return; }
     const btn = document.getElementById('btn-salvar-paciente');
     btn.disabled = true;
+    const payload = { nome, cpf, nascimento: nascimento||null, telefone, endereco,
+      resp_nome, resp_cpf, resp_parentesco };
     try {
       if (id) {
-        const { error } = await db.from('pacientes').update({ nome, cpf, nascimento: nascimento||null, telefone, endereco }).match({ id: Number(id) });
+        const { error } = await db.from('pacientes').update(payload).match({ id: Number(id) });
         if (error) throw error;
         toast('Paciente atualizado com sucesso!', 'success');
       } else {
-        const { error } = await db.from('pacientes').insert([{ nome, cpf, nascimento: nascimento||null, telefone, endereco }]);
+        const { error } = await db.from('pacientes').insert([payload]);
         if (error) throw error;
         toast('Paciente cadastrado com sucesso!', 'success');
       }
@@ -2337,11 +2459,21 @@
     const p = pacientes.find(x => Number(x.id) === Number(id));
     if (!p) return;
     document.getElementById('paciente_edit_id').value = p.id;
-    document.getElementById('nome').value = p.nome || '';
-    document.getElementById('cpf').value = p.cpf || '';
-    document.getElementById('nascimento').value = p.nascimento || '';
-    document.getElementById('telefone').value = p.telefone || '';
-    document.getElementById('endereco').value = p.endereco || '';
+    document.getElementById('nome').value        = p.nome        || '';
+    document.getElementById('cpf').value         = p.cpf         || '';
+    document.getElementById('nascimento').value  = p.nascimento  || '';
+    document.getElementById('telefone').value    = p.telefone    || '';
+    // endereço no campo composto e campos separados
+    document.getElementById('endereco').value    = p.endereco    || '';
+    document.getElementById('endereco-rua').value    = '';
+    document.getElementById('endereco-numero').value = '';
+    document.getElementById('endereco-bairro').value = '';
+    document.getElementById('endereco-cidade').value = '';
+    document.getElementById('cep').value             = '';
+    // Responsável legal
+    const rnEl = document.getElementById('resp-nome');      if (rnEl) rnEl.value = p.resp_nome || '';
+    const rcEl = document.getElementById('resp-cpf');       if (rcEl) rcEl.value = p.resp_cpf  || '';
+    const rpEl = document.getElementById('resp-parentesco');if (rpEl) rpEl.value = p.resp_parentesco || '';
     navTo('novo-paciente');
   }
 
@@ -2362,8 +2494,8 @@
   }
 
   function limparFormPaciente() {
-    ['paciente_edit_id','nome','cpf','nascimento','telefone','endereco'].forEach(id => {
-      document.getElementById(id).value = '';
+    ['paciente_edit_id','nome','cpf','nascimento','telefone','endereco','cep','endereco-rua','endereco-numero','endereco-bairro','endereco-cidade','resp-nome','resp-cpf','resp-parentesco'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
     });
   }
 
