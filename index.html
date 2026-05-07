@@ -1307,7 +1307,7 @@
                   <th>CPF</th>
                   <th>Vacina</th>
                   <th>Local Aplicação</th>
-                  <th>Aplicador</th>
+                  <th>Aplicador</th><th>Local</th>
                   <th>Status</th>
                   <th style="text-align:right">Ações</th>
                 </tr>
@@ -1698,6 +1698,24 @@
             <div class="form-group">
               <label class="form-label">Nome do Aplicador</label>
               <input class="form-control" id="aplic_profissional" placeholder="Ex: Dr. João Silva">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Local da Aplicação</label>
+              <select class="form-control" id="aplic_local">
+                <option value="">Selecione o local...</option>
+                <option value="Braço Direito - Deltóide">Braço Direito — Deltóide</option>
+                <option value="Braço Esquerdo - Deltóide">Braço Esquerdo — Deltóide</option>
+                <option value="Coxa Direita">Coxa Direita</option>
+                <option value="Coxa Esquerda">Coxa Esquerda</option>
+                <option value="Glúteo Direito">Glúteo Direito</option>
+                <option value="Glúteo Esquerdo">Glúteo Esquerdo</option>
+                <option value="Subcutâneo - Braço Direito">Subcutâneo — Braço Direito</option>
+                <option value="Subcutâneo - Braço Esquerdo">Subcutâneo — Braço Esquerdo</option>
+                <option value="Intradérmico - Antebraço">Intradérmico — Antebraço</option>
+                <option value="Oral">Oral</option>
+                <option value="Nasal">Nasal</option>
+                <option value="Outro">Outro</option>
+              </select>
             </div>
             <div class="highlight-bar" style="margin-bottom:16px">
               💡 O sistema reduzirá o estoque automaticamente ao registrar a aplicação.
@@ -2774,6 +2792,7 @@
     const valor = Number(document.getElementById('valor').value || 0);
     const forma_pagamento = document.getElementById('pagamento').value;
     const profissional = document.getElementById('aplic_profissional').value.trim();
+    const local_aplicacao = document.getElementById('aplic_local')?.value || '';
 
     if (!paciente_id) { toast('Selecione um paciente.', 'warning'); return; }
     if (!vacina_id) { toast('Selecione uma vacina.', 'warning'); return; }
@@ -2799,7 +2818,8 @@
         const { error: e1 } = await db.from('aplicacoes').insert([{
           paciente_id, vacina_id, vacina_text: v.nome, lote: v.lote||null,
           data_aplicacao, dose, quantidade, valor, forma_pagamento,
-          profissional: profissional||null
+          profissional: profissional||null,
+          local_aplicacao: local_aplicacao||null
         }]);
         if (e1) throw e1;
         const novoStock = Number(v.stock||0) - quantidade;
@@ -2816,6 +2836,7 @@
         validade: v.validade || '',
         data: data_aplicacao,
         profissional: profissional || '',
+        local_aplicacao: local_aplicacao || '',
         paciente_nome: pacObj.nome || '',
         paciente_cpf: pacObj.cpf || ''
       };
@@ -2970,7 +2991,7 @@
             <table class="data-table">
               <thead><tr>
                 <th>Vacina</th><th>Lote</th><th>Data</th><th>Dose</th><th>Qtd</th>
-                <th>Valor</th><th>Pagamento</th><th>Aplicador</th>
+                <th>Valor</th><th>Pagamento</th><th>Aplicador</th><th>Local</th>
               </tr></thead>
               <tbody>
                 ${hist.map(h => {
@@ -2984,6 +3005,7 @@
                     <td><strong>R$ ${h.valor ? Number(h.valor).toFixed(2) : '0.00'}</strong></td>
                     <td><span class="badge badge-orange">${esc(h.forma_pagamento||'—')}</span></td>
                     <td style="font-size:0.8rem;color:var(--gray-500)">${esc(h.profissional||'—')}</td>
+                    <td style="font-size:0.8rem;color:var(--gray-500)">${esc(h.local_aplicacao||'—')}</td>
                   </tr>`;
                 }).join('')}
               </tbody>
@@ -4390,6 +4412,10 @@
     <div class="ficha-row">
       <div class="ficha-cell-lbl">Aplic. Aplicador(a)</div>
       <div class="ficha-cell-val">${profissional}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">📍 Local de Aplicação</div>
+      <div class="ficha-cell-val">${local_aplicacao||'—'}</div>
     </div>
     <div class="ficha-row">
       <div class="ficha-cell-lbl">&#x1F5D3;&#xFE0F; Data de Aplicação</div>
