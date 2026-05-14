@@ -970,6 +970,9 @@
         <span class="icon">🔔</span> Lembretes
         <span class="badge-count" id="nav-count-lembretes" style="background:#e74c3c;color:#fff">—</span>
       </button>
+      <button class="nav-item" onclick="navTo('jornada-vacinacao')">
+        <span class="icon">🗺️</span> Jornada Vacinal
+      </button>
     </div>
     <div class="nav-section">
       <div class="nav-group-toggle" onclick="toggleNavGroup('group-acoes')">
@@ -1862,7 +1865,74 @@
     </div>
 
 
-    <!-- ===== PAGE: USUÁRIOS (só admin) ===== -->
+    <!-- ===== PAGE: JORNADA DE VACINAÇÃO ===== -->
+    <div id="page-jornada-vacinacao" class="page">
+
+      <!-- Busca do paciente -->
+      <div class="jornada-header-card">
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:700;color:var(--orange-dark);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">🗺️ Jornada de Vacinação</div>
+          <div id="jornada-paciente-dados">
+            <div style="color:var(--gray-400);font-size:14px">Selecione um paciente para visualizar a jornada vacinal</div>
+          </div>
+        </div>
+        <div class="jornada-search-area">
+          <div class="jornada-search-row">
+            <input id="jornada-search-input" class="form-control" placeholder="🔍 Nome ou CPF do paciente..." style="min-width:260px" oninput="jornadaFiltrarPacientes()" onkeydown="jornadaKeyDown(event)">
+            <button class="btn btn-primary btn-sm" onclick="jornadaAbrirPaciente()">Buscar</button>
+          </div>
+          <div id="jornada-dropdown" style="position:relative;width:100%;display:none">
+            <div id="jornada-dropdown-lista" style="position:absolute;top:0;right:0;left:0;background:white;border:1.5px solid var(--orange);border-radius:10px;box-shadow:var(--shadow-md);z-index:200;max-height:220px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container principal (oculto até selecionar paciente) -->
+      <div id="jornada-container" style="display:none">
+        <!-- Estatísticas resumidas -->
+        <div class="jornada-stats" id="jornada-stats-pills"></div>
+
+        <!-- Barra de progresso -->
+        <div style="background:#fff;border:1.5px solid #f0f0f0;border-radius:14px;padding:16px 20px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:700;color:var(--gray-700)">Progresso Vacinal</span>
+            <span id="jornada-progress-pct" style="font-size:13px;font-weight:800;color:var(--orange-dark)">0%</span>
+          </div>
+          <div class="jornada-progress-bar-wrap">
+            <div class="jornada-progress-bar" id="jornada-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="jornada-progress-label" id="jornada-progress-label"></div>
+        </div>
+
+        <!-- Chips de faixa etária (gerados por JS) -->
+        <div class="jornada-faixa-chips-wrap" id="jornada-faixa-chips"></div>
+
+        <!-- Filtros de status -->
+        <div class="jornada-filter-tabs" id="jornada-filter-tabs">
+          <button class="jornada-filter-tab active" data-filter="todos" onclick="jornadaSetFilter(this,'todos')">Todos</button>
+          <button class="jornada-filter-tab" data-filter="aplicada" onclick="jornadaSetFilter(this,'aplicada')">✅ Aplicadas</button>
+          <button class="jornada-filter-tab" data-filter="atrasada" onclick="jornadaSetFilter(this,'atrasada')">🔴 Atrasadas</button>
+          <button class="jornada-filter-tab" data-filter="pendente" onclick="jornadaSetFilter(this,'pendente')">🟡 Próximas</button>
+          <button class="jornada-filter-tab" data-filter="futura" onclick="jornadaSetFilter(this,'futura')">🔵 Futuras</button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="jornada-timeline" id="jornada-timeline"></div>
+      </div>
+
+      <!-- Empty state (sem paciente) -->
+      <div id="jornada-empty" class="card">
+        <div class="card-body jornada-no-paciente">
+          <div class="jornada-no-icon">🗺️</div>
+          <p>Busque um paciente para ver a jornada de vacinação</p>
+          <div style="margin-top:12px;font-size:13px;color:var(--gray-400)">A jornada mostra todas as vacinas aplicadas e as próximas doses recomendadas pelo calendário PNI</div>
+        </div>
+      </div>
+
+    </div>
+
+
+        <!-- ===== PAGE: USUÁRIOS (só admin) ===== -->
     <div id="page-usuarios" class="page">
       <div class="card" style="max-width:860px">
         <div class="card-header">
@@ -2179,7 +2249,28 @@
   let _mostrarZeradas = false;
 
   const CALENDARIO_VACINAL = [{"faixa": "Ao nascer", "desc": "Recém-nascido", "vacinas": [{"nome": "BCG", "doses": "Dose única", "obs": "Proteção contra formas graves de tuberculose"}, {"nome": "Hepatite B", "doses": "1ª dose", "obs": "Primeira dose ao nascer"}]}, {"faixa": "1 mês", "desc": "1 mês de vida", "vacinas": [{"nome": "Hepatite B", "doses": "2ª dose", "obs": "Segunda dose"}]}, {"faixa": "2 meses", "desc": "2 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "1ª dose", "obs": "Difteria, Tétano, Coqueluche, Hib, Hepatite B"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "1ª dose", "obs": "Pólio injetável"}, {"nome": "Pneumocócica 13-valente", "doses": "1ª dose", "obs": "Previne pneumonia, meningite, otite"}, {"nome": "Rotavírus", "doses": "1ª dose", "obs": "Previne diarreia grave por rotavírus"}]}, {"faixa": "3 meses", "desc": "3 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "1ª dose", "obs": "Previne meningite meningocócica C"}, {"nome": "Meningocócica ACWY", "doses": "1ª dose", "obs": "Sorogrupos A, C, W e Y (particular)"}]}, {"faixa": "4 meses", "desc": "4 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Pneumocócica 13-valente", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Rotavírus", "doses": "2ª dose", "obs": "Segunda e última dose"}]}, {"faixa": "5 meses", "desc": "5 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Meningocócica ACWY", "doses": "2ª dose", "obs": "Segunda dose (particular)"}]}, {"faixa": "6 meses", "desc": "6 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "Influenza", "doses": "1ª dose", "obs": "Anual — 2 doses no 1º ano (intervalo 30 dias)"}, {"nome": "Hepatite B", "doses": "3ª dose", "obs": "Apenas se não fez esquema pentavalente completo"}]}, {"faixa": "7 meses", "desc": "7 meses de vida", "vacinas": [{"nome": "Influenza", "doses": "2ª dose", "obs": "Somente no primeiro ano de vacinação, 30 dias após a 1ª"}]}, {"faixa": "9 meses", "desc": "9 meses de vida", "vacinas": [{"nome": "Febre Amarela", "doses": "1ª dose", "obs": "Dose inicial (reforço aos 4 anos)"}, {"nome": "Meningocócica B", "doses": "3ª dose", "obs": "Esquema 2+1 (particular)"}]}, {"faixa": "12 meses", "desc": "1 ano de vida", "vacinas": [{"nome": "Tríplice Viral (SCR)", "doses": "1ª dose", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Pneumocócica 13-valente", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica C conjugada", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Dose de reforço (particular)"}, {"nome": "Varicela", "doses": "1ª dose", "obs": "Primeira dose da Catapora"}, {"nome": "Hepatite A", "doses": "1ª dose", "obs": "Dose única no calendário público; 2 doses no particular"}]}, {"faixa": "15 meses", "desc": "15 meses de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "1º Reforço", "obs": "Reforço de Difteria, Tétano, Coqueluche"}, {"nome": "VOP (Poliomielite Oral)", "doses": "1º Reforço", "obs": "Gotinhas de reforço"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Segunda dose (calendário particular)"}, {"nome": "Tetra Viral (SCRV)", "doses": "Dose única", "obs": "SCR + Varicela (alternativa à SCR + Varicela separados)"}]}, {"faixa": "18 meses", "desc": "18 meses de vida", "vacinas": [{"nome": "Meningocócica B", "doses": "Reforço", "obs": "Reforço (particular)"}, {"nome": "Meningocócica ACWY", "doses": "Reforço adicional", "obs": "Conforme indicação médica"}]}, {"faixa": "4 anos", "desc": "4 anos de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "2º Reforço", "obs": "Último reforço da DTP"}, {"nome": "VOP (Poliomielite Oral)", "doses": "2º Reforço", "obs": "Último reforço da Pólio"}, {"nome": "Varicela", "doses": "2ª dose", "obs": "Segunda dose da Catapora"}, {"nome": "Tríplice Viral (SCR)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Febre Amarela", "doses": "Reforço", "obs": "Reforço (se fez a 1ª antes dos 5 anos)"}]}, {"faixa": "5 anos", "desc": "5 anos de vida", "vacinas": [{"nome": "Pneumocócica 23-valente", "doses": "Dose única", "obs": "Apenas grupos de risco"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Repetir todo ano"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Se não completou o esquema"}]}, {"faixa": "9 anos", "desc": "9 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "1ª dose", "obs": "Meninas — Previne HPV tipos 6,11,16,18"}, {"nome": "HPV Nonavalente", "doses": "1ª dose", "obs": "Particular — 9 tipos de HPV"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Reforço a cada 5 anos"}]}, {"faixa": "11 anos", "desc": "11 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "2ª dose", "obs": "Meninos também (particular/público conforme calendário)"}, {"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "Reforço", "obs": "Proteção reforçada contra Coqueluche"}, {"nome": "Meningocócica B", "doses": "Reforço", "obs": "Particular — reforço adolescente"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Particular"}]}, {"faixa": "Gestantes", "desc": "Durante a gestação", "vacinas": [{"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "A cada gestação", "obs": "A partir da 20ª semana — protege o bebê contra Coqueluche"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Qualquer trimestre"}, {"nome": "Hepatite B", "doses": "Conforme esquema", "obs": "Se não vacinada anteriormente"}, {"nome": "COVID-19", "doses": "Conforme protocolo", "obs": "Segura e recomendada na gestação"}]}, {"faixa": "Adultos (20–59 anos)", "desc": "Adultos de 20 a 59 anos", "vacinas": [{"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Tríplice Viral (SCR)", "doses": "2 doses (se não vacinado)", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Febre Amarela", "doses": "Dose única vitalícia", "obs": "Reforço único se necessário"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Todo ano"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}, {"faixa": "Idosos (60+ anos)", "desc": "60 anos ou mais", "vacinas": [{"nome": "Influenza", "doses": "Dose anual", "obs": "Alta prioridade"}, {"nome": "Pneumocócica 23-valente", "doses": "1 a 2 doses", "obs": "Prevenção de pneumonia grave"}, {"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Herpes Zóster", "doses": "2 doses", "obs": "Intervalo de 2–6 meses (a partir de 50 anos)"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}];
+  let _jornadaPacienteId = null;
+  let _jornadaFilter = 'todos';
+  let _jornadaFaixaFiltro = null; // null = todas as faixas
   let _faixaSelecionada = null;
+
+  // Mapeia faixa etária para meses de vida
+  const FAIXA_MESES = {
+    'Ao nascer': 0, '1 mês': 1, '2 meses': 2, '3 meses': 3, '4 meses': 4,
+    '5 meses': 5, '6 meses': 6, '7 meses': 7, '9 meses': 9,
+    '12 meses': 12, '15 meses': 15, '18 meses': 18,
+    '4 anos': 48, '5 anos': 60, '9 anos': 108, '11 anos': 132,
+    'Gestantes': -1, 'Adultos (20–59 anos)': 240, 'Idosos (60+ anos)': 720
+  };
+
+  // Mapa de intervalo (em meses) entre doses por faixa
+  const PROXIMA_DOSE_MESES = {
+    'Ao nascer': 1, '1 mês': 1, '2 meses': 1, '3 meses': 1, '4 meses': 1,
+    '5 meses': 1, '6 meses': 1, '7 meses': 2, '9 meses': 3,
+    '12 meses': 3, '15 meses': 3, '18 meses': 29,
+    '4 anos': 12, '5 anos': 12, '9 anos': 24, '11 anos': 12,
+    'Gestantes': 0, 'Adultos (20–59 anos)': 0, 'Idosos (60+ anos)': 0
+  };
   let ultimaRetirada = null;
   let agendEditId = null;
   let orcEditId = null;
@@ -2304,6 +2395,7 @@
     'estoque':         { id: 'page-estoque',          title: 'Estoque de Vacinas' },
     'nova-vacina':     { id: 'page-nova-vacina',      title: 'Adicionar Vacina' },
     'lembretes':       { id: 'page-lembretes',        title: '🔔 Lembretes de Doses' },
+    'jornada-vacinacao': { id: 'page-jornada-vacinacao', title: '🗺️ Jornada de Vacinação' },
     'usuarios':        { id: 'page-usuarios',          title: '👥 Gerenciar Usuários' },
     'retiradas':       { id: 'page-retiradas',        title: '📤 Retirada de Vacinas' },
     'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
@@ -2330,6 +2422,7 @@
     });
 
     // on enter page actions
+    if (page === 'jornada-vacinacao') { /* reset dropdown */ document.getElementById('jornada-dropdown').style.display='none'; }
     if (page === 'nova-aplicacao') { populatePacienteSelect(); populateVacinaSelect(); setDefaultDate(); }
     if (page === 'usuarios') { fetchUsuarios(); }
     if (page === 'novo-paciente') {
@@ -4086,6 +4179,314 @@
     @media print {
       body > *:not(#comprovante-retirada) { display: none !important; }
       #comprovante-retirada { display: block !important; }
+    }
+
+    /* ===== JORNADA DE VACINAÇÃO ===== */
+    .jornada-header-card {
+      background: linear-gradient(135deg, #fff7f1 0%, #ffe8d4 100%);
+      border: 1px solid var(--orange-200);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .jornada-paciente-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      flex: 1;
+    }
+    .jornada-info-item { display: flex; flex-direction: column; gap: 2px; }
+    .jornada-info-label { font-size: 11px; font-weight: 600; color: var(--orange-dark); text-transform: uppercase; letter-spacing: 0.06em; }
+    .jornada-info-value { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+    .jornada-info-sub { font-size: 12px; color: var(--gray-400); }
+    .jornada-search-area {
+      display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    }
+    .jornada-search-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .jornada-no-paciente {
+      text-align: center; padding: 60px 20px;
+      color: var(--gray-400);
+    }
+    .jornada-no-paciente .jornada-no-icon { font-size: 56px; margin-bottom: 12px; }
+    .jornada-no-paciente p { font-size: 15px; font-weight: 500; }
+
+    /* Timeline */
+    .jornada-timeline { display: flex; flex-direction: column; gap: 0; }
+    .jornada-faixa {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .jornada-faixa-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .jornada-faixa-header:hover { background: var(--gray-50); }
+    .jornada-faixa-dot {
+      width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+    }
+    .jornada-faixa-dot.aplicada { background: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+    .jornada-faixa-dot.parcial { background: var(--yellow); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+    .jornada-faixa-dot.futura { background: var(--gray-200); }
+    .jornada-faixa-dot.atrasada { background: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+    .jornada-faixa-name { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+    .jornada-faixa-desc { font-size: 12px; color: var(--gray-400); margin-left: 2px; }
+    .jornada-faixa-badges { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .jornada-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    }
+    .jornada-badge.aplicada { background: var(--green-light); color: #15803d; }
+    .jornada-badge.pendente { background: var(--yellow-light); color: #92400e; }
+    .jornada-badge.atrasada { background: var(--red-light); color: #b91c1c; }
+    .jornada-badge.futura { background: var(--gray-100); color: var(--gray-500); }
+    .jornada-faixa-toggle { font-size: 13px; color: var(--gray-400); transition: transform 0.2s; }
+    .jornada-faixa.open .jornada-faixa-toggle { transform: rotate(180deg); }
+    .jornada-faixa-body { display: none; padding: 0 16px 14px; }
+    .jornada-faixa.open .jornada-faixa-body { display: block; }
+    .jornada-vacina-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 4px;
+      transition: background 0.12s;
+    }
+    .jornada-vacina-row:hover { background: var(--gray-50); }
+    .jornada-vacina-status-icon { font-size: 18px; flex-shrink: 0; width: 28px; text-align: center; }
+    .jornada-vacina-name { font-size: 13px; font-weight: 600; color: var(--gray-800); flex: 1; }
+    .jornada-vacina-dose { font-size: 12px; color: var(--gray-400); }
+    .jornada-vacina-data { font-size: 12px; color: var(--gray-500); min-width: 90px; text-align: right; }
+    .jornada-vacina-obs { font-size: 11px; color: var(--gray-400); font-style: italic; }
+
+    /* === NOVO VISUAL JORNADA (card-style premium) === */
+    .jornada-faixa-nova {
+      margin-bottom: 8px;
+      border-radius: 14px;
+      border: 1.5px solid #f0f0f0;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .jornada-faixa-nova:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
+
+    /* Header da faixa */
+    .jnova-faixa-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 18px; cursor: pointer; user-select: none;
+      transition: background 0.15s; gap: 10px;
+    }
+    .jnova-faixa-header:hover { background: #fff8f3; }
+    .jnova-faixa-chip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+
+    /* Dots de status da faixa */
+    .jnova-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .jnova-dot.aplicada { background: #16a34a; box-shadow: 0 0 0 3px #dcfce7; }
+    .jnova-dot.parcial  { background: #d97706; box-shadow: 0 0 0 3px #fef3c7; }
+    .jnova-dot.atrasada { background: #dc2626; box-shadow: 0 0 0 3px #fee2e2; }
+    .jnova-dot.pendente { background: #ea580c; box-shadow: 0 0 0 3px #ffedd5; }
+    .jnova-dot.futura   { background: #94a3b8; box-shadow: 0 0 0 3px #f1f5f9; }
+
+    .jnova-faixa-titulo {
+      font-size: 13px; font-weight: 800;
+      color: #ea580c; letter-spacing: 0.02em;
+    }
+    .jnova-faixa-sub { font-size: 12px; color: #94a3b8; }
+    .jnova-faixa-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .jnova-faixa-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 999px; white-space: nowrap;
+    }
+    .jnova-faixa-badge.completa { background: #dcfce7; color: #15803d; }
+    .jnova-faixa-badge.atrasada { background: #fee2e2; color: #b91c1c; }
+    .jnova-faixa-badge.pendente { background: #ffedd5; color: #9a3412; }
+    .jnova-faixa-badge.futura   { background: #f1f5f9; color: #475569; }
+
+    .jnova-vacinas-count { font-size: 11px; color: #94a3b8; font-weight: 600; }
+    .jnova-toggle {
+      font-size: 16px; color: #94a3b8; transition: transform 0.22s; margin-left: 2px;
+    }
+    .jornada-faixa-nova.collapsed .jnova-toggle { transform: rotate(-90deg); }
+
+    /* Body da faixa */
+    .jnova-faixa-body {
+      padding: 0 14px 14px;
+      display: flex; flex-direction: column; gap: 8px;
+      border-top: 1px solid #f8f8f8;
+    }
+    .jornada-faixa-nova.collapsed .jnova-faixa-body { display: none; }
+
+    /* Card da vacina */
+    .jnova-vacina-card {
+      display: flex; gap: 12px;
+      background: #fafafa;
+      border-radius: 12px;
+      border: 1.5px solid #f0f0f0;
+      border-left: 4px solid #94a3b8;
+      padding: 12px 14px;
+      transition: box-shadow 0.15s, background 0.15s;
+      margin-top: 2px;
+    }
+    .jnova-vacina-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.08); background: #fff; }
+
+    .jnova-card-left { display: flex; align-items: flex-start; padding-top: 5px; }
+    .jnova-diamond {
+      width: 10px; height: 10px;
+      transform: rotate(45deg); border-radius: 2px; flex-shrink: 0;
+    }
+    .jnova-card-body { flex: 1; min-width: 0; }
+    .jnova-card-nome { font-size: 14px; font-weight: 700; color: #111827; line-height: 1.3; }
+    .jnova-card-dose { font-size: 12px; color: #64748b; margin-top: 2px; font-weight: 500; }
+    .jnova-card-obs  { font-size: 11.5px; color: #94a3b8; font-style: italic; margin-top: 3px; line-height: 1.4; }
+
+    .jnova-card-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 9px; align-items: center;
+    }
+    .jnova-chip {
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 999px;
+      border: 1.5px solid transparent; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
+    .jnova-chip.azul  { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .jnova-chip.roxo  { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
+    .jnova-chip.status { font-weight: 700; }
+
+    /* Botão lembrete individual */
+    .jnova-lembrete-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #fff7ed; border: 1.5px solid #fb923c;
+      color: #ea580c; border-radius: 999px;
+      padding: 3px 11px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .jnova-lembrete-btn:hover { background: #ea580c; color: #fff; border-color: #ea580c; }
+    .jnova-lembrete-btn.ok {
+      background: #f0fdf4; color: #16a34a; border-color: #86efac; cursor: default;
+    }
+
+    /* Botão criar lembretes global */
+    .jornada-btn-criar-lembretes {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 9px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; margin: 8px 0 2px 0;
+      box-shadow: 0 2px 8px rgba(234,88,12,0.25);
+      transition: box-shadow 0.15s, transform 0.1s;
+    }
+    .jornada-btn-criar-lembretes:hover {
+      box-shadow: 0 4px 14px rgba(234,88,12,0.35); transform: translateY(-1px);
+    }
+
+    /* Compat botões antigos */
+    .jornada-lembrete-btn { background: none; border: 1.5px solid var(--orange); color: var(--orange); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; cursor: pointer; margin-left: 6px; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+    .jornada-lembrete-btn:hover { background: var(--orange); color: #fff; }
+    .jornada-lembrete-btn.criado { background: #d1fae5; color: #065f46; border-color: #22c55e; }
+    .jornada-proxima-data { font-size: 11px; color: #0369a1; background: #e0f2fe; border-radius: 4px; padding: 1px 6px; margin-top: 2px; display: inline-block; }
+
+    /* Legenda e Estatísticas */
+    .jornada-stats {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .jornada-stat-pill {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+    .jornada-stat-pill .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .jornada-stat-pill .dot.verde { background: var(--green); }
+    .jornada-stat-pill .dot.amarelo { background: var(--yellow); }
+    .jornada-stat-pill .dot.vermelho { background: var(--red); }
+    .jornada-stat-pill .dot.cinza { background: var(--gray-200); }
+    .jornada-progress-bar-wrap {
+      background: var(--gray-100); border-radius: 999px; height: 8px;
+      overflow: hidden; margin-bottom: 6px;
+    }
+    .jornada-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), #4ade80);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+    .jornada-progress-label {
+      font-size: 12px; color: var(--gray-400); font-weight: 500;
+    }
+
+    /* Filtros de status */
+    /* Chips de faixa etária */
+    .jornada-faixa-chips-wrap {
+      display: flex; gap: 5px; flex-wrap: wrap;
+      margin-bottom: 10px;
+      padding: 12px 14px;
+      background: #fff;
+      border: 1.5px solid #f0f0f0;
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      align-items: center;
+    }
+    .jnova-faixa-chip-btn {
+      padding: 5px 13px; border-radius: 999px;
+      border: 1.5px solid #e5e7eb;
+      background: #f9fafb; font-size: 12px; font-weight: 600;
+      color: #6b7280; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .jnova-faixa-chip-btn:hover {
+      border-color: #ea580c; color: #ea580c; background: #fff7ed;
+    }
+    .jnova-faixa-chip-btn.active {
+      background: #ea580c; border-color: #ea580c;
+      color: #fff; font-weight: 700;
+      box-shadow: 0 2px 6px rgba(234,88,12,0.3);
+    }
+    .jnova-faixa-chip-btn.tem-atraso {
+      border-color: #fca5a5; color: #dc2626; background: #fff5f5;
+    }
+    .jnova-faixa-chip-btn.tem-atraso.active {
+      background: #dc2626; border-color: #dc2626; color: #fff;
+    }
+    .jnova-faixa-chip-btn.tem-aplicada {
+      border-color: #86efac; color: #16a34a; background: #f0fdf4;
+    }
+    .jnova-faixa-chip-btn.tem-aplicada.active {
+      background: #16a34a; border-color: #16a34a; color: #fff;
+    }
+    .jnova-faixa-chip-btn.paciente-atual {
+      border-color: #ea580c; color: #ea580c; font-weight: 800;
+      background: #fff7ed;
+    }
+
+    .jornada-filter-tabs {
+      display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .jornada-filter-tab {
+      padding: 6px 15px; border-radius: 999px;
+      border: 1.5px solid #e5e7eb;
+      background: #f9fafb; font-size: 12px; font-weight: 600;
+      color: #6b7280; cursor: pointer; transition: all 0.15s;
+    }
+    .jornada-filter-tab:hover { border-color: #ea580c; color: #ea580c; background: #fff7ed; }
+    .jornada-filter-tab.active {
+      background: #fff7ed; border-color: #ea580c;
+      color: #ea580c; font-weight: 700;
     }
   </style>
   <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
@@ -6123,6 +6524,500 @@
     const palavras = nc.split(/[\s\-\(\)+,]+/).filter(p => p.length > 4);
     return palavras.some(p => ne.includes(p));
   }
+
+
+  // ===================================================================
+  // ===== JORNADA DE VACINAÇÃO =========================================
+  // ===================================================================
+
+  function jornadaCalcularIdadeMeses(nascimento) {
+    if (!nascimento) return null;
+    const nasc = new Date(nascimento + 'T00:00:00');
+    const hoje = new Date();
+    const meses = (hoje.getFullYear() - nasc.getFullYear()) * 12 + (hoje.getMonth() - nasc.getMonth());
+    return meses;
+  }
+
+  function jornadaFiltrarPacientes() {
+    const q = (document.getElementById('jornada-search-input').value || '').toLowerCase().trim();
+    const dd = document.getElementById('jornada-dropdown');
+    const lista = document.getElementById('jornada-dropdown-lista');
+    if (!q || q.length < 2) { dd.style.display = 'none'; return; }
+    const encontrados = (pacientes || []).filter(p =>
+      (p.nome || '').toLowerCase().includes(q) || (p.cpf || '').replace(/\D/g,'').includes(q.replace(/\D/g,''))
+    ).slice(0, 20);
+    if (!encontrados.length) { dd.style.display = 'none'; return; }
+    dd.style.display = 'block';
+    lista.innerHTML = encontrados.map(p => {
+      const nasc = p.nascimento ? new Date(p.nascimento+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const idade = jornadaCalcularIdadeMeses(p.nascimento);
+      const idadeStr = idade !== null ? (idade >= 24 ? Math.floor(idade/12) + ' anos' : idade + ' meses') : '';
+      return `<div onclick="window.jornadaSelecionarPaciente(${p.id})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-100);transition:background 0.12s" onmouseover="this.style.background='var(--orange-50)'" onmouseout="this.style.background=''">
+        <div style="font-weight:600;font-size:13px;color:var(--gray-900)">${esc(p.nome)}</div>
+        <div style="font-size:11px;color:var(--gray-400)">CPF: ${esc(p.cpf||'—')} • Nasc: ${nasc}${idadeStr ? ' • ' + idadeStr : ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function jornadaKeyDown(e) {
+    if (e.key === 'Enter') jornadaAbrirPaciente();
+  }
+
+  function jornadaAbrirPaciente() {
+    const q = (document.getElementById('jornada-search-input').value || '').toLowerCase().trim();
+    if (!q) return;
+    const encontrado = (pacientes || []).find(p =>
+      (p.nome || '').toLowerCase().includes(q) || (p.cpf || '').replace(/\D/g,'').includes(q.replace(/\D/g,''))
+    );
+    if (encontrado) { jornadaSelecionarPaciente(encontrado.id); }
+  }
+
+  function jornadaSelecionarPaciente(pacienteId) {
+    document.getElementById('jornada-dropdown').style.display = 'none';
+    _jornadaPacienteId = pacienteId;
+    _jornadaFilter = 'todos';
+    // Reset filtro tabs
+    document.querySelectorAll('.jornada-filter-tab').forEach(t => t.classList.remove('active'));
+    const allTab = document.querySelector('.jornada-filter-tab[data-filter="todos"]');
+    if (allTab) allTab.classList.add('active');
+
+    const p = findPaciente(pacienteId);
+    if (!p) return;
+
+    // Atualizar input
+    document.getElementById('jornada-search-input').value = p.nome || '';
+
+    // Calcular idade
+    const idadeMeses = jornadaCalcularIdadeMeses(p.nascimento);
+    const idadeStr = idadeMeses !== null
+      ? (idadeMeses >= 24 ? Math.floor(idadeMeses/12) + ' anos e ' + (idadeMeses % 12) + ' meses' : idadeMeses + ' meses de vida')
+      : '—';
+    const nascFormatado = p.nascimento
+      ? new Date(p.nascimento+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+
+    // Mostrar dados do paciente
+    document.getElementById('jornada-paciente-dados').innerHTML = `
+      <div class="jornada-paciente-info">
+        <div class="jornada-info-item">
+          <span class="jornada-info-label">Paciente</span>
+          <span class="jornada-info-value">${esc(p.nome)}</span>
+        </div>
+        <div class="jornada-info-item">
+          <span class="jornada-info-label">CPF</span>
+          <span class="jornada-info-value">${esc(p.cpf || '—')}</span>
+        </div>
+        <div class="jornada-info-item">
+          <span class="jornada-info-label">Nascimento</span>
+          <span class="jornada-info-value">${nascFormatado}</span>
+          <span class="jornada-info-sub">${idadeStr}</span>
+        </div>
+        <div class="jornada-info-item">
+          <span class="jornada-info-label">Responsável</span>
+          <span class="jornada-info-value">${esc(p.resp_nome || '—')}</span>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('jornada-empty').style.display = 'none';
+    document.getElementById('jornada-container').style.display = 'block';
+
+    _jornadaFaixaFiltro = null; // resetar filtro de faixa
+    jornadaRenderFaixaChips(pacienteId, idadeMeses);
+    jornadaRenderTimeline(pacienteId, idadeMeses);
+  }
+
+  function jornadaRenderFaixaChips(pacienteId, idadeMeses) {
+    const wrap = document.getElementById('jornada-faixa-chips');
+    if (!wrap) return;
+    const apl = (aplicacoes || []).filter(a => Number(a.paciente_id) === Number(pacienteId));
+    const p = findPaciente(pacienteId);
+    const datasApl = apl.map(a => a.data_aplicacao).filter(Boolean).sort();
+    const dataClinica = datasApl.length > 0 ? new Date(datasApl[0]+'T00:00:00') : null;
+
+    let html = `<button class="jnova-faixa-chip-btn${_jornadaFaixaFiltro===null?' active':''}" onclick="jornadaSetFaixaFiltro(null)">Todas</button>`;
+
+    CALENDARIO_VACINAL.forEach(faixa => {
+      const faixaMeses = FAIXA_MESES[faixa.faixa];
+      // Calcular data esperada desta faixa
+      let dataEsperada = null;
+      if (p && p.nascimento && faixaMeses >= 0) {
+        dataEsperada = new Date(p.nascimento+'T00:00:00');
+        dataEsperada.setMonth(dataEsperada.getMonth() + faixaMeses);
+      }
+      // Ocultar faixas totalmente anteriores à clínica (sem aplicações registradas)
+      const faixaPassada = idadeMeses !== null && faixaMeses >= 0 && idadeMeses >= faixaMeses + 2;
+      const faixaAtualChip = idadeMeses !== null && faixaMeses >= 0 && idadeMeses >= faixaMeses && idadeMeses < faixaMeses + 2;
+      const antesClinica = dataClinica && dataEsperada && dataEsperada < dataClinica;
+      const temApl = faixa.vacinas.some(v => apl.find(a => jornadaMatchVacina(a.vacina_text||a.vacina||'', v.nome)));
+      if (faixaPassada && antesClinica && !temApl) return; // ocultar chip
+
+      // Status dominante da faixa
+      let extraClass = '';
+      const algumApl = temApl;
+      const algumAtraso = !algumApl && faixaPassada && !antesClinica;
+      const ehAtual = faixaAtualChip;
+      if (algumAtraso) extraClass = ' tem-atraso';
+      else if (algumApl) extraClass = ' tem-aplicada';
+      if (ehAtual) extraClass += ' paciente-atual';
+
+      const isActive = _jornadaFaixaFiltro === faixa.faixa;
+      html += `<button class="jnova-faixa-chip-btn${extraClass}${isActive?' active':''}" onclick="jornadaSetFaixaFiltro('${faixa.faixa.replace(/'/g,"\\'")}')">
+        ${esc(faixa.faixa)}
+      </button>`;
+    });
+
+    wrap.innerHTML = html;
+  }
+
+  function jornadaSetFaixaFiltro(faixaNome) {
+    _jornadaFaixaFiltro = faixaNome;
+    if (_jornadaPacienteId) {
+      const p = findPaciente(_jornadaPacienteId);
+      const idadeMeses = jornadaCalcularIdadeMeses(p ? p.nascimento : null);
+      jornadaRenderFaixaChips(_jornadaPacienteId, idadeMeses);
+      jornadaRenderTimeline(_jornadaPacienteId, idadeMeses);
+    }
+  }
+  window.jornadaSetFaixaFiltro = jornadaSetFaixaFiltro;
+
+  function jornadaSetFilter(el, filter) {
+    _jornadaFilter = filter;
+    document.querySelectorAll('.jornada-filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    if (_jornadaPacienteId) {
+      const p = findPaciente(_jornadaPacienteId);
+      const idadeMeses = jornadaCalcularIdadeMeses(p ? p.nascimento : null);
+      jornadaRenderTimeline(_jornadaPacienteId, idadeMeses);
+    }
+  }
+
+  function jornadaMatchVacina(aplicacaoNome, calendarioNome) {
+    const na = (aplicacaoNome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const nc = (calendarioNome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if (na.includes(nc) || nc.includes(na)) return true;
+    const aliases = {
+      'pentavalente': ['penta', 'dtp+hib+hepb', 'pentaxim', 'infanrix penta'],
+      'pneumococica': ['pneumo', 'prevenar', 'synflorix'],
+      'rotavirus': ['rota', 'rotarix', 'rotateq'],
+      'vip': ['polio', 'vip', 'poliorix', 'ipol'],
+      'vop': ['gotinha', 'vop', 'bopv'],
+      'meningococica c': ['mening c', 'neisvac', 'menjugate'],
+      'meningococica b': ['mening b', 'bexsero'],
+      'meningococica acwy': ['mening acwy', 'nimenrix', 'menveo', 'menactra'],
+      'triplice viral': ['scr', 'sarampo', 'mmr', 'priorix', 'trimovax'],
+      'tetra viral': ['scrv', 'priorix tetra'],
+      'varicela': ['catapora', 'varilrix', 'varilix', 'varivax'],
+      'hepatite a': ['hep a', 'havrix', 'vaqta', 'avaxim'],
+      'hepatite b': ['hep b', 'engerix', 'recombivax', 'euvax'],
+      'influenza': ['gripe', 'fluarix', 'vaxigrip', 'fluzone'],
+      'febre amarela': ['amarilica', 'stamaril', 'amaril'],
+      'dtp': ['dtp', 'triplice bacteriana', 'refortrix', 'infanrix'],
+      'dtpa': ['dtpa', 'triplice acelular', 'boostrix'],
+      'dt': ['dupla adulto', 'difteria tetano'],
+      'bcg': ['bcg'],
+      'hpv': ['gardasil', 'cervarix', 'silgard'],
+      'dengue': ['qdenga'],
+      'herpes zoster': ['zoster', 'shingrix', 'zostavax']
+    };
+    for (const [key, syns] of Object.entries(aliases)) {
+      const matchCal = nc.includes(key) || syns.some(s => nc.includes(s));
+      const matchApl = na.includes(key) || syns.some(s => na.includes(s));
+      if (matchCal && matchApl) return true;
+    }
+    const palavras = nc.split(/[\s\-\(\)+,]+/).filter(w => w.length > 4);
+    return palavras.some(w => na.includes(w));
+  }
+
+  function jornadaRenderTimeline(pacienteId, idadeMeses) {
+    const apl = (aplicacoes || []).filter(a => Number(a.paciente_id) === Number(pacienteId));
+    const hoje = new Date();
+    // Data da primeira aplicação registrada na clínica para este paciente
+    const datasApl = apl.map(a => a.data_aplicacao).filter(Boolean).sort();
+    const dataClinica = datasApl.length > 0 ? new Date(datasApl[0] + 'T00:00:00') : null;
+
+    let totalVacinas = 0, aplicadas = 0, pendentes = 0, atrasadas = 0, futuras = 0;
+    const timelineEl = document.getElementById('jornada-timeline');
+    timelineEl.innerHTML = '';
+
+    CALENDARIO_VACINAL.forEach((faixa, idx) => {
+      // Filtro por faixa etária selecionada nos chips
+      if (_jornadaFaixaFiltro !== null && faixa.faixa !== _jornadaFaixaFiltro) return;
+
+      const faixaMeses = FAIXA_MESES[faixa.faixa];
+      let faixaPassada = false, faixaFutura = false, faixaAtual = false;
+      if (idadeMeses !== null && faixaMeses >= 0) {
+        // Faixa "atual" = o paciente está nessa faixa agora (até 1 mês além)
+        faixaAtual   = idadeMeses >= faixaMeses && idadeMeses < faixaMeses + 2;
+        faixaPassada = idadeMeses >= faixaMeses + 2; // passou com folga de 2 meses
+        faixaFutura  = idadeMeses < faixaMeses;
+      }
+
+      // Data esperada da faixa (nascimento + faixaMeses)
+      const p = findPaciente(pacienteId);
+      let dataEsperadaFaixa = null;
+      if (p && p.nascimento && faixaMeses >= 0) {
+        dataEsperadaFaixa = new Date(p.nascimento + 'T00:00:00');
+        dataEsperadaFaixa.setMonth(dataEsperadaFaixa.getMonth() + faixaMeses);
+      }
+
+      const vacResult = faixa.vacinas.map(v => {
+        const aplMatch = apl.find(a => jornadaMatchVacina(a.vacina_text || a.vacina || '', v.nome));
+        let status = 'futura';
+        let dataApl = null;
+
+        if (aplMatch) {
+          status = 'aplicada';
+          dataApl = aplMatch.data_aplicacao;
+        } else if (faixaAtual) {
+          // Faixa atual do paciente → pendente (está na hora de tomar)
+          status = 'pendente';
+        } else if (faixaPassada && faixaMeses >= 0) {
+          // Faixa passada sem aplicação
+          // Se a data esperada é anterior à chegada na clínica → ocultar
+          if (dataClinica && dataEsperadaFaixa && dataEsperadaFaixa < dataClinica) {
+            status = 'nao_aplicado_aqui';
+          } else {
+            status = 'atrasada';
+          }
+        } else if (faixaFutura) {
+          status = 'futura';
+        } else {
+          status = 'pendente';
+        }
+
+        totalVacinas++;
+        if (status === 'aplicada') aplicadas++;
+        else if (status === 'atrasada') atrasadas++;
+        else if (status === 'pendente') pendentes++;
+        else if (status !== 'nao_aplicado_aqui') futuras++;
+
+        return { ...v, status, dataApl };
+      });
+
+      // Filtrar vacinas com status visível
+      const vacVisiveis = vacResult.filter(v => v.status !== 'nao_aplicado_aqui');
+      if (vacVisiveis.length === 0) return; // faixa toda anterior à clínica → omitir
+
+      // Status geral da faixa (baseado em vacinas visíveis)
+      let dotClass = 'futura';
+      const allApl      = vacVisiveis.every(v => v.status === 'aplicada');
+      const someApl     = vacVisiveis.some(v => v.status === 'aplicada');
+      const hasAtrasada = vacVisiveis.some(v => v.status === 'atrasada');
+      if (allApl) dotClass = 'aplicada';
+      else if (hasAtrasada) dotClass = 'atrasada';
+      else if (someApl) dotClass = 'parcial';
+      else if (faixaAtual || (!faixaFutura && faixaMeses >= 0)) dotClass = 'pendente';
+      else dotClass = 'futura';
+
+      // Filtro de abas
+      if (_jornadaFilter !== 'todos') {
+        const temStatus = vacVisiveis.some(v => v.status === _jornadaFilter);
+        if (!temStatus) return;
+      }
+
+      // Render faixa no novo estilo card
+      const faixaDiv = document.createElement('div');
+      faixaDiv.className = 'jornada-faixa-nova';
+
+      // Header da faixa (chip etário)
+      const aplCount = vacVisiveis.filter(v => v.status === 'aplicada').length;
+      const atCount  = vacVisiveis.filter(v => v.status === 'atrasada').length;
+      const penCount = vacVisiveis.filter(v => v.status === 'pendente').length;
+      const futCount = vacVisiveis.filter(v => v.status === 'futura').length;
+
+      const statusLabel = allApl
+        ? `<span class="jnova-faixa-badge completa">✅ Completa</span>`
+        : hasAtrasada
+          ? `<span class="jnova-faixa-badge atrasada">🔴 ${atCount} em atraso</span>`
+          : penCount
+            ? `<span class="jnova-faixa-badge pendente">🟡 ${penCount} próxima${penCount>1?'s':''}</span>`
+            : `<span class="jnova-faixa-badge futura">🔵 ${futCount} futura${futCount>1?'s':''}</span>`;
+
+      faixaDiv.innerHTML = `
+        <div class="jnova-faixa-header" onclick="this.closest('.jornada-faixa-nova').classList.toggle('collapsed')">
+          <div class="jnova-faixa-chip">
+            <span class="jnova-dot ${dotClass}"></span>
+            <span class="jnova-faixa-titulo">${esc(faixa.faixa)}</span>
+            <span class="jnova-faixa-sub">${esc(faixa.desc)}</span>
+          </div>
+          <div class="jnova-faixa-meta">
+            ${statusLabel}
+            <span class="jnova-vacinas-count">${vacVisiveis.length} vacina${vacVisiveis.length>1?'s':''}</span>
+            <span class="jnova-toggle">▾</span>
+          </div>
+        </div>
+        <div class="jnova-faixa-body">
+          ${vacVisiveis.filter(v => _jornadaFilter === 'todos' || v.status === _jornadaFilter).map(v => {
+            const proxData = (v.status === 'aplicada' && v.dataApl) ? jornadaProximaData(v.dataApl, faixa.faixa) : null;
+            const proxFmt  = proxData ? new Date(proxData+'T00:00:00').toLocaleDateString('pt-BR') : null;
+            const jaLembrete = proxData && (lembretes||[]).some(l =>
+              Number(l.paciente_id) === Number(pacienteId) && l.vacina === v.nome && l.proxima_dose === proxData
+            );
+            const nomeSeguro = v.nome.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
+            const statusColors = {
+              aplicada: { bg: '#f0fdf4', border: '#86efac', dot: '#22c55e', label: '✅ Aplicada' },
+              atrasada: { bg: '#fef2f2', border: '#fca5a5', dot: '#ef4444', label: '⚠️ Em atraso' },
+              pendente: { bg: '#fffbeb', border: '#fcd34d', dot: '#f59e0b', label: '📆 Próxima' },
+              futura:   { bg: '#f8fafc', border: '#e2e8f0', dot: '#94a3b8', label: '🔵 Futura' }
+            };
+            const sc = statusColors[v.status] || statusColors.futura;
+
+            const dataAplHtml = v.dataApl
+              ? `<span class="jnova-chip azul">📅 ${new Date(v.dataApl+'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+              : '';
+            const proxHtml = proxFmt
+              ? `<span class="jnova-chip roxo">🗓️ Próx: ${proxFmt}</span>`
+              : '';
+            const lembreteHtml = proxData && new Date(proxData+'T00:00:00') > hoje
+              ? (jaLembrete
+                  ? `<button class="jnova-lembrete-btn ok" disabled>✅ Lembrete criado</button>`
+                  : `<button class="jnova-lembrete-btn" onclick="jornadaCriarLembreteAuto(${pacienteId},'${nomeSeguro}','${proxData}',this)">🔔 Lembrete</button>`)
+              : '';
+
+            return `<div class="jnova-vacina-card" style="border-left-color:${sc.dot}">
+              <div class="jnova-card-left">
+                <div class="jnova-diamond" style="background:${sc.dot}"></div>
+              </div>
+              <div class="jnova-card-body">
+                <div class="jnova-card-nome">${esc(v.nome)}</div>
+                <div class="jnova-card-dose">${esc(v.doses)}</div>
+                ${v.obs ? `<div class="jnova-card-obs">${esc(v.obs)}</div>` : ''}
+                <div class="jnova-card-chips">
+                  <span class="jnova-chip status" style="background:${sc.bg};border:1px solid ${sc.border};color:${sc.dot}">${sc.label}</span>
+                  ${dataAplHtml}
+                  ${proxHtml}
+                  ${lembreteHtml}
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      `;
+      timelineEl.appendChild(faixaDiv);
+    });
+    // Stats pills
+    const pct = totalVacinas ? Math.round((aplicadas / totalVacinas) * 100) : 0;
+    document.getElementById('jornada-progress-bar').style.width = pct + '%';
+    document.getElementById('jornada-progress-pct').textContent = pct + '%';
+    document.getElementById('jornada-progress-label').textContent =
+      `${aplicadas} de ${totalVacinas} vacinas aplicadas · ${atrasadas} em atraso · ${pendentes} próximas`;
+
+    document.getElementById('jornada-stats-pills').innerHTML = `
+      <div class="jornada-stat-pill"><div class="dot verde"></div>${aplicadas} Aplicadas</div>
+      <div class="jornada-stat-pill"><div class="dot vermelho"></div>${atrasadas} Atrasadas</div>
+      <div class="jornada-stat-pill"><div class="dot amarelo"></div>${pendentes} Próximas</div>
+      <div class="jornada-stat-pill"><div class="dot cinza"></div>${futuras} Futuras</div>
+      <button class="jornada-btn-criar-lembretes" onclick="jornadaCriarTodosLembretes(${pacienteId})">🔔 Criar lembretes automáticos das próximas doses</button>
+    `;
+  }
+
+  // Expor funções no escopo global para onclicks inline
+  // ===== JORNADA — DATAS PREVISTAS & LEMBRETES AUTOMÁTICOS =====
+
+  function jornadaProximaData(dataApl, faixaAtual) {
+    if (!dataApl) return null;
+    const meses = PROXIMA_DOSE_MESES[faixaAtual];
+    if (!meses || meses <= 0) return null;
+    const d = new Date(dataApl + 'T00:00:00');
+    d.setMonth(d.getMonth() + meses);
+    return d.toISOString().slice(0, 10);
+  }
+
+  async function jornadaCriarLembreteAuto(pacienteId, vacinaNome, dataProxima, btnEl) {
+    if (!dataProxima) return;
+    const p = findPaciente(pacienteId);
+    const nomePac = p ? p.nome : 'Paciente';
+    const obs = `Próxima dose — ${vacinaNome} — Jornada automática`;
+    try {
+      const { error } = await db.from('lembretes').insert([{
+        paciente_id: Number(pacienteId),
+        vacina: vacinaNome,
+        proxima_dose: dataProxima,
+        obs,
+        status: 'pendente'
+      }]);
+      if (error) throw error;
+      btnEl.textContent = '✅ Lembrete criado';
+      btnEl.classList.add('criado');
+      btnEl.disabled = true;
+      toast('Lembrete criado para ' + nomePac + ' — ' + new Date(dataProxima+'T00:00:00').toLocaleDateString('pt-BR'), 'success');
+      // Recarregar lembretes
+      await carregarLembretes();
+    } catch(e) {
+      toast('Erro ao criar lembrete: ' + (e.message || e), 'error');
+    }
+  }
+
+  async function jornadaCriarTodosLembretes(pacienteId) {
+    const p = findPaciente(pacienteId);
+    if (!p) return;
+    const apl = (aplicacoes || []).filter(a => Number(a.paciente_id) === Number(pacienteId));
+    const hoje = new Date();
+    const idadeMeses = jornadaCalcularIdadeMeses(p.nascimento);
+    let criados = 0;
+    const loteInsert = [];
+
+    CALENDARIO_VACINAL.forEach((faixa) => {
+      const faixaMeses = FAIXA_MESES[faixa.faixa];
+      const faixaPassada = idadeMeses !== null && faixaMeses >= 0 && idadeMeses >= faixaMeses;
+      const faixaFutura  = idadeMeses !== null && faixaMeses >= 0 && idadeMeses < faixaMeses;
+
+      faixa.vacinas.forEach(v => {
+        const aplMatch = apl.find(a => jornadaMatchVacina(a.vacina_text || a.vacina || '', v.nome));
+        if (aplMatch && aplMatch.data_aplicacao) {
+          const proxima = jornadaProximaData(aplMatch.data_aplicacao, faixa.faixa);
+          if (proxima) {
+            const dtProx = new Date(proxima + 'T00:00:00');
+            if (dtProx > hoje) {
+              // Verificar se já existe lembrete para esse paciente + vacina + data
+              const jaExiste = (lembretes || []).some(l =>
+                Number(l.paciente_id) === Number(pacienteId) &&
+                l.vacina === v.nome &&
+                l.proxima_dose === proxima
+              );
+              if (!jaExiste) {
+                loteInsert.push({
+                  paciente_id: Number(pacienteId),
+                  vacina: v.nome,
+                  proxima_dose: proxima,
+                  obs: `Próxima dose — ${v.nome} — Automático (Jornada)`,
+                  status: 'pendente'
+                });
+                criados++;
+              }
+            }
+          }
+        }
+      });
+    });
+
+    if (loteInsert.length === 0) {
+      toast('Nenhum lembrete novo a criar (já existem ou não há próximas doses futuras).', 'warning');
+      return;
+    }
+    try {
+      const { error } = await db.from('lembretes').insert(loteInsert);
+      if (error) throw error;
+      await carregarLembretes();
+      toast(`✅ ${loteInsert.length} lembrete(s) criado(s) automaticamente para ${p.nome}!`, 'success');
+      // Re-renderizar jornada para atualizar botões
+      jornadaRenderTimeline(pacienteId, idadeMeses);
+    } catch(e) {
+      toast('Erro ao criar lembretes: ' + (e.message || e), 'error');
+    }
+  }
+
+  window.jornadaCriarLembreteAuto   = jornadaCriarLembreteAuto;
+  window.jornadaCriarTodosLembretes = jornadaCriarTodosLembretes;
+
+  window.jornadaSelecionarPaciente = jornadaSelecionarPaciente;
+  window.jornadaFiltrarPacientes   = jornadaFiltrarPacientes;
+  window.jornadaAbrirPaciente      = jornadaAbrirPaciente;
+  window.jornadaSetFilter          = jornadaSetFilter;
+  window.jornadaKeyDown            = jornadaKeyDown;
+
+  // ===================================================================
 
   function gerarOrcamentoDoPlano() {
     if (_faixaSelecionada === null) return;
