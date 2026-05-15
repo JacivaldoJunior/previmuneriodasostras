@@ -1023,6 +1023,9 @@
         <span class="nav-group-arrow" id="arrow-group-admin">▼</span>
       </div>
       <div class="nav-group-items" id="group-admin">
+        <button class="nav-item" onclick="navTo('profissionais')">
+          <span class="icon">🩺</span> Profissionais
+        </button>
         <button class="nav-item" onclick="navTo('usuarios')">
           <span class="icon">👥</span> Usuários
         </button>
@@ -1510,6 +1513,27 @@
               </div>
             </div>
 
+            <!-- CNS + Sexo -->
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">CNS — Cartão Nacional de Saúde</label>
+                <input class="form-control" id="cns" placeholder="000 0000 0000 0000" oninput="mascaraCNS(this)" maxlength="18">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sexo <span class="req">*</span></label>
+                <select class="form-control" id="sexo">
+                  <option value="">Selecione...</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+            </div>
+            <!-- Nome da Mãe -->
+            <div class="form-group">
+              <label class="form-label">Nome da Mãe</label>
+              <input class="form-control" id="nome-mae" placeholder="Ex: Ana da Silva">
+            </div>
             <!-- Telefone -->
             <div class="form-group">
               <label class="form-label">Telefone</label>
@@ -1699,8 +1723,11 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Nome do Aplicador</label>
-              <input class="form-control" id="aplic_profissional" placeholder="Ex: Dr. João Silva">
+              <label class="form-label">Profissional Aplicador <span class="req">*</span></label>
+              <select class="form-control" id="aplic_profissional">
+                <option value="">Selecione o profissional...</option>
+              </select>
+              <div style="font-size:0.75rem;color:var(--gray-400);margin-top:4px">💡 Cadastre profissionais em Administração → Profissionais</div>
             </div>
             <div class="form-group">
               <label class="form-label">Local da Aplicação</label>
@@ -1727,6 +1754,7 @@
               <button class="btn btn-ghost" onclick="navTo('aplicacoes')">Cancelar</button>
               <button class="btn btn-outline-orange" id="btn-imprimir-etiqueta" style="display:none" onclick="imprimirEtiqueta()">🖨️ Imprimir Etiqueta</button>
               <button class="btn btn-outline-orange" id="btn-imprimir-ficha" style="display:none" onclick="imprimirFicha()">📋 Imprimir Ficha</button>
+              <button class="btn btn-ghost" id="btn-ver-fhir" style="display:none;border:1px solid var(--blue,#3b82f6);color:var(--blue,#3b82f6)" onclick="abrirModalFHIR()">🔬 Ver JSON FHIR</button>
               <button class="btn btn-primary" onclick="registrarAplicacao()">💉 Registrar Aplicação</button>
             </div>
           </div>
@@ -1931,6 +1959,101 @@
 
     </div>
 
+
+    <!-- ===== PAGE: PROFISSIONAIS ===== -->
+    <div id="page-profissionais" class="page">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🩺 Profissionais de Saúde</div>
+            <div class="card-subtitle" id="total-profissionais-label">Nenhum profissional cadastrado</div>
+          </div>
+          <button class="btn btn-primary" onclick="abrirFormProfissional()">➕ Novo Profissional</button>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-profissionais">
+            <thead>
+              <tr>
+                <th>Nome</th><th>CNS</th><th>CPF</th><th>CBO</th><th>CNES</th><th>Cargo</th><th>Status</th><th style="text-align:right">Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Modal de Profissional -->
+      <div id="backdrop-profissional" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center" onclick="if(event.target===this)fecharFormProfissional()">
+        <div class="card" style="width:100%;max-width:580px;max-height:90vh;overflow-y:auto;margin:20px">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="form-prof-title">Novo Profissional</div>
+              <div class="card-subtitle">Dados obrigatórios para integração RNDS/RIA</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="fecharFormProfissional()">✕</button>
+          </div>
+          <div class="card-body">
+            <input type="hidden" id="prof_edit_id">
+            <div class="form-group">
+              <label class="form-label">Nome completo <span class="req">*</span></label>
+              <input class="form-control" id="prof-nome" placeholder="Ex: Francine Bastos">
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">CPF <span class="req">*</span></label>
+                <input class="form-control" id="prof-cpf" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">CNS <span class="req">*</span></label>
+                <input class="form-control" id="prof-cns" placeholder="000 0000 0000 0000" oninput="mascaraCNS(this)" maxlength="18">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">CBO — Ocupação <span class="req">*</span></label>
+                <select class="form-control" id="prof-cbo" onchange="document.getElementById('cbo-manual-wrap').style.display=this.value==='Outro'?'block':'none'">
+                  <option value="">Selecione...</option>
+                  <option value="223505">223505 — Enfermeiro</option>
+                  <option value="223550">223550 — Técnico de Enfermagem</option>
+                  <option value="225120">225120 — Médico</option>
+                  <option value="223810">223810 — Farmacêutico</option>
+                  <option value="322205">322205 — Aux. Enfermagem</option>
+                  <option value="Outro">Outro (manual)</option>
+                </select>
+              </div>
+              <div class="form-group" id="cbo-manual-wrap" style="display:none">
+                <label class="form-label">CBO Manual</label>
+                <input class="form-control" id="prof-cbo-manual" placeholder="Ex: 225125">
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">CNES do Estabelecimento <span class="req">*</span></label>
+                <input class="form-control" id="prof-cnes" placeholder="Ex: 1234567" maxlength="7">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cargo / Função</label>
+                <input class="form-control" id="prof-cargo" placeholder="Ex: Enfermeira">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Conselho (CRM / COREN etc.)</label>
+              <input class="form-control" id="prof-conselho" placeholder="Ex: COREN-SP 123456">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-control" id="prof-status">
+                <option value="Ativo">Ativo</option>
+                <option value="Inativo">Inativo</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+              <button class="btn btn-ghost" onclick="fecharFormProfissional()">Cancelar</button>
+              <button class="btn btn-primary" id="btn-salvar-prof" onclick="salvarProfissional()">💾 Salvar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
         <!-- ===== PAGE: USUÁRIOS (só admin) ===== -->
     <div id="page-usuarios" class="page">
@@ -2396,6 +2519,7 @@
     'nova-vacina':     { id: 'page-nova-vacina',      title: 'Adicionar Vacina' },
     'lembretes':       { id: 'page-lembretes',        title: '🔔 Lembretes de Doses' },
     'jornada-vacinacao': { id: 'page-jornada-vacinacao', title: '🗺️ Jornada de Vacinação' },
+    'profissionais':   { id: 'page-profissionais',     title: '🩺 Profissionais de Saúde' },
     'usuarios':        { id: 'page-usuarios',          title: '👥 Gerenciar Usuários' },
     'retiradas':       { id: 'page-retiradas',        title: '📤 Retirada de Vacinas' },
     'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
@@ -2423,7 +2547,8 @@
 
     // on enter page actions
     if (page === 'jornada-vacinacao') { /* reset dropdown */ document.getElementById('jornada-dropdown').style.display='none'; }
-    if (page === 'nova-aplicacao') { populatePacienteSelect(); populateVacinaSelect(); setDefaultDate(); }
+    if (page === 'nova-aplicacao') { populatePacienteSelect(); populateVacinaSelect(); populateProfissionalSelect(); setDefaultDate(); }
+    if (page === 'profissionais') { fetchProfissionais(); }
     if (page === 'usuarios') { fetchUsuarios(); }
     if (page === 'novo-paciente') {
       const editId = document.getElementById('paciente_edit_id').value;
@@ -2468,7 +2593,7 @@
 
   // ===== FETCH ALL =====
   async function fetchAll() {
-    await Promise.all([fetchPacientes(), fetchVacinas(), fetchAplicacoes()]);
+    await Promise.all([fetchPacientes(), fetchVacinas(), fetchAplicacoes(), fetchProfissionais()]);
     renderDashboard();
     await fetchLembretes();
     await fetchRetiradas();
@@ -2503,8 +2628,9 @@
     }
     tbody.innerHTML = list.map(p => {
       const nasc = p.nascimento ? new Date(p.nascimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const cnsBadge = p.cns ? '' : '<span title="CNS não cadastrado" style="font-size:0.68rem;background:#fff7f1;color:#c85a10;border:1px solid #ffc999;border-radius:4px;padding:1px 5px;margin-left:5px">sem CNS</span>';
       return `<tr>
-        <td><strong>${esc(p.nome||'')}</strong></td>
+        <td><strong>${esc(p.nome||'')}</strong>${cnsBadge}</td>
         <td>${esc(p.cpf||'—')}</td>
         <td>${nasc}</td>
         <td>${esc(p.telefone||'—')}</td>
@@ -2583,6 +2709,9 @@
     const nascimento  = document.getElementById('nascimento').value;
     const telefone    = document.getElementById('telefone').value.trim();
     const endereco    = document.getElementById('endereco').value.trim();
+    const cns         = document.getElementById('cns')?.value.trim()         || null;
+    const sexo        = document.getElementById('sexo')?.value               || null;
+    const nome_mae    = document.getElementById('nome-mae')?.value.trim()    || null;
     const resp_nome      = document.getElementById('resp-nome')?.value.trim()      || null;
     const resp_cpf       = document.getElementById('resp-cpf')?.value.trim()       || null;
     const resp_parentesco= document.getElementById('resp-parentesco')?.value       || null;
@@ -2590,7 +2719,7 @@
     const btn = document.getElementById('btn-salvar-paciente');
     btn.disabled = true;
     const payload = { nome, cpf, nascimento: nascimento||null, telefone, endereco,
-      resp_nome, resp_cpf, resp_parentesco };
+      cns, sexo, nome_mae, resp_nome, resp_cpf, resp_parentesco };
     try {
       if (id) {
         const { error } = await db.from('pacientes').update(payload).match({ id: Number(id) });
@@ -2624,6 +2753,10 @@
     document.getElementById('endereco-bairro').value = '';
     document.getElementById('endereco-cidade').value = '';
     document.getElementById('cep').value             = '';
+    // CNS / Sexo / Nome Mãe (RNDS)
+    const cnsEl = document.getElementById('cns');     if (cnsEl) cnsEl.value = p.cns     || '';
+    const sexoEl = document.getElementById('sexo');   if (sexoEl) sexoEl.value = p.sexo  || '';
+    const maeEl = document.getElementById('nome-mae');if (maeEl) maeEl.value = p.nome_mae || '';
     // Responsável legal
     const rnEl = document.getElementById('resp-nome');      if (rnEl) rnEl.value = p.resp_nome || '';
     const rcEl = document.getElementById('resp-cpf');       if (rcEl) rcEl.value = p.resp_cpf  || '';
@@ -2648,12 +2781,380 @@
   }
 
   function limparFormPaciente() {
-    ['paciente_edit_id','nome','cpf','nascimento','telefone','endereco','cep','endereco-rua','endereco-numero','endereco-bairro','endereco-cidade','resp-nome','resp-cpf','resp-parentesco'].forEach(id => {
+    ['paciente_edit_id','nome','cpf','nascimento','telefone','endereco','cns','nome-mae','cep','endereco-rua','endereco-numero','endereco-bairro','endereco-cidade','resp-nome','resp-cpf','resp-parentesco'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
+    const sexoEl2 = document.getElementById('sexo'); if (sexoEl2) sexoEl2.value = '';
   }
 
   // ===== VACINAS =====
+
+
+  // ===== RNDS / FHIR =====
+
+  /**
+   * Gera o Bundle FHIR R4 de Imunização conforme o modelo RNDS (RIA).
+   * Referência: https://rnds-guia.saude.gov.br/docs/ria/ria-perfil
+   */
+  function gerarPayloadFHIR(ap) {
+    if (!ap) return null;
+
+    const now = new Date().toISOString();
+    const dataAplic = ap.data || new Date().toISOString().slice(0, 10);
+
+    // ── helper: limpa formatação de documentos ──
+    const soNum = s => (s || '').replace(/\D/g, '');
+
+    // ── UUIDs locais (geração simples sem dependência) ──
+    function uuid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    const immId   = uuid();
+    const patId   = uuid();
+    const pracId  = uuid();
+    const orgId   = uuid();
+    const bundleId = uuid();
+
+    // ── Mapa de imunobiológico → código SNOMED / FHIR (PNI) ──
+    // O sistema ideal usa o código MS (Código do Imunobiológico do PNI).
+    // Se não disponível, usamos o nome como display e código genérico.
+    const codigoImuno = ap.vacina_codigo_ms
+      ? { system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico', code: ap.vacina_codigo_ms, display: ap.vacina_imuno || ap.vacina }
+      : { system: 'http://snomed.info/sct', code: '787859002', display: ap.vacina_imuno || ap.vacina };
+
+    // ── Local de aplicação → código FHIR ──
+    const localMap = {
+      'Braço Direito - Deltóide':    { code: '368209003', display: 'Braço Direito — Deltóide' },
+      'Braço Esquerdo - Deltóide':   { code: '368208006', display: 'Braço Esquerdo — Deltóide' },
+      'Coxa Direita':                { code: '11207009',  display: 'Coxa Direita' },
+      'Coxa Esquerda':               { code: '61396006',  display: 'Coxa Esquerda' },
+      'Glúteo Direito':              { code: '207002',    display: 'Glúteo Direito' },
+      'Glúteo Esquerdo':             { code: '287182009', display: 'Glúteo Esquerdo' },
+      'Subcutâneo - Braço Direito':  { code: '368209003', display: 'Subcutâneo — Braço Direito' },
+      'Subcutâneo - Braço Esquerdo': { code: '368208006', display: 'Subcutâneo — Braço Esquerdo' },
+      'Intradérmico - Antebraço':    { code: '13136005',  display: 'Intradérmico — Antebraço' },
+      'Oral':                        { code: '26643006',  display: 'Via Oral' },
+      'Nasal':                       { code: '46862004',  display: 'Via Nasal' },
+    };
+    const localInfo = localMap[ap.local_aplicacao] || { code: '1255663005', display: ap.local_aplicacao || 'Não informado' };
+
+    // ── Dose ──
+    const doseMap = {
+      '1ª Dose': '1', '2ª Dose': '2', '3ª Dose': '3',
+      '4ª Dose': '4', 'Dose Única': '1', 'Reforço': 'B',
+      '1º Reforço': 'R1', '2º Reforço': 'R2',
+    };
+    const doseSeq = doseMap[ap.dose] || ap.dose || '1';
+
+    // ── Patient resource ──
+    const patient = {
+      resourceType: 'Patient',
+      id: patId,
+      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0'] },
+      identifier: [],
+      name: [{ use: 'official', text: ap.paciente_nome }],
+      birthDate: ap.paciente_nascimento || undefined,
+      gender: ap.paciente_sexo === 'Masculino' ? 'male' : ap.paciente_sexo === 'Feminino' ? 'female' : 'unknown',
+    };
+
+    const cpfPac = soNum(ap.paciente_cpf);
+    if (cpfPac) patient.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCPF', value: cpfPac });
+    const cnsPac = soNum(ap.paciente_cns);
+    if (cnsPac) patient.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCNS', value: cnsPac });
+    if (ap.paciente_nome_mae) {
+      patient.extension = [{
+        url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRNomeMae-1.0',
+        valueString: ap.paciente_nome_mae
+      }];
+    }
+
+    // ── Practitioner resource (profissional aplicador) ──
+    const practitioner = {
+      resourceType: 'Practitioner',
+      id: pracId,
+      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRProfissional-1.0'] },
+      identifier: [],
+      name: [{ use: 'official', text: ap.profissional }],
+      qualification: ap.prof_cbo ? [{
+        code: {
+          coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCBO', code: ap.prof_cbo, display: ap.prof_cbo }]
+        }
+      }] : undefined
+    };
+    const cpfProf = soNum(ap.prof_cpf);
+    if (cpfProf) practitioner.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCPF', value: cpfProf });
+    const cnsProf = soNum(ap.prof_cns);
+    if (cnsProf) practitioner.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCNS', value: cnsProf });
+
+    // ── Organization (estabelecimento) ──
+    const organization = {
+      resourceType: 'Organization',
+      id: orgId,
+      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstabelecimentoSaude-1.0'] },
+      identifier: ap.prof_cnes_vinculo ? [{
+        system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BREstabelecimentoSaude',
+        value: ap.prof_cnes_vinculo
+      }] : []
+    };
+
+    // ── Immunization resource ──
+    const immunization = {
+      resourceType: 'Immunization',
+      id: immId,
+      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRImunizacao-1.0'] },
+      status: 'completed',
+      vaccineCode: {
+        coding: [codigoImuno]
+      },
+      patient: { reference: 'Patient/' + patId },
+      occurrenceDateTime: dataAplic,
+      primarySource: true,
+      lotNumber: ap.lote || undefined,
+      expirationDate: ap.validade || undefined,
+      site: {
+        coding: [{
+          system: 'http://snomed.info/sct',
+          code: localInfo.code,
+          display: localInfo.display
+        }]
+      },
+      performer: [{
+        function: {
+          coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v2-0443', code: 'AP', display: 'Administering Provider' }]
+        },
+        actor: { reference: 'Practitioner/' + pracId }
+      }, {
+        function: {
+          coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v2-0443', code: 'OP', display: 'Ordering Provider' }]
+        },
+        actor: { reference: 'Organization/' + orgId }
+      }],
+      protocolApplied: [{
+        targetDisease: [{ coding: [codigoImuno] }],
+        doseNumberString: doseSeq
+      }]
+    };
+
+    // ── Bundle ──
+    const bundle = {
+      resourceType: 'Bundle',
+      id: bundleId,
+      meta: {
+        lastUpdated: now,
+        profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroImunobiologicoAdministrado-1.0']
+      },
+      type: 'document',
+      timestamp: now,
+      entry: [
+        { fullUrl: 'urn:uuid:' + patId,   resource: patient },
+        { fullUrl: 'urn:uuid:' + pracId,  resource: practitioner },
+        { fullUrl: 'urn:uuid:' + orgId,   resource: organization },
+        { fullUrl: 'urn:uuid:' + immId,   resource: immunization }
+      ]
+    };
+
+    // Remove campos undefined para JSON limpo
+    return JSON.parse(JSON.stringify(bundle));
+  }
+
+  let fhirJsonAtual = null;
+
+  function abrirModalFHIR() {
+    if (!ultimaAplicacao) { toast('Registre uma aplicação primeiro.', 'warning'); return; }
+    fhirJsonAtual = gerarPayloadFHIR(ultimaAplicacao);
+    const pre = document.getElementById('fhir-json-output');
+    if (pre) pre.textContent = JSON.stringify(fhirJsonAtual, null, 2);
+    const bd = document.getElementById('backdrop-fhir');
+    if (bd) { bd.style.display = 'flex'; window.scrollTo(0,0); }
+  }
+
+  function fecharModalFHIR() {
+    const bd = document.getElementById('backdrop-fhir');
+    if (bd) bd.style.display = 'none';
+  }
+
+  async function copiarFHIR() {
+    if (!fhirJsonAtual) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(fhirJsonAtual, null, 2));
+      const msg = document.getElementById('fhir-copy-msg');
+      if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2500); }
+    } catch(e) { toast('Erro ao copiar: ' + e.message, 'error'); }
+  }
+
+  function baixarFHIR() {
+    if (!fhirJsonAtual) return;
+    const blob = new Blob([JSON.stringify(fhirJsonAtual, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const pacNome = (ultimaAplicacao?.paciente_nome || 'paciente').replace(/\s+/g, '_').toLowerCase();
+    const dt = (ultimaAplicacao?.data || new Date().toISOString().slice(0,10)).replace(/-/g,'');
+    a.download = 'fhir_ria_' + pacNome + '_' + dt + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // ===== PROFISSIONAIS =====
+  let profissionais = [];
+
+  async function fetchProfissionais() {
+    try {
+      if (!db) { renderProfissionais(); return; }
+      const { data, error } = await db.from('profissionais').select('*').order('nome');
+      if (error) throw error;
+      profissionais = data || [];
+      renderProfissionais();
+      populateProfissionalSelect();
+      const lbl = document.getElementById('total-profissionais-label');
+      if (lbl) lbl.textContent = profissionais.length + ' profissional(is) cadastrado(s)';
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderProfissionais() {
+    const tbody = document.querySelector('#tabela-profissionais tbody');
+    if (!tbody) return;
+    if (!profissionais.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🩺</div><p>Nenhum profissional cadastrado</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = profissionais.map(p => {
+      const sc = p.status === 'Ativo' ? 'var(--green)' : 'var(--gray-400)';
+      return '<tr>' +
+        '<td><strong>' + esc(p.nome||'') + '</strong></td>' +
+        '<td style="font-family:monospace;font-size:0.82rem">' + esc(p.cns||'—') + '</td>' +
+        '<td style="font-family:monospace;font-size:0.82rem">' + esc(p.cpf||'—') + '</td>' +
+        '<td>' + esc(p.cbo||'—') + '</td>' +
+        '<td>' + esc(p.cnes||'—') + '</td>' +
+        '<td>' + esc(p.cargo||'—') + '</td>' +
+        '<td><span style="color:' + sc + ';font-weight:600">' + esc(p.status||'Ativo') + '</span></td>' +
+        '<td><div class="actions">' +
+          '<button class="btn btn-ghost btn-sm" onclick="editarProfissional(' + p.id + ')">✏️</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="excluirProfissional(' + p.id + ')">🗑️</button>' +
+        '</div></td></tr>';
+    }).join('');
+  }
+
+  function populateProfissionalSelect() {
+    const sel = document.getElementById('aplic_profissional');
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Selecione o profissional...</option>';
+    profissionais.filter(p => p.status !== 'Inativo').forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nome + (p.cargo ? ' — ' + p.cargo : '');
+      sel.appendChild(opt);
+    });
+    if (current) sel.value = current;
+  }
+
+  function abrirFormProfissional() {
+    ['prof_edit_id','prof-nome','prof-cpf','prof-cns','prof-cbo-manual','prof-cnes','prof-cargo','prof-conselho'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const cboEl = document.getElementById('prof-cbo'); if (cboEl) cboEl.value = '';
+    const stEl = document.getElementById('prof-status'); if (stEl) stEl.value = 'Ativo';
+    const mw = document.getElementById('cbo-manual-wrap'); if (mw) mw.style.display = 'none';
+    const tt = document.getElementById('form-prof-title'); if (tt) tt.textContent = 'Novo Profissional';
+    const bd = document.getElementById('backdrop-profissional');
+    if (bd) { bd.style.display = 'flex'; }
+  }
+
+  function fecharFormProfissional() {
+    const bd = document.getElementById('backdrop-profissional');
+    if (bd) bd.style.display = 'none';
+  }
+
+  function editarProfissional(id) {
+    const p = profissionais.find(x => Number(x.id) === Number(id));
+    if (!p) return;
+    document.getElementById('prof_edit_id').value   = p.id;
+    document.getElementById('prof-nome').value      = p.nome    || '';
+    document.getElementById('prof-cpf').value       = p.cpf     || '';
+    document.getElementById('prof-cns').value       = p.cns     || '';
+    document.getElementById('prof-cnes').value      = p.cnes    || '';
+    document.getElementById('prof-cargo').value     = p.cargo   || '';
+    document.getElementById('prof-conselho').value  = p.conselho|| '';
+    document.getElementById('prof-status').value    = p.status  || 'Ativo';
+    const cbos = ['223505','223550','225120','223810','322205'];
+    const cboEl = document.getElementById('prof-cbo');
+    const mw    = document.getElementById('cbo-manual-wrap');
+    if (cbos.includes(p.cbo)) {
+      if (cboEl) cboEl.value = p.cbo;
+      if (mw) mw.style.display = 'none';
+    } else {
+      if (cboEl) cboEl.value = 'Outro';
+      document.getElementById('prof-cbo-manual').value = p.cbo || '';
+      if (mw) mw.style.display = 'block';
+    }
+    const tt = document.getElementById('form-prof-title'); if (tt) tt.textContent = 'Editar Profissional';
+    const bd = document.getElementById('backdrop-profissional'); if (bd) bd.style.display = 'flex';
+  }
+
+  async function salvarProfissional() {
+    const id       = document.getElementById('prof_edit_id').value;
+    const nome     = document.getElementById('prof-nome').value.trim();
+    const cpf      = document.getElementById('prof-cpf').value.trim();
+    const cns      = document.getElementById('prof-cns').value.trim();
+    const cboSel   = document.getElementById('prof-cbo').value;
+    const cbo      = cboSel === 'Outro' ? document.getElementById('prof-cbo-manual').value.trim() : cboSel;
+    const cnes     = document.getElementById('prof-cnes').value.trim();
+    const cargo    = document.getElementById('prof-cargo').value.trim();
+    const conselho = document.getElementById('prof-conselho').value.trim();
+    const status   = document.getElementById('prof-status').value;
+    if (!nome || !cpf || !cns || !cbo || !cnes) {
+      toast('Preencha nome, CPF, CNS, CBO e CNES.', 'warning'); return;
+    }
+    const btn = document.getElementById('btn-salvar-prof');
+    if (btn) btn.disabled = true;
+    const payload = { nome, cpf, cns, cbo, cnes, cargo, conselho, status };
+    try {
+      if (id) {
+        const { error } = await db.from('profissionais').update(payload).match({ id: Number(id) });
+        if (error) throw error;
+        toast('Profissional atualizado!', 'success');
+      } else {
+        const { error } = await db.from('profissionais').insert([payload]);
+        if (error) throw error;
+        toast('Profissional cadastrado!', 'success');
+      }
+      fecharFormProfissional();
+      await fetchProfissionais();
+    } catch (err) {
+      toast('Erro ao salvar: ' + (err.message||err), 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function excluirProfissional(id) {
+    const ok = await confirm('Excluir profissional?', 'Esta ação não pode ser desfeita.');
+    if (!ok) return;
+    try {
+      const { error } = await db.from('profissionais').delete().match({ id });
+      if (error) throw error;
+      toast('Profissional excluído.', 'success');
+      await fetchProfissionais();
+    } catch (err) {
+      toast('Erro ao excluir: ' + (err.message||err), 'error');
+    }
+  }
+
+  // ===== MÁSCARA CNS =====
+  function mascaraCNS(el) {
+    let v = el.value.replace(/\D/g, '').slice(0, 15);
+    if (v.length > 11) v = v.slice(0,3)+' '+v.slice(3,7)+' '+v.slice(7,11)+' '+v.slice(11);
+    else if (v.length > 7) v = v.slice(0,3)+' '+v.slice(3,7)+' '+v.slice(7);
+    else if (v.length > 3) v = v.slice(0,3)+' '+v.slice(3);
+    el.value = v;
+  }
+
   async function fetchVacinas() {
     try {
       if (!db) { renderEstoque(); return; }
@@ -2884,8 +3385,15 @@
     const dose = document.getElementById('dose').value.trim();
     const valor = Number(document.getElementById('valor').value || 0);
     const forma_pagamento = document.getElementById('pagamento').value;
-    const profissional = document.getElementById('aplic_profissional').value.trim();
-    const local_aplicacao = document.getElementById('aplic_local')?.value || '';
+    const profissionalSel = document.getElementById('aplic_profissional');
+    const profissional_id = profissionalSel ? Number(profissionalSel.value) || null : null;
+    const profObj = (typeof profissionais !== 'undefined' ? profissionais : []).find(p => Number(p.id) === profissional_id) || {};
+    const profissional      = profObj.nome      || '';
+    const prof_cns          = profObj.cns       || null;
+    const prof_cpf          = profObj.cpf       || null;
+    const prof_cbo          = profObj.cbo       || null;
+    const prof_cnes_vinculo = profObj.cnes      || null;
+    const local_aplicacao   = document.getElementById('aplic_local')?.value || '';
 
     if (!paciente_id) { toast('Selecione um paciente.', 'warning'); return; }
     if (!vacina_id) { toast('Selecione uma vacina.', 'warning'); return; }
@@ -2912,6 +3420,11 @@
           paciente_id, vacina_id, vacina_text: v.nome, lote: v.lote||null,
           data_aplicacao, dose, quantidade, valor, forma_pagamento,
           profissional: profissional||null,
+          profissional_id: profissional_id||null,
+          prof_cns: prof_cns||null,
+          prof_cpf: prof_cpf||null,
+          prof_cbo: prof_cbo||null,
+          prof_cnes_vinculo: prof_cnes_vinculo||null,
           local_aplicacao: local_aplicacao||null
         }]);
         if (e1) throw e1;
@@ -2928,15 +3441,31 @@
         lote: v.lote || '',
         validade: v.validade || '',
         data: data_aplicacao,
+        dose: dose || '',
         profissional: profissional || '',
         local_aplicacao: local_aplicacao || '',
         paciente_nome: pacObj.nome || '',
-        paciente_cpf: pacObj.cpf || ''
+        paciente_cpf: pacObj.cpf || '',
+        // Dados RNDS
+        paciente_cns:      pacObj.cns       || '',
+        paciente_nascimento: pacObj.nascimento || '',
+        paciente_sexo:     pacObj.sexo      || '',
+        paciente_nome_mae: pacObj.nome_mae  || '',
+        resp_nome:         pacObj.resp_nome || '',
+        resp_cpf:          pacObj.resp_cpf  || '',
+        prof_cns:          prof_cns         || '',
+        prof_cpf:          prof_cpf         || '',
+        prof_cbo:          prof_cbo         || '',
+        prof_cnes_vinculo: prof_cnes_vinculo|| '',
+        vacina_codigo_ms:  v.codigo_ms      || '',
+        vacina_imuno:      v.imuno          || v.nome || ''
       };
       const btnImpr = document.getElementById('btn-imprimir-etiqueta');
       if (btnImpr) btnImpr.style.display = 'inline-flex';
       const btnFicha = document.getElementById('btn-imprimir-ficha');
       if (btnFicha) btnFicha.style.display = 'inline-flex';
+      const btnFhir = document.getElementById('btn-ver-fhir');
+      if (btnFhir) btnFhir.style.display = 'inline-flex';
       ['quantidade','data_aplicacao','dose','valor'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = id === 'quantidade' ? 1 : '';
@@ -4720,6 +5249,30 @@
   <div id="pdf-orc-conteudo" style="font-family:'Inter',sans-serif;max-width:680px;margin:0 auto;padding:40px 36px;color:#18181b"></div>
 </div>
 
+
+    <!-- ===== MODAL: JSON FHIR RNDS ===== -->
+    <div id="backdrop-fhir" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px">
+      <div class="card" style="width:100%;max-width:760px;margin:0 auto">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🔬 Payload FHIR — Imunização RNDS</div>
+            <div class="card-subtitle">Conforme padrão HL7 FHIR R4 adotado pela RNDS (RIA)</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="fecharModalFHIR()">✕</button>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="copiarFHIR()">📋 Copiar JSON</button>
+            <button class="btn btn-ghost btn-sm" onclick="baixarFHIR()">⬇️ Baixar .json</button>
+            <div id="fhir-copy-msg" style="font-size:0.8rem;color:var(--green);align-self:center;display:none">✅ Copiado!</div>
+          </div>
+          <pre id="fhir-json-output" style="background:var(--gray-50,#f8f9fa);border:1px solid var(--gray-200,#e5e7eb);border-radius:8px;padding:16px;font-size:0.72rem;overflow-x:auto;max-height:520px;white-space:pre-wrap;word-break:break-all;font-family:monospace"></pre>
+          <div id="fhir-aviso" style="margin-top:12px;padding:10px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:0.8rem;color:#92400e">
+            ⚠️ Este JSON é gerado localmente para conferência. O envio efetivo à RNDS requer autenticação via certificado digital ICP-Brasil e chamada ao endpoint FHIR do DATASUS. Consulte a documentação da RNDS em <a href="https://rnds-guia.saude.gov.br" target="_blank" style="color:#92400e">rnds-guia.saude.gov.br</a>.
+          </div>
+        </div>
+      </div>
+    </div>
 </body></html>`);
     win.document.close();
   }
