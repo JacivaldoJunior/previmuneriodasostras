@@ -3368,7 +3368,8 @@
         <td>${pagBadge}</td>
         <td>
           <div class="actions">
-            <button class="btn btn-ghost btn-sm" onclick="verAplicacao(${a.id})">👁️</button>
+            <button class="btn btn-ghost btn-sm" onclick="verAplicacao(${a.id})" title="Ver detalhes">👁️</button>
+            <button class="btn btn-ghost btn-sm" onclick="verFHIRDaAplicacao(${a.id})" title="Ver JSON FHIR / RIA" style="color:#3b82f6;border-color:#bfdbfe">🔬</button>
             ${btnPag}
             <button class="btn btn-danger btn-sm" onclick="excluirAplicacao(${a.id})">🗑️</button>
           </div>
@@ -3499,6 +3500,48 @@
     document.getElementById('modal-aplicacao').classList.add('open');
   }
   function fecharModalAplicacao() { document.getElementById('modal-aplicacao').classList.remove('open'); }
+
+  // ===== VER FHIR DE APLICAÇÃO JÁ REGISTRADA =====
+  function verFHIRDaAplicacao(id) {
+    const a = aplicacoes.find(x => Number(x.id) === Number(id));
+    if (!a) { toast('Aplicação não encontrada.', 'warning'); return; }
+    const p = findPaciente(a.paciente_id);
+
+    // Montar objeto no mesmo formato de ultimaAplicacao para reuso do gerarPayloadFHIR
+    const aplicObj = {
+      id:                 a.id,
+      vacina:             a.vacina_text || a.vacina || '',
+      vacina_text:        a.vacina_text || a.vacina || '',
+      vacina_codigo_ms:   a.vacina_codigo_ms || '',
+      vacina_imuno:       a.vacina_imuno || '',
+      lote:               a.lote || '',
+      validade:           a.validade || '',
+      dose:               a.dose || '',
+      data:               a.data_aplicacao || new Date().toISOString().slice(0,10),
+      data_aplicacao:     a.data_aplicacao || '',
+      valor:              a.valor || 0,
+      forma_pagamento:    a.forma_pagamento || '',
+      quantidade:         a.quantidade || 1,
+      local_aplicacao:    a.local_aplicacao || '',
+      profissional:       a.profissional || '',
+      profissional_id:    a.profissional_id || null,
+      prof_cns:           a.prof_cns || '',
+      prof_cpf:           a.prof_cpf || '',
+      prof_cbo:           a.prof_cbo || '',
+      prof_cnes_vinculo:  a.prof_cnes_vinculo || '',
+      paciente_id:        a.paciente_id,
+      paciente_nome:      p ? p.nome : '',
+      paciente_cpf:       p ? p.cpf  : '',
+      paciente_cns:       p ? p.cns  : '',
+      paciente_sexo:      p ? p.sexo : '',
+      paciente_nascimento: p ? p.data_nascimento : '',
+      nome_mae:           p ? p.nome_mae : '',
+    };
+
+    // Usar a função já existente de gerar FHIR
+    ultimaAplicacao = aplicObj;
+    abrirModalFHIR();
+  }
 
 
   // ===== EDITAR PAGAMENTO (só aplicações do dia) =====
