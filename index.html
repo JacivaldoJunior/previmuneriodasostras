@@ -5390,7 +5390,7 @@
 
   function imprimirFicha() {
     if (!ultimaAplicacao) { toast('Nenhuma aplicação registrada ainda.', 'warning'); return; }
-    const { vacina, lote, validade, data, profissional, paciente_nome, paciente_cpf } = ultimaAplicacao;
+    const { vacina, lote, validade, data, profissional, paciente_nome, paciente_cpf, local_aplicacao } = ultimaAplicacao;
 
     const dataFmt = data     ? new Date(data     + 'T00:00:00').toLocaleDateString('pt-BR') : '';
     const valFmt  = validade ? new Date(validade  + 'T00:00:00').toLocaleDateString('pt-BR') : '';
