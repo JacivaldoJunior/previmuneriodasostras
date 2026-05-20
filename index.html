@@ -4440,8 +4440,9 @@
   }
 
   // Close modals on backdrop click
-  ['modal-historico','modal-aplicacao','modal-editar-vacina','modal-usuario'].forEach(id => {
-    document.getElementById(id).addEventListener('click', function(e) {
+  ['modal-historico','modal-aplicacao','modal-editar-vacina','modal-usuario','backdrop-fhir'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', function(e) {
       if (e.target === this) this.classList.remove('open');
     });
   });
