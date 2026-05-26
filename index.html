@@ -3736,8 +3736,14 @@
       const nasc = new Date(p.nascimento+'T00:00:00');
       const hoje = new Date();
       let anos = hoje.getFullYear() - nasc.getFullYear();
-      const m = hoje.getMonth() - nasc.getMonth();
-      if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) anos--;
+      const diffMes = hoje.getMonth() - nasc.getMonth();
+      if (diffMes < 0 || (diffMes === 0 && hoje.getDate() < nasc.getDate())) anos--;
+      if (anos < 2) {
+        let meses = (hoje.getFullYear() - nasc.getFullYear()) * 12 + (hoje.getMonth() - nasc.getMonth());
+        if (hoje.getDate() < nasc.getDate()) meses--;
+        if (meses <= 0) return 'Recém-nascido';
+        return meses === 1 ? '1 mês' : meses + ' meses';
+      }
       return anos + ' anos';
     })() : '—';
 
@@ -5193,31 +5199,27 @@
 
 <!-- ===== MODAL AGENDAMENTO ===== -->
 <div id="modal-agendamento" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:620px;max-height:90vh;overflow-y:auto">
+  <div class="modal-box" style="max-width:600px;max-height:92vh;overflow-y:auto">
     <div class="modal-head">
       <div class="modal-title">📅 Novo Agendamento de Vacina</div>
       <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
     </div>
     <div class="modal-body" style="display:grid;gap:14px">
 
-      <!-- Linha 1: Nome + CPF -->
+      <!-- Nome + Celular -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group" style="margin:0">
           <label class="form-label">Nome Completo <span class="req">*</span></label>
           <input id="agend-nome" class="form-control" placeholder="Nome completo">
         </div>
         <div class="form-group" style="margin:0">
-          <label class="form-label">CPF <span class="req">*</span></label>
-          <input id="agend-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
+          <label class="form-label">Celular <span class="req">*</span></label>
+          <input id="agend-celular" class="form-control" placeholder="(00) 00000-0000" oninput="mascaraTelefone(this)">
         </div>
       </div>
 
-      <!-- Linha 2: Data nascimento + Data agendamento + Horário -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data de Nascimento <span class="req">*</span></label>
-          <input id="agend-nascimento" type="date" class="form-control">
-        </div>
+      <!-- Data agendamento + Horário -->
+      <div style="display:grid;grid-template-columns:1fr 140px;gap:12px">
         <div class="form-group" style="margin:0">
           <label class="form-label">Data do Agendamento <span class="req">*</span></label>
           <input id="agend-data" type="date" class="form-control">
@@ -5228,99 +5230,19 @@
         </div>
       </div>
 
-      <!-- Linha 3: Endereço -->
+      <!-- Vacinas (múltiplas) -->
       <div class="form-group" style="margin:0">
-        <label class="form-label">Endereço Completo <span class="req">*</span></label>
-        <input id="agend-endereco" class="form-control" placeholder="Rua, número, bairro, cidade — CEP">
-      </div>
-
-      <!-- Linha 4: Vacina + Dose -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Vacina <span class="req">*</span></label>
-          <select id="agend-vacina-id" class="form-control" onchange="preencherDadosVacinaAgend()">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Dose</label>
-          <select id="agend-dose" class="form-control">
-            <option value="">—</option>
-            <option value="1ª dose">1ª Dose</option>
-            <option value="2ª dose">2ª Dose</option>
-            <option value="3ª dose">3ª Dose</option>
-            <option value="dose única">Dose Única</option>
-            <option value="reforço">Reforço</option>
-            <option value="anual">Anual</option>
-          </select>
+        <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Vacinas <span class="req">*</span></span>
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:0.78rem;padding:2px 10px" onclick="adicionarLinhaVacinaAgend()">+ Adicionar vacina</button>
+        </label>
+        <div id="agend-vacinas-lista" style="display:grid;gap:8px">
+          <!-- linhas de vacina geradas dinamicamente -->
         </div>
       </div>
 
-      <!-- Linha 5: Lote + Validade -->
+      <!-- Status + Obs -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Lote</label>
-          <input id="agend-lote" class="form-control" placeholder="Preenchido automaticamente" readonly>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Validade</label>
-          <input id="agend-validade" class="form-control" placeholder="Preenchido automaticamente" readonly>
-        </div>
-      </div>
-
-      <!-- Linha 6: Local da aplicação (parte do corpo) -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Local da Aplicação (parte do corpo)</label>
-        <select id="agend-local" class="form-control">
-          <option value="">Selecione...</option>
-          <optgroup label="Braço">
-            <option value="Deltoide direito">Deltoide Direito</option>
-            <option value="Deltoide esquerdo">Deltoide Esquerdo</option>
-            <option value="Vasto lateral do braço direito">Vasto Lateral do Braço Direito</option>
-            <option value="Vasto lateral do braço esquerdo">Vasto Lateral do Braço Esquerdo</option>
-          </optgroup>
-          <optgroup label="Coxa">
-            <option value="Vasto lateral da coxa direita">Vasto Lateral da Coxa Direita</option>
-            <option value="Vasto lateral da coxa esquerda">Vasto Lateral da Coxa Esquerda</option>
-          </optgroup>
-          <optgroup label="Glúteo">
-            <option value="Glúteo direito (ventroglúteo)">Glúteo Direito (Ventroglúteo)</option>
-            <option value="Glúteo esquerdo (ventroglúteo)">Glúteo Esquerdo (Ventroglúteo)</option>
-          </optgroup>
-          <optgroup label="Outros">
-            <option value="Subcutâneo — abdome">Subcutâneo — Abdome</option>
-            <option value="Intradérmico — antebraço direito">Intradérmico — Antebraço Direito</option>
-            <option value="Intradérmico — antebraço esquerdo">Intradérmico — Antebraço Esquerdo</option>
-            <option value="Oral">Oral</option>
-          </optgroup>
-        </select>
-      </div>
-
-      <!-- Linha 7: Aplicador + Forma de Pagamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Aplicador</label>
-          <input id="agend-aplicador" class="form-control" placeholder="Nome do profissional">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Forma de Pagamento</label>
-          <select id="agend-pagamento" class="form-control">
-            <option value="">Selecione...</option>
-            <option value="dinheiro">Dinheiro</option>
-            <option value="cartao_credito">Cartão de Crédito</option>
-            <option value="cartao_debito">Cartão de Débito</option>
-            <option value="pix">PIX</option>
-            <option value="convenio">Convênio</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Linha 8: Valor + Obs -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Valor (R$)</label>
-          <input id="agend-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
-        </div>
         <div class="form-group" style="margin:0">
           <label class="form-label">Status</label>
           <select id="agend-status" class="form-control">
@@ -5329,13 +5251,24 @@
             <option value="cancelado">Cancelado</option>
           </select>
         </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Observações</label>
+          <input id="agend-obs" class="form-control" placeholder="Informações adicionais...">
+        </div>
       </div>
 
-      <!-- Obs -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Observações</label>
-        <textarea id="agend-obs" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
-      </div>
+      <!-- campos ocultos mantidos para compatibilidade -->
+      <input type="hidden" id="agend-cpf">
+      <input type="hidden" id="agend-nascimento">
+      <input type="hidden" id="agend-endereco">
+      <input type="hidden" id="agend-vacina-id">
+      <input type="hidden" id="agend-dose">
+      <input type="hidden" id="agend-lote">
+      <input type="hidden" id="agend-validade">
+      <input type="hidden" id="agend-local">
+      <input type="hidden" id="agend-aplicador">
+      <input type="hidden" id="agend-pagamento">
+      <input type="hidden" id="agend-valor">
 
     </div>
     <div class="modal-foot">
@@ -6417,25 +6350,26 @@
       if (!a) return;
       document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '✏️ Editar Agendamento';
       document.getElementById('agend-nome').value       = a.nome_completo || '';
-      document.getElementById('agend-cpf').value        = a.cpf || '';
-      document.getElementById('agend-nascimento').value = a.data_nascimento || '';
+      const celEdit = document.getElementById('agend-celular'); if (celEdit) celEdit.value = a.cpf || '';
       document.getElementById('agend-data').value       = a.data_agendamento || '';
-      document.getElementById('agend-endereco').value   = a.endereco || '';
-      document.getElementById('agend-vacina-id').value  = a.vacina_id || '';
-      document.getElementById('agend-dose').value       = a.dose || '';
-      document.getElementById('agend-lote').value       = a.lote || '';
-      document.getElementById('agend-validade').value   = a.validade_display || '';
-      document.getElementById('agend-local').value      = a.local_aplicacao || '';
-      document.getElementById('agend-aplicador').value  = a.aplicador || '';
-      document.getElementById('agend-pagamento').value  = a.forma_pagamento || '';
-      document.getElementById('agend-valor').value      = a.valor || '';
       document.getElementById('agend-status').value     = a.status || 'agendado';
-      document.getElementById('agend-obs').value        = a.obs || '';
+      const obsEdit = document.getElementById('agend-obs'); if (obsEdit) obsEdit.value = a.obs || '';
       const hEl = document.getElementById('agend-hora'); if (hEl) hEl.value = a.hora_agendamento || '';
+      // Iniciar lista de vacinas com a vacina do agendamento
+      initVacinasAgend();
+      if (a.vacina_id) {
+        setTimeout(() => {
+          const firstSel = document.querySelector('.agend-vacina-sel');
+          if (firstSel) firstSel.value = a.vacina_id;
+          const firstDose = document.querySelector('.agend-dose-sel');
+          if (firstDose) firstDose.value = a.dose || '';
+        }, 80);
+      }
     } else {
       // Modo novo
       document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '📅 Novo Agendamento de Vacina';
-      ['agend-nome','agend-cpf','agend-nascimento','agend-endereco','agend-lote','agend-validade','agend-aplicador','agend-obs','agend-hora'].forEach(id => {
+      initVacinasAgend();
+      ['agend-nome','agend-celular','agend-cpf','agend-nascimento','agend-endereco','agend-lote','agend-validade','agend-aplicador','agend-obs','agend-hora'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
       });
       document.getElementById('agend-data').value      = new Date().toISOString().slice(0,10);
@@ -6473,40 +6407,99 @@
     if (v.preco) document.getElementById('agend-valor').value = Number(v.preco).toFixed(2);
   }
 
+  // ===== AGENDAMENTO: múltiplas vacinas =====
+  let agendVacinaCount = 0;
+
+  function mascaraTelefone(el) {
+    let v = el.value.replace(/\D/g,'');
+    if (v.length <= 10) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+    else v = v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3');
+    el.value = v;
+  }
+
+  function adicionarLinhaVacinaAgend(vacinaId='', dose='') {
+    const lista = document.getElementById('agend-vacinas-lista');
+    if (!lista) return;
+    const idx = agendVacinaCount++;
+    const opts = (vacinas||[]).map(v => `<option value="${v.id}" ${Number(vacinaId)===Number(v.id)?'selected':''}>${esc(v.nome)}</option>`).join('');
+    const doseOpts = ['','1ª dose','2ª dose','3ª dose','dose única','reforço','anual']
+      .map(d => `<option value="${d}" ${d===dose?'selected':''}>${d||'—'}</option>`).join('');
+    const row = document.createElement('div');
+    row.id = 'agend-vacina-row-'+idx;
+    row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr auto;gap:8px;align-items:center';
+    row.innerHTML = `
+      <select class="form-control agend-vacina-sel" data-idx="${idx}">
+        <option value="">Selecione a vacina...</option>${opts}
+      </select>
+      <select class="form-control agend-dose-sel" data-idx="${idx}">${doseOpts}</select>
+      <button type="button" class="btn btn-ghost btn-sm" style="color:var(--red);padding:4px 8px" onclick="removerLinhaVacinaAgend(${idx})" title="Remover">✕</button>
+    `;
+    lista.appendChild(row);
+    if (lista.children.length === 1) {
+      lista.querySelector('.btn-ghost').style.display = 'none';
+    } else {
+      lista.querySelectorAll('.btn-ghost').forEach(b => b.style.display = '');
+    }
+  }
+
+  function removerLinhaVacinaAgend(idx) {
+    const row = document.getElementById('agend-vacina-row-'+idx);
+    if (row) row.remove();
+    const lista = document.getElementById('agend-vacinas-lista');
+    if (lista && lista.children.length === 1) {
+      lista.querySelector('.btn-ghost').style.display = 'none';
+    }
+  }
+
+  function initVacinasAgend() {
+    agendVacinaCount = 0;
+    const lista = document.getElementById('agend-vacinas-lista');
+    if (lista) lista.innerHTML = '';
+    adicionarLinhaVacinaAgend();
+  }
+
   async function salvarAgendamento() {
     const nome_completo    = document.getElementById('agend-nome').value.trim();
-    const cpf              = document.getElementById('agend-cpf').value.trim();
-    const data_nascimento  = document.getElementById('agend-nascimento').value;
+    const celular          = document.getElementById('agend-celular')?.value.trim() || '';
     const data_agendamento = document.getElementById('agend-data').value;
-    const endereco         = document.getElementById('agend-endereco').value.trim();
-    const vacina_id        = Number(document.getElementById('agend-vacina-id').value || 0);
-    const dose             = document.getElementById('agend-dose').value;
-    const local_aplicacao  = document.getElementById('agend-local').value;
-    const aplicador        = document.getElementById('agend-aplicador').value.trim();
-    const forma_pagamento  = document.getElementById('agend-pagamento').value;
-    const valor            = Number(document.getElementById('agend-valor').value || 0);
-    const status           = document.getElementById('agend-status').value || 'agendado';
-    const obs              = document.getElementById('agend-obs').value.trim();
     const hora_agendamento = document.getElementById('agend-hora')?.value || null;
+    const status           = document.getElementById('agend-status').value || 'agendado';
+    const obs              = document.getElementById('agend-obs')?.value.trim() || '';
 
     if (!nome_completo)    { toast('Informe o nome completo.', 'warning'); return; }
-    if (!cpf)              { toast('Informe o CPF.', 'warning'); return; }
-    if (!data_nascimento)  { toast('Informe a data de nascimento.', 'warning'); return; }
+    if (!celular)          { toast('Informe o celular.', 'warning'); return; }
     if (!data_agendamento) { toast('Informe a data do agendamento.', 'warning'); return; }
-    if (!endereco)         { toast('Informe o endereço.', 'warning'); return; }
-    if (!vacina_id)        { toast('Selecione uma vacina.', 'warning'); return; }
 
-    const v = findVacina(vacina_id);
-    const vacina_nome = v ? v.nome : '';
-    const lote = v ? (v.lote || '') : '';
-    const validade_display = document.getElementById('agend-validade').value;
+    // Coletar todas as vacinas selecionadas
+    const lista = document.getElementById('agend-vacinas-lista');
+    const vacinaRows = lista ? lista.querySelectorAll('[id^="agend-vacina-row-"]') : [];
+    const vacinasSelecionadas = [];
+    vacinaRows.forEach(row => {
+      const sel = row.querySelector('.agend-vacina-sel');
+      const doseSel = row.querySelector('.agend-dose-sel');
+      if (sel && sel.value) {
+        const v = findVacina(Number(sel.value));
+        vacinasSelecionadas.push({ id: sel.value, nome: v ? v.nome : '', dose: doseSel ? doseSel.value : '' });
+      }
+    });
+    if (!vacinasSelecionadas.length) { toast('Selecione pelo menos uma vacina.', 'warning'); return; }
 
+    const vacina_id   = vacinasSelecionadas[0].id;
+    const vacina_nome = vacinasSelecionadas.map(v => v.nome).join(', ');
+    const dose        = vacinasSelecionadas[0].dose;
+    const v0          = findVacina(Number(vacina_id));
+    const lote        = v0 ? (v0.lote || '') : '';
+    const validade_display = v0 ? (v0.validade || '') : '';
+    const vacinas_json = JSON.stringify(vacinasSelecionadas);
+
+    const obsFinal = [obs, vacinasSelecionadas.length > 1 ? 'Vacinas adicionais: ' + vacinasSelecionadas.slice(1).map(v=>v.nome+(v.dose?' ('+v.dose+')':'')).join(', ') : ''].filter(Boolean).join(' | ');
     const payload = {
-      nome_completo, cpf, data_nascimento, data_agendamento, hora_agendamento, endereco,
-      vacina_id, vacina_nome, lote, validade_display,
-      dose: dose || null, local_aplicacao: local_aplicacao || null,
-      aplicador: aplicador || null, forma_pagamento: forma_pagamento || null,
-      valor: valor || 0, status, obs: obs || null
+      nome_completo, cpf: celular, data_nascimento: null, data_agendamento, hora_agendamento,
+      endereco: '',
+      vacina_id: Number(vacina_id), vacina_nome, lote, validade_display,
+      dose: dose || null, local_aplicacao: null,
+      aplicador: null, forma_pagamento: null,
+      valor: 0, status, obs: obsFinal || null
     };
 
     try {
