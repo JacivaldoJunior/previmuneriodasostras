@@ -293,6 +293,7 @@
     /* ===== TABLE ===== */
     .table-wrapper { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; }
+    .data-table thead th { position: sticky; top: 0; z-index: 2; background: var(--gray-50); }
     .data-table th {
       padding: 10px 14px;
       font-size: 11px; font-weight: 700;
@@ -312,7 +313,7 @@
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tbody tr:hover { background: var(--orange-50); }
     .data-table .actions { display: flex; gap: 6px; justify-content: flex-end; }
-    .scroll-table { max-height: 380px; overflow-y: auto; }
+    .scroll-table { max-height: calc(100vh - 260px); overflow-y: auto; overflow-x: auto; border-radius: 0 0 12px 12px; }
 
     /* ===== BADGES ===== */
     .badge {
@@ -1028,6 +1029,9 @@
         </button>
         <button class="nav-item" onclick="navTo('usuarios')">
           <span class="icon">👥</span> Usuários
+        </button>
+        <button class="nav-item" onclick="navTo('auditoria')">
+          <span class="icon">🔍</span> Auditoria
         </button>
       </div>
     </div>
@@ -2341,6 +2345,25 @@
   </div>
 </div>
 
+<!-- PÁGINA AUDITORIA -->
+<div id="page-auditoria" class="page" style="display:none">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🔍 Log de Auditoria</h1>
+      <p class="page-subtitle">Rastreabilidade de operações — Cláusulas m e v do Termo DATASUS</p>
+    </div>
+    <button class="btn btn-primary" onclick="fetchAuditoria()">🔄 Atualizar</button>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <table class="data-table" id="tabela-auditoria">
+      <thead><tr>
+        <th>Data/Hora</th><th>Operador</th><th>Ação</th><th>Tabela</th><th>Registro ID</th><th>Detalhes</th>
+      </tr></thead>
+      <tbody id="auditoria-tbody"><tr><td colspan="6" style="text-align:center;color:var(--gray-400)">Carregando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- CONFIRM DIALOG -->
 <div id="confirm-backdrop" class="confirm-backdrop">
   <div class="confirm-box">
@@ -2402,6 +2425,28 @@
 
   // ===== ESTADO DE LOGIN =====
   let usuarioLogado = null; // { id, nome, login, cargo, status }
+
+  // ===== LOG DE AUDITORIA (Cláusulas m e v do Termo DATASUS) =====
+  async function registrarAuditoria(acao, tabela, registro_id, dados_antes, dados_depois) {
+    try {
+      const operador = usuarioLogado ? usuarioLogado.nome : 'Sistema';
+      const operador_id = usuarioLogado ? usuarioLogado.id : null;
+      await db.from('auditoria_log').insert([{
+        acao,           // 'INSERT', 'UPDATE', 'DELETE'
+        tabela,         // 'aplicacoes', 'pacientes', etc.
+        registro_id: String(registro_id || ''),
+        operador,
+        operador_id,
+        dados_antes: dados_antes ? JSON.stringify(dados_antes) : null,
+        dados_depois: dados_depois ? JSON.stringify(dados_depois) : null,
+        data_hora: new Date().toISOString()
+      }]);
+    } catch(e) {
+      console.warn('Log de auditoria não registrado:', e);
+    }
+  }
+  // ===== FIM LOG DE AUDITORIA =====
+
 
   // ===== LOGIN / LOGOUT =====
   async function fazerLogin() {
@@ -2514,6 +2559,7 @@
     'pacientes':       { id: 'page-pacientes',        title: 'Pacientes' },
     'novo-paciente':   { id: 'page-novo-paciente',    title: 'Novo Paciente' },
     'aplicacoes':      { id: 'page-aplicacoes',       title: 'Aplicações' },
+    'auditoria':       { id: 'page-auditoria',         title: 'Log de Auditoria' },
     'nova-aplicacao':  { id: 'page-nova-aplicacao',   title: 'Registrar Aplicação' },
     'estoque':         { id: 'page-estoque',          title: 'Estoque de Vacinas' },
     'nova-vacina':     { id: 'page-nova-vacina',      title: 'Adicionar Vacina' },
@@ -2768,7 +2814,9 @@
     const ok = await confirm('Excluir paciente?', 'Esta ação também pode remover as aplicações vinculadas (se configurado cascade). Deseja continuar?');
     if (!ok) return;
     try {
+      const pacToDelete = pacientes.find(x => Number(x.id) === Number(id));
       const { error } = await db.from('pacientes').delete().match({ id });
+      if (!error) await registrarAuditoria('DELETE', 'pacientes', id, pacToDelete, null);
       if (error) throw error;
       toast('Paciente excluído.', 'success');
       await fetchPacientes(); await fetchAplicacoes();
@@ -3307,7 +3355,9 @@
     const ok = await confirm('Remover do estoque?', 'Este lote será removido permanentemente do estoque.');
     if (!ok) return;
     try {
+      const vacToDelete = vacinas.find(x => Number(x.id) === Number(id));
       const { error } = await db.from('vacinas').delete().match({ id });
+      if (!error) await registrarAuditoria('DELETE', 'vacinas', id, vacToDelete, null);
       if (error) throw error;
       toast('Vacina removida.', 'success');
       await fetchVacinas();
@@ -3417,7 +3467,7 @@
         if (error) throw error;
       } catch (rpcErr) {
         console.warn('RPC fallback:', rpcErr);
-        const { error: e1 } = await db.from('aplicacoes').insert([{
+        const payload_ap = {
           paciente_id, vacina_id, vacina_text: v.nome, lote: v.lote||null,
           data_aplicacao, dose, quantidade, valor, forma_pagamento,
           profissional: profissional||null,
@@ -3427,8 +3477,10 @@
           prof_cbo: prof_cbo||null,
           prof_cnes_vinculo: prof_cnes_vinculo||null,
           local_aplicacao: local_aplicacao||null
-        }]);
+        };
+        const { data: ap_inserted, error: e1 } = await db.from('aplicacoes').insert([payload_ap]).select().single();
         if (e1) throw e1;
+        await registrarAuditoria('INSERT', 'aplicacoes', ap_inserted?.id, null, payload_ap);
         const novoStock = Number(v.stock||0) - quantidade;
         const { error: e2 } = await db.from('vacinas').update({ stock: novoStock }).match({ id: vacina_id });
         if (e2) throw e2;
@@ -3641,10 +3693,12 @@
     const forma = document.getElementById('edit-pag-forma').value;
     if (!forma) { toast('Selecione a forma de pagamento.', 'warning'); return; }
     try {
+      const apBefore = aplicacoes.find(x => Number(x.id) === Number(id));
       const { error } = await db.from('aplicacoes')
         .update({ valor, forma_pagamento: forma })
         .match({ id });
       if (error) throw error;
+      await registrarAuditoria('UPDATE', 'aplicacoes', id, {valor: apBefore?.valor, forma_pagamento: apBefore?.forma_pagamento}, {valor, forma_pagamento: forma});
       toast('Pagamento atualizado!', 'success');
       fecharEditarPagamento();
       await fetchAplicacoes();
@@ -3658,7 +3712,9 @@
     const ok = await confirm('Excluir aplicação?', 'Atenção: o estoque NÃO será reajustado automaticamente.');
     if (!ok) return;
     try {
+      const apToDelete = aplicacoes.find(x => Number(x.id) === Number(id));
       const { error } = await db.from('aplicacoes').delete().match({ id });
+      if (!error) await registrarAuditoria('DELETE', 'aplicacoes', id, apToDelete, null);
       if (error) throw error;
       toast('Aplicação excluída.', 'success');
       await fetchAplicacoes();
@@ -8212,7 +8268,8 @@
     /* --- Scroll table wrapper --- */
     .scroll-table, .table-wrapper {
       border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
-      overflow: hidden !important;
+      overflow-y: auto !important;
+      overflow-x: auto !important;
     }
 
     /* --- Highlight bar / alerts --- */
