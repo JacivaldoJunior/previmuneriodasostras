@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Previmune — Sistema de Vacinação</title>
+  <title>Previmune v2805-1152</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -50,16 +50,16 @@
       position: fixed;
       left: 0; top: 0; bottom: 0;
       width: 240px;
-      background: var(--white);
-      border-right: 1px solid var(--gray-200);
+      background: #1e2a3b;
+      border-right: none;
       display: flex;
       flex-direction: column;
       z-index: 100;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 3px 0 12px rgba(0,0,0,0.25);
     }
     .sidebar-logo {
       padding: 20px 20px 16px;
-      border-bottom: 1px solid var(--gray-100);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
       align-items: center;
       gap: 12px;
@@ -68,15 +68,15 @@
       width: 40px; height: 40px;
       border-radius: var(--radius-sm);
       object-fit: contain;
-      background: var(--orange-50);
+      background: rgba(255,255,255,0.1);
       padding: 4px;
     }
     .sidebar-logo-text h2 {
       font-size: 16px; font-weight: 800;
-      color: var(--orange-dark);
+      color: #ffffff;
     }
     .sidebar-logo-text p {
-      font-size: 11px; color: var(--gray-400);
+      font-size: 11px; color: rgba(255,255,255,0.5);
       font-weight: 500;
     }
     .sidebar-nav {
@@ -84,14 +84,17 @@
       padding: 12px 0;
       overflow-y: auto;
     }
+    .sidebar-nav::-webkit-scrollbar { width: 4px; }
+    .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
     .nav-section {
       padding: 0 12px;
       margin-bottom: 4px;
     }
     .nav-label {
       font-size: 10px; font-weight: 700;
-      color: var(--gray-400);
-      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       padding: 12px 8px 4px;
     }
@@ -100,34 +103,35 @@
       padding: 9px 12px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      font-size: 14px; font-weight: 500;
-      color: var(--gray-600);
+      font-size: 13.5px; font-weight: 500;
+      color: rgba(255,255,255,0.65);
       transition: all 0.15s;
       border: none; background: none; width: 100%; text-align: left;
     }
-    .nav-item:hover { background: var(--gray-100); color: var(--gray-900); }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: #ffffff; }
     .nav-item.active {
-      background: var(--orange-50);
-      color: var(--orange-dark);
+      background: var(--orange);
+      color: #ffffff;
       font-weight: 600;
+      box-shadow: 0 2px 8px rgba(231,107,31,0.4);
     }
     .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
     .nav-item .badge-count {
       margin-left: auto;
-      background: var(--orange-100);
-      color: var(--orange-dark);
+      background: rgba(255,255,255,0.15);
+      color: #ffffff;
       font-size: 11px; font-weight: 700;
       padding: 2px 7px; border-radius: 999px;
     }
     .sidebar-footer {
       padding: 16px;
-      border-top: 1px solid var(--gray-100);
+      border-top: 1px solid rgba(255,255,255,0.08);
     }
     .sidebar-user {
       display: flex; align-items: center; gap: 10px;
       padding: 8px 10px;
       border-radius: var(--radius-sm);
-      background: var(--orange-50);
+      background: rgba(255,255,255,0.07);
     }
     .user-avatar {
       width: 32px; height: 32px; border-radius: 50%;
@@ -619,11 +623,15 @@
     }
     /* LOGOUT BUTTON */
     .btn-logout {
-      display: flex; align-items: center; gap: 6px;
-      background: transparent; border: 1px solid #fecaca;
-      color: #ef4444; border-radius: 8px;
-      padding: 6px 12px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all 0.15s; font-family: inherit;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.7);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
     }
     .btn-logout:hover { background: #fef2f2; }
     /* BLOQUEIO DE ACESSO */
@@ -838,15 +846,15 @@
       transition: background 0.15s;
       user-select: none;
     }
-    .nav-group-toggle:hover { background: var(--gray-100); }
+    .nav-group-toggle:hover { background: rgba(255,255,255,0.05); }
     .nav-group-label {
       font-size: 10px; font-weight: 700;
-      color: var(--gray-400);
+      color: rgba(255,255,255,0.35);
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
     .nav-group-arrow {
-      font-size: 10px; color: var(--gray-400);
+      font-size: 10px; color: rgba(255,255,255,0.35);
       transition: transform 0.2s;
     }
     .nav-group-arrow.open { transform: rotate(180deg); }
@@ -1010,6 +1018,16 @@
         <button class="nav-item" onclick="navTo('relatorios')">
           <span class="icon">📊</span> Relatórios
         </button>
+        <button class="nav-item" onclick="navTo('descartes')">
+          <span class="icon">🗑️</span> Descartes
+          <span class="badge-count" id="nav-count-descartes">—</span>
+        </button>
+        <button class="nav-item" onclick="navTo('temperatura')">
+          <span class="icon">🌡️</span> Temperatura
+        </button>
+        <button class="nav-item" onclick="navTo('civp')">
+          <span class="icon">📋</span> CIVP
+        </button>
         <button class="nav-item" onclick="navTo('planos-vacinais')">
           <span class="icon">🗓️</span> Planos Vacinais
         </button>
@@ -1068,6 +1086,14 @@
     <!-- ===== PAGE: DASHBOARD ===== -->
     <div id="page-dashboard" class="page active">
       <!-- ALERTA DOSES PRÓXIMAS -->
+      <div id="dash-alerta-vencendo" style="display:none;background:linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid #ef4444;border-radius:12px;padding:16px 20px;margin-bottom:12px;align-items:flex-start;gap:14px">
+        <span style="font-size:1.8rem;line-height:1">🚨</span>
+        <div style="flex:1">
+          <div style="font-weight:700;color:#b91c1c;font-size:1rem;margin-bottom:6px">Vacinas vencendo em breve ou vencidas!</div>
+          <div id="dash-alerta-vencendo-lista" style="display:flex;flex-direction:column;gap:4px;font-size:0.88rem"></div>
+        </div>
+        <button onclick="navTo('estoque')" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:600;cursor:pointer;font-size:0.85rem;white-space:nowrap">Ver estoque →</button>
+      </div>
       <div id="dash-alerta-doses" style="display:none;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:2px solid #f97316;border-radius:12px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:flex-start;gap:14px">
         <span style="font-size:1.8rem;line-height:1">⚠️</span>
         <div style="flex:1">
@@ -1734,6 +1760,12 @@
               <div style="font-size:0.75rem;color:var(--gray-400);margin-top:4px">💡 Cadastre profissionais em Administração → Profissionais</div>
             </div>
             <div class="form-group">
+              <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="chk_domiciliar" onchange="toggleDomiciliar()" style="width:16px;height:16px;accent-color:var(--orange);cursor:pointer">
+                🏠 Aplicação Domiciliar
+              </label>
+            </div>
+            <div class="form-group" id="div_local_aplicacao">
               <label class="form-label">Local da Aplicação</label>
               <select class="form-control" id="aplic_local">
                 <option value="">Selecione o local...</option>
@@ -1857,6 +1889,77 @@
     </div>
 
     <!-- PAGE: LEMBRETES -->
+    <!-- ===== PAGE: DESCARTES ===== -->
+    <div id="page-descartes" class="page">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🗑️ Registro de Descartes</div>
+            <div class="card-subtitle">Controle de vacinas descartadas — RDC 197/2017</div>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalDescarte(null)">➕ Registrar Descarte</button>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-descartes">
+            <thead>
+              <tr>
+                <th>Data</th><th>Vacina / Lote</th><th>Qtd Descartada</th><th>Motivo</th><th>Responsável</th><th>Obs</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-descartes"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: TEMPERATURA ===== -->
+    <div id="page-temperatura" class="page">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🌡️ Controle de Temperatura</div>
+            <div class="card-subtitle">Registro diário de temperatura — RDC 197/2017 Art. 11 §II</div>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalTemperatura()">➕ Registrar Temperatura</button>
+        </div>
+        <div id="alerta-temp-fora" style="display:none;background:#fef2f2;border:1.5px solid #ef4444;border-radius:10px;padding:14px 18px;margin-bottom:16px;color:#b91c1c;font-weight:600">
+          🚨 Atenção: existem registros de temperatura FORA da faixa recomendada (2°C–8°C)!
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-temperatura">
+            <thead>
+              <tr>
+                <th>Data</th><th>Equipamento</th><th>Temp. Mín (°C)</th><th>Temp. Máx (°C)</th><th>Status</th><th>Responsável</th><th>Obs</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-temperatura"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: CIVP ===== -->
+    <div id="page-civp" class="page">
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📋 CIVP — Certificados Internacionais</div>
+            <div class="card-subtitle">Certificados de Vacinação ou Profilaxia emitidos — RDC 197/2017 Art. 18</div>
+          </div>
+        </div>
+        <div class="scroll-table">
+          <table class="data-table" id="tabela-civp">
+            <thead>
+              <tr>
+                <th>Nº</th><th>Data Emissão</th><th>Paciente</th><th>Vacina</th><th>Lote</th><th>Validade Cert.</th><th>Aplicador</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-civp"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="page-lembretes" class="page">
       <div class="card" style="margin-bottom:20px">
         <div class="card-header">
@@ -2377,6 +2480,8 @@
 </div>
 
 <script>
+  console.log('Previmune v2805-1152 carregado');
+
   // ======= CONFIGURE AQUI =======
   const SUPABASE_URL = "https://shepwjdunsjijivmbqbq.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZXB3amR1bnNqaWppdm1icWJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTE2NTQsImV4cCI6MjA5MDYyNzY1NH0.FjOwInO7cJoIryTwKddR8KkPXPSdiMvZJhrDXBrzywM";
@@ -2568,6 +2673,9 @@
     'profissionais':   { id: 'page-profissionais',     title: '🩺 Profissionais de Saúde' },
     'usuarios':        { id: 'page-usuarios',          title: '👥 Gerenciar Usuários' },
     'retiradas':       { id: 'page-retiradas',        title: '📤 Retirada de Vacinas' },
+    'descartes':       { id: 'page-descartes',         title: '🗑️ Descarte de Vacinas' },
+    'temperatura':     { id: 'page-temperatura',       title: '🌡️ Controle de Temperatura' },
+    'civp':            { id: 'page-civp',              title: '📋 CIVP — Certificados Emitidos' },
     'relatorios':      { id: 'page-relatorios',       title: '📊 Relatórios' },
     'agendamentos':    { id: 'page-agendamentos',    title: '📅 Agendamentos' },
     'orcamentos':      { id: 'page-orcamentos',       title: '📄 Orçamentos' },
@@ -2641,10 +2749,14 @@
   async function fetchAll() {
     await Promise.all([fetchPacientes(), fetchVacinas(), fetchAplicacoes(), fetchProfissionais()]);
     renderDashboard();
+    verificarVacinasVencendo();
     await fetchLembretes();
     await fetchRetiradas();
     await fetchAgendamentos();
     await fetchOrcamentos();
+    await fetchDescartes();
+    await fetchTemperatura();
+    await fetchCIVP();
   }
 
   // ===== PACIENTES =====
@@ -3265,7 +3377,7 @@
         <td>
           <div class="actions">
             <button class="btn btn-ghost btn-sm" onclick="abrirEditarVacina(${v.id})">✏️ Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="removerVacina(${v.id})">🗑️</button>
+            <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="abrirDescarte(${v.id})" title="Registrar Descarte">🗑️ Descartar</button>
           </div>
         </td>
       </tr>`;
@@ -3421,7 +3533,9 @@
             <button class="btn btn-ghost btn-sm" onclick="verAplicacao(${a.id})" title="Ver detalhes">👁️</button>
             <button class="btn btn-ghost btn-sm" onclick="reabrirAplicacao(${a.id})" title="Imprimir etiqueta / ficha / Ver FHIR" style="color:#7c3aed;border-color:#ddd6fe">🖨️</button>
             ${btnPag}
-            <button class="btn btn-danger btn-sm" onclick="excluirAplicacao(${a.id})">🗑️</button>
+            ${a.local_aplicacao === 'Aplicação Domiciliar' ? `<button class="btn btn-ghost btn-sm" onclick="comprovanteCasa(${a.id})" title="Comprovante Aplicação em Casa" style="color:#0369a1;border-color:#bae6fd">🏠</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="editarAplicacao(${a.id})" title="Editar aplicação" style="color:#7c3aed;border-color:#ddd6fe">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="excluirAplicacao(${a.id})">🗑️</button>
           </div>
         </td>
       </tr>`;
@@ -3444,7 +3558,7 @@
     const prof_cpf          = profObj.cpf       || null;
     const prof_cbo          = profObj.cbo       || null;
     const prof_cnes_vinculo = profObj.cnes      || null;
-    const local_aplicacao   = document.getElementById('aplic_local')?.value || '';
+    const local_aplicacao   = getLocalAplicacao();
 
     if (!paciente_id) { toast('Selecione um paciente.', 'warning'); return; }
     if (!vacina_id) { toast('Selecione uma vacina.', 'warning'); return; }
@@ -3487,6 +3601,11 @@
       }
 
       toast('Aplicação registrada e estoque atualizado!', 'success');
+      // Gerar CIVP automaticamente com número sequencial
+      if (ap_inserted && ap_inserted.id) {
+        await fetchAplicacoes();
+        await gerarCIVP(ap_inserted.id);
+      }
       // Salvar dados para imprimir etiqueta + ficha
       const pacObj = (pacientes||[]).find(p=>Number(p.id)===Number(paciente_id)) || {};
       ultimaAplicacao = {
@@ -3542,8 +3661,11 @@
           <div><div class="form-label">CPF</div>${esc(p ? p.cpf||'—' : '—')}</div>
           <div><div class="form-label">Vacina</div><strong>${esc(a.vacina_text||a.vacina||'—')}</strong></div>
           <div><div class="form-label">Lote</div>${esc(a.lote||'—')}</div>
+          <div><div class="form-label">Validade do Lote</div>${a.validade ? new Date(a.validade+'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div>
           <div><div class="form-label">Data</div>${dt}</div>
           <div><div class="form-label">Dose</div>${esc(a.dose||'—')}</div>
+          <div><div class="form-label">Aplicador</div>${esc(a.profissional||a.profissional_nome||a.aplicador||'—')}</div>
+          <div><div class="form-label">Local</div>${esc(a.local_aplicacao||'—')}</div>
           <div><div class="form-label">Quantidade</div>${a.quantidade||1}</div>
           <div><div class="form-label">Valor</div><strong>R$ ${a.valor ? Number(a.valor).toFixed(2) : '0.00'}</strong></div>
           <div><div class="form-label">Pagamento</div><span class="badge badge-orange">${esc(a.forma_pagamento||'—')}</span></div>
@@ -3708,6 +3830,86 @@
     }
   }
 
+  // ===== EDITAR APLICAÇÃO =====
+  function editarAplicacao(id) {
+    const a = aplicacoes.find(x => Number(x.id) === Number(id));
+    if (!a) { toast('Aplicação não encontrada.', 'error'); return; }
+
+    // Garantir que modal existe
+    if (!document.getElementById('modal-editar-aplicacao')) {
+      toast('Modal não carregado. Recarregue a página.', 'error'); return;
+    }
+
+    document.getElementById('edit-aplic-id').value    = a.id;
+    document.getElementById('edit-aplic-data').value  = a.data_aplicacao || '';
+    document.getElementById('edit-aplic-dose').value  = a.dose || '';
+    document.getElementById('edit-aplic-local').value = a.local_aplicacao || '';
+    document.getElementById('edit-aplic-valor').value = a.valor || '';
+    document.getElementById('edit-aplic-pagamento').value = a.forma_pagamento || '';
+    document.getElementById('edit-aplic-obs').value   = a.obs || '';
+
+    // Popular select de profissionais
+    const sel = document.getElementById('edit-aplic-profissional');
+    sel.innerHTML = '<option value="">Selecione o profissional...</option>' +
+      (profissionais||[]).filter(p => p.status !== 'Inativo').map(p =>
+        `<option value="${p.id}" ${Number(p.id) === Number(a.profissional_id) ? 'selected' : ''}>${esc(p.nome)}</option>`
+      ).join('');
+
+    document.getElementById('modal-editar-aplicacao').style.display = 'flex';
+  }
+
+  function fecharEditarAplicacao() {
+    const m = document.getElementById('modal-editar-aplicacao');
+    if (m) m.style.display = 'none';
+  }
+
+  async function salvarEdicaoAplicacao() {
+    const id            = Number(document.getElementById('edit-aplic-id').value);
+    const data_aplicacao = document.getElementById('edit-aplic-data').value;
+    const dose          = document.getElementById('edit-aplic-dose').value.trim();
+    const local_aplicacao = document.getElementById('edit-aplic-local').value;
+    const profissional_id = Number(document.getElementById('edit-aplic-profissional').value) || null;
+    const valor         = Number(document.getElementById('edit-aplic-valor').value) || 0;
+    const forma_pagamento = document.getElementById('edit-aplic-pagamento').value;
+    const obs           = document.getElementById('edit-aplic-obs').value.trim();
+
+    if (!id) { toast('ID inválido.', 'error'); return; }
+
+    const profObj = (profissionais||[]).find(p => Number(p.id) === profissional_id) || {};
+    const payload = {
+      data_aplicacao,
+      dose,
+      local_aplicacao: local_aplicacao || null,
+      profissional_id: profissional_id || null,
+      profissional: profObj.nome || null,
+      prof_cns: profObj.cns || null,
+      prof_cpf: profObj.cpf || null,
+      prof_cbo: profObj.cbo || null,
+      prof_cnes_vinculo: profObj.cnes || null,
+      valor,
+      forma_pagamento: forma_pagamento || null,
+      obs: obs || null
+    };
+
+    try {
+      const { error } = await db.from('aplicacoes').update(payload).eq('id', id);
+      if (error) throw error;
+
+      await registrarAuditoria('UPDATE', 'aplicacoes', id, null, payload);
+
+      // Atualizar array local
+      const idx = aplicacoes.findIndex(x => Number(x.id) === id);
+      if (idx !== -1) aplicacoes[idx] = { ...aplicacoes[idx], ...payload };
+
+      fecharEditarAplicacao();
+      renderAplicacoes();
+      toast('Aplicação atualizada com sucesso!', 'success');
+    } catch(e) {
+      console.error('Erro ao editar aplicação:', e);
+      toast('Erro ao salvar: ' + (e.message || e), 'error');
+    }
+  }
+
   async function excluirAplicacao(id) {
     const ok = await confirm('Excluir aplicação?', 'Atenção: o estoque NÃO será reajustado automaticamente.');
     if (!ok) return;
@@ -3839,6 +4041,8 @@
 
   // ===== DASHBOARD =====
   function renderDashboard() {
+    // Alerta vacinas vencendo
+    if (typeof verificarVacinasVencendo === 'function') verificarVacinasVencendo();
     // Últimas 5 aplicações
     const tbody5 = document.querySelector('#dash-aplicacoes tbody');
     const last5 = aplicacoes.slice(0, 5);
@@ -3955,6 +4159,23 @@
   }
 
   // ---- VACINA ----
+  function toggleDomiciliar() {
+    const chk = document.getElementById('chk_domiciliar');
+    const div = document.getElementById('div_local_aplicacao');
+    if (chk.checked) {
+      div.style.display = 'none';
+      document.getElementById('aplic_local').value = '';
+    } else {
+      div.style.display = 'block';
+    }
+  }
+
+  function getLocalAplicacao() {
+    const chk = document.getElementById('chk_domiciliar');
+    if (chk && chk.checked) return 'Aplicação Domiciliar';
+    return document.getElementById('aplic_local')?.value || '';
+  }
+
   function filtrarOpcoesVacina() {
     const q = (document.getElementById('vacina_search').value || '').toLowerCase().trim();
     const listaBase = vacinas.filter(v => Number(v.stock||0) > 0);
@@ -4025,6 +4246,480 @@
     const dd = document.getElementById('vacina_dropdown');
     if (dd) dd.classList.remove('open');
     document.getElementById('alerta-estoque').style.display = 'none';
+  }
+
+
+  // ========================================================
+  // ===== MÓDULO: DESCARTES ================================
+  // ========================================================
+  let descartes = [];
+
+  async function fetchDescartes() {
+    try {
+      if (!db) return;
+      const { data, error } = await db.from('descartes').select('*').order('data_descarte', { ascending: false });
+      if (error) {
+        if (error.code === '42P01' || (error.message||'').includes('does not exist')) {
+          console.warn('Tabela descartes não existe ainda. Rode o SQL de setup no Supabase.');
+          return;
+        }
+        throw error;
+      }
+      descartes = data || [];
+      renderDescartes();
+      const el = document.getElementById('nav-count-descartes');
+      if (el) el.textContent = descartes.length;
+    } catch(e) { console.error('fetchDescartes:', e); }
+  }
+
+  function renderDescartes() {
+    const tbody = document.getElementById('tbody-descartes');
+    if (!tbody) return;
+    if (!descartes.length) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🗑️</div><p>Nenhum descarte registrado</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = descartes.map(d => {
+      const dt = d.data_descarte ? new Date(d.data_descarte + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const v = vacinas.find(x => Number(x.id) === Number(d.vacina_id));
+      const vacinaInfo = v ? `${esc(v.nome)} <span style="font-size:0.78rem;color:var(--gray-400)">${esc(v.lote||'—')}</span>` : esc(d.vacina_nome||'—');
+      const motivoCor = d.motivo==='Vencimento' ? '#dc2626' : d.motivo==='Quebra de Cadeia de Frio' ? '#7c3aed' : d.motivo==='Recall' ? '#b45309' : '#52525b';
+      return `<tr>
+        <td>${dt}</td>
+        <td>${vacinaInfo}</td>
+        <td><strong>${d.quantidade||0}</strong> doses</td>
+        <td><span style="color:${motivoCor};font-weight:600">${esc(d.motivo||'—')}</span></td>
+        <td>${esc(d.responsavel||'—')}</td>
+        <td style="font-size:0.8rem;color:var(--gray-500)">${esc(d.obs||'—')}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="imprimirDescarte(${d.id})" title="Imprimir Termo">🖨️</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirDescarte(${d.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function abrirDescarte(vacinaId) {
+    abrirModalDescarte(vacinaId);
+  }
+
+  function abrirModalDescarte(vacinaId) {
+    // Popular select de vacinas
+    const sel = document.getElementById('desc-vacina-id');
+    sel.innerHTML = '<option value="">Selecione a vacina...</option>';
+    vacinas.filter(v => Number(v.stock||0) > 0 || true).forEach(v => {
+      const op = document.createElement('option');
+      op.value = v.id;
+      op.textContent = v.nome + (v.lote ? ' — Lote: ' + v.lote : '') + ' (Qtd: ' + (v.stock||0) + ')';
+      sel.appendChild(op);
+    });
+    if (vacinaId) sel.value = vacinaId;
+
+    // Popular select de responsáveis
+    const selResp = document.getElementById('desc-responsavel');
+    selResp.innerHTML = '<option value="">Selecione o responsável...</option>';
+    profissionais.forEach(p => {
+      const op = document.createElement('option');
+      op.value = p.nome;
+      op.textContent = p.nome + (p.cargo ? ' — ' + p.cargo : '');
+      selResp.appendChild(op);
+    });
+
+    document.getElementById('desc-data').value = new Date().toISOString().slice(0,10);
+    document.getElementById('desc-qtd').value = '';
+    document.getElementById('desc-motivo').value = '';
+    document.getElementById('desc-obs').value = '';
+    document.getElementById('desc-alerta-stock').style.display = 'none';
+    document.getElementById('modal-descarte').style.display = 'flex';
+    preencherInfoDescarte();
+  }
+
+  function fecharModalDescarte() {
+    document.getElementById('modal-descarte').style.display = 'none';
+  }
+
+  function preencherInfoDescarte() {
+    const id = document.getElementById('desc-vacina-id').value;
+    const alertEl = document.getElementById('desc-alerta-stock');
+    if (!id) { alertEl.style.display = 'none'; return; }
+    const v = vacinas.find(x => Number(x.id) === Number(id));
+    if (v) {
+      alertEl.style.display = 'block';
+      const venc = v.validade ? new Date(v.validade+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      alertEl.innerHTML = `📦 Estoque atual: <strong>${v.stock||0} doses</strong> · Validade: <strong>${venc}</strong>`;
+    }
+  }
+
+  async function salvarDescarte() {
+    const vacina_id = document.getElementById('desc-vacina-id').value;
+    const data_descarte = document.getElementById('desc-data').value;
+    const quantidade = Number(document.getElementById('desc-qtd').value || 0);
+    const motivo = document.getElementById('desc-motivo').value;
+    const responsavel = document.getElementById('desc-responsavel').value;
+    const obs = document.getElementById('desc-obs').value.trim();
+
+    if (!vacina_id) { toast('Selecione a vacina.', 'error'); return; }
+    if (!data_descarte) { toast('Informe a data do descarte.', 'error'); return; }
+    if (!quantidade || quantidade <= 0) { toast('Informe a quantidade descartada.', 'error'); return; }
+    if (!motivo) { toast('Selecione o motivo do descarte.', 'error'); return; }
+    if (!responsavel) { toast('Selecione o responsável.', 'error'); return; }
+
+    const v = vacinas.find(x => Number(x.id) === Number(vacina_id));
+    if (v && quantidade > Number(v.stock||0)) {
+      const ok = await confirm('Quantidade maior que o estoque', `Você está descartando ${quantidade} doses, mas o estoque tem apenas ${v.stock||0}. Deseja continuar?`);
+      if (!ok) return;
+    }
+
+    try {
+      const { error } = await db.from('descartes').insert([{
+        vacina_id: Number(vacina_id),
+        vacina_nome: v ? v.nome : '',
+        lote: v ? v.lote||'' : '',
+        data_descarte,
+        quantidade,
+        motivo,
+        responsavel,
+        obs: obs || null
+      }]);
+      if (error) throw error;
+
+      // Baixar estoque
+      if (v) {
+        const novoStock = Math.max(0, Number(v.stock||0) - quantidade);
+        await db.from('vacinas').update({ stock: novoStock }).match({ id: Number(vacina_id) });
+      }
+
+      toast(`✅ Descarte de ${quantidade} doses registrado com sucesso!`, 'success');
+      fecharModalDescarte();
+      await fetchVacinas();
+      await fetchDescartes();
+    } catch(e) {
+      toast('Erro ao salvar descarte: ' + (e.message || e), 'error');
+    }
+  }
+
+  async function excluirDescarte(id) {
+    const ok = await confirm('Excluir Descarte', 'Este registro será removido permanentemente.');
+    if (!ok) return;
+    try {
+      await db.from('descartes').delete().match({ id: Number(id) });
+      toast('Registro excluído.', 'success');
+      await fetchDescartes();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  }
+
+  function imprimirDescarte(id) {
+    const d = descartes.find(x => Number(x.id) === Number(id));
+    if (!d) return;
+    const v = vacinas.find(x => Number(x.id) === Number(d.vacina_id));
+    const dt = d.data_descarte ? new Date(d.data_descarte+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const win = window.open('', '_blank', 'width=600,height=700');
+    win.document.write(`<!DOCTYPE html><html><head><title>Termo de Descarte</title>
+    <style>body{font-family:Arial,sans-serif;padding:30px;color:#222}h1{font-size:1.2rem;text-align:center;border-bottom:2px solid #333;padding-bottom:10px}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:8px 12px;border:1px solid #ddd;font-size:0.9rem}td:first-child{font-weight:700;background:#f5f5f5;width:40%}.rodape{margin-top:40px;display:flex;justify-content:space-between}.assin{border-top:1px solid #333;padding-top:8px;font-size:0.8rem;text-align:center;width:45%}</style>
+    </head><body>
+    <h1>TERMO DE DESCARTE DE IMUNOBIOLÓGICO<br><span style="font-size:0.8rem;font-weight:normal">RDC 197/2017 — ANVISA</span></h1>
+    <table>
+      <tr><td>Vacina</td><td>${esc(v ? v.nome : d.vacina_nome||'—')}</td></tr>
+      <tr><td>Lote</td><td>${esc(d.lote||'—')}</td></tr>
+      <tr><td>Data do Descarte</td><td>${dt}</td></tr>
+      <tr><td>Quantidade Descartada</td><td>${d.quantidade} dose(s)</td></tr>
+      <tr><td>Motivo</td><td>${esc(d.motivo||'—')}</td></tr>
+      <tr><td>Responsável</td><td>${esc(d.responsavel||'—')}</td></tr>
+      <tr><td>Observações</td><td>${esc(d.obs||'—')}</td></tr>
+    </table>
+    <div class="rodape">
+      <div class="assin">Responsável Técnico<br>${esc(d.responsavel||'')}</div>
+      <div class="assin">Testemunha / Fiscal</div>
+    </div>
+    <p style="margin-top:30px;font-size:0.75rem;text-align:center;color:#888">Documento gerado pelo sistema Previmune em ${new Date().toLocaleString('pt-BR')}</p>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  }
+
+  // ========================================================
+  // ===== MÓDULO: TEMPERATURA ==============================
+  // ========================================================
+  let registrosTemp = [];
+
+  async function fetchTemperatura() {
+    try {
+      if (!db) return;
+      const { data, error } = await db.from('controle_temperatura').select('*').order('data_registro', { ascending: false });
+      if (error) {
+        if (error.code === '42P01' || (error.message||'').includes('does not exist')) {
+          console.warn('Tabela controle_temperatura não existe ainda. Rode o SQL de setup no Supabase.');
+          return;
+        }
+        throw error;
+      }
+      registrosTemp = data || [];
+      renderTemperatura();
+    } catch(e) { console.error('fetchTemperatura:', e); }
+  }
+
+  function renderTemperatura() {
+    const tbody = document.getElementById('tbody-temperatura');
+    if (!tbody) return;
+    const alertaFora = document.getElementById('alerta-temp-fora');
+    const temFora = registrosTemp.some(r => {
+      const mn = Number(r.temp_min), mx = Number(r.temp_max);
+      return mn < 2 || mx > 8;
+    });
+    if (alertaFora) alertaFora.style.display = temFora ? 'block' : 'none';
+
+    if (!registrosTemp.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🌡️</div><p>Nenhum registro de temperatura</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = registrosTemp.map(r => {
+      const dt = r.data_registro ? new Date(r.data_registro+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const mn = Number(r.temp_min), mx = Number(r.temp_max);
+      const fora = mn < 2 || mx > 8;
+      const status = fora
+        ? '<span style="color:#dc2626;font-weight:700">⚠️ FORA DA FAIXA</span>'
+        : '<span style="color:#16a34a;font-weight:600">✅ Normal</span>';
+      const rowStyle = fora ? 'background:#fef2f2' : '';
+      return `<tr style="${rowStyle}">
+        <td>${dt}</td>
+        <td>${esc(r.equipamento||'Refrigerador Principal')}</td>
+        <td style="font-weight:600;${mn<2?'color:#dc2626':''}">${mn.toFixed(1)}°C</td>
+        <td style="font-weight:600;${mx>8?'color:#dc2626':''}">${mx.toFixed(1)}°C</td>
+        <td>${status}</td>
+        <td>${esc(r.responsavel||'—')}</td>
+        <td style="font-size:0.8rem;color:var(--gray-500)">${esc(r.obs||'—')}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="excluirTemperatura(${r.id})">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function abrirModalTemperatura() {
+    const selResp = document.getElementById('temp-responsavel');
+    selResp.innerHTML = '<option value="">Selecione o responsável...</option>';
+    profissionais.forEach(p => {
+      const op = document.createElement('option');
+      op.value = p.nome;
+      op.textContent = p.nome + (p.cargo ? ' — ' + p.cargo : '');
+      selResp.appendChild(op);
+    });
+    document.getElementById('temp-data').value = new Date().toISOString().slice(0,10);
+    document.getElementById('temp-equipamento').value = '';
+    document.getElementById('temp-min').value = '';
+    document.getElementById('temp-max').value = '';
+    document.getElementById('temp-obs').value = '';
+    document.getElementById('temp-status-preview').style.display = 'none';
+    document.getElementById('modal-temperatura').style.display = 'flex';
+
+    ['temp-min','temp-max'].forEach(id => {
+      document.getElementById(id).oninput = atualizarStatusTemp;
+    });
+  }
+
+  function atualizarStatusTemp() {
+    const mn = parseFloat(document.getElementById('temp-min').value);
+    const mx = parseFloat(document.getElementById('temp-max').value);
+    const el = document.getElementById('temp-status-preview');
+    if (isNaN(mn) || isNaN(mx)) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    if (mn < 2 || mx > 8) {
+      el.style.background = '#fef2f2'; el.style.color = '#b91c1c'; el.style.border = '1px solid #fca5a5';
+      el.textContent = '⚠️ FORA DA FAIXA! Vacinas entre 2°C e 8°C. Acionar responsável técnico imediatamente.';
+    } else {
+      el.style.background = '#f0fdf4'; el.style.color = '#166534'; el.style.border = '1px solid #86efac';
+      el.textContent = '✅ Temperatura dentro da faixa recomendada (2°C – 8°C)';
+    }
+  }
+
+  function fecharModalTemperatura() {
+    document.getElementById('modal-temperatura').style.display = 'none';
+  }
+
+  async function salvarTemperatura() {
+    const data_registro = document.getElementById('temp-data').value;
+    const equipamento = document.getElementById('temp-equipamento').value.trim() || 'Refrigerador Principal';
+    const temp_min = parseFloat(document.getElementById('temp-min').value);
+    const temp_max = parseFloat(document.getElementById('temp-max').value);
+    const responsavel = document.getElementById('temp-responsavel').value;
+    const obs = document.getElementById('temp-obs').value.trim();
+
+    if (!data_registro) { toast('Informe a data.', 'error'); return; }
+    if (isNaN(temp_min) || isNaN(temp_max)) { toast('Informe as temperaturas.', 'error'); return; }
+    if (!responsavel) { toast('Selecione o responsável.', 'error'); return; }
+    if (temp_min > temp_max) { toast('Temp. mínima maior que a máxima.', 'error'); return; }
+
+    try {
+      const { error } = await db.from('controle_temperatura').insert([{
+        data_registro, equipamento, temp_min, temp_max, responsavel, obs: obs||null
+      }]);
+      if (error) throw error;
+      toast('✅ Temperatura registrada!', 'success');
+      fecharModalTemperatura();
+      await fetchTemperatura();
+    } catch(e) { toast('Erro: ' + (e.message||e), 'error'); }
+  }
+
+  async function excluirTemperatura(id) {
+    const ok = await confirm('Excluir registro?', 'Este registro será removido permanentemente.');
+    if (!ok) return;
+    try {
+      await db.from('controle_temperatura').delete().match({ id: Number(id) });
+      toast('Removido.', 'success');
+      await fetchTemperatura();
+    } catch(e) { toast('Erro: ' + e.message, 'error'); }
+  }
+
+  // ========================================================
+  // ===== MÓDULO: CIVP — NUMERAÇÃO SEQUENCIAL ==============
+  // ========================================================
+  let civpRegistros = [];
+
+  async function fetchCIVP() {
+    try {
+      if (!db) return;
+      const { data, error } = await db.from('civp').select('*').order('numero', { ascending: false });
+      if (error) {
+        if (error.code === '42P01' || (error.message||'').includes('does not exist')) {
+          console.warn('Tabela civp não existe ainda. Rode o SQL de setup no Supabase.');
+          return;
+        }
+        throw error;
+      }
+      civpRegistros = data || [];
+      renderCIVP();
+    } catch(e) { console.error('fetchCIVP:', e); }
+  }
+
+  function renderCIVP() {
+    const tbody = document.getElementById('tbody-civp');
+    if (!tbody) return;
+    if (!civpRegistros.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum CIVP emitido</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = civpRegistros.map(c => {
+      const dtEmissao = c.data_emissao ? new Date(c.data_emissao+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const dtValidade = c.validade_cert ? new Date(c.validade_cert+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const p = pacientes.find(x => Number(x.id) === Number(c.paciente_id));
+      return `<tr>
+        <td><strong style="color:var(--orange)">#${String(c.numero).padStart(4,'0')}</strong></td>
+        <td>${dtEmissao}</td>
+        <td>${esc(p ? p.nome : c.paciente_nome||'—')}</td>
+        <td>${esc(c.vacina||'—')}</td>
+        <td>${esc(c.lote||'—')}</td>
+        <td>${dtValidade}</td>
+        <td>${esc(c.aplicador||'—')}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="imprimirCIVP(${c.id})">🖨️ Imprimir</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function gerarCIVP(aplicacaoId) {
+    // Chamado ao registrar aplicação — gera CIVP automaticamente
+    const a = aplicacoes.find(x => Number(x.id) === Number(aplicacaoId));
+    if (!a) return;
+    const p = findPaciente(a.paciente_id);
+    try {
+      // Próximo número sequencial
+      const { data: maxData } = await db.from('civp').select('numero').order('numero', { ascending: false }).limit(1);
+      const nextNum = maxData && maxData.length > 0 ? Number(maxData[0].numero) + 1 : 1;
+
+      // Validade do CIVP = validade da vacina no estoque ou +1 ano
+      const v = vacinas.find(x => x.nome === (a.vacina_text||a.vacina));
+      const validadeCert = v && v.validade ? v.validade : new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().slice(0,10);
+
+      const { error } = await db.from('civp').insert([{
+        numero: nextNum,
+        aplicacao_id: a.id,
+        paciente_id: a.paciente_id,
+        paciente_nome: p ? p.nome : '',
+        vacina: a.vacina_text||a.vacina||'',
+        lote: a.lote||'',
+        data_emissao: a.data_aplicacao || new Date().toISOString().slice(0,10),
+        validade_cert: validadeCert,
+        aplicador: a.profissional||a.aplicador||''
+      }]);
+      if (error) console.error('Erro CIVP:', error);
+      else await fetchCIVP();
+    } catch(e) { console.error('gerarCIVP:', e); }
+  }
+
+  function imprimirCIVP(id) {
+    const c = civpRegistros.find(x => Number(x.id) === Number(id));
+    if (!c) return;
+    const dtEmissao = c.data_emissao ? new Date(c.data_emissao+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const dtValidade = c.validade_cert ? new Date(c.validade_cert+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const numFmt = String(c.numero).padStart(4,'0');
+    const win = window.open('', '_blank', 'width=700,height=600');
+    win.document.write(`<!DOCTYPE html><html><head><title>CIVP #${numFmt}</title>
+    <style>body{font-family:Arial,sans-serif;padding:30px;color:#222;max-width:600px;margin:0 auto}
+    .civp-header{text-align:center;margin-bottom:20px;border-bottom:3px double #333;padding-bottom:16px}
+    .civp-title{font-size:1.3rem;font-weight:bold;letter-spacing:1px}
+    .civp-sub{font-size:0.85rem;color:#555;margin-top:4px}
+    .civp-num{font-size:1.1rem;color:#c2410c;font-weight:bold;margin-top:8px}
+    table{width:100%;border-collapse:collapse;margin:16px 0}
+    td{padding:9px 12px;border:1px solid #ddd;font-size:0.9rem}
+    td:first-child{font-weight:bold;background:#f9f9f9;width:42%}
+    .footer{margin-top:30px;text-align:center;font-size:0.75rem;color:#888;border-top:1px solid #ddd;padding-top:12px}
+    .assin-box{display:flex;justify-content:space-around;margin-top:40px}
+    .assin{text-align:center;width:40%}.assin-line{border-top:1px solid #333;padding-top:6px;font-size:0.8rem}
+    </style></head><body>
+    <div class="civp-header">
+      <div class="civp-title">CERTIFICADO INTERNACIONAL DE VACINAÇÃO OU PROFILAXIA</div>
+      <div class="civp-sub">INTERNATIONAL CERTIFICATE OF VACCINATION OR PROPHYLAXIS</div>
+      <div class="civp-sub">RDC ANVISA 197/2017 — Regulamento Sanitário Internacional (RSI 2005)</div>
+      <div class="civp-num">Nº ${numFmt}</div>
+    </div>
+    <table>
+      <tr><td>Titular / Certificate Holder</td><td><strong>${esc(c.paciente_nome||'—')}</strong></td></tr>
+      <tr><td>Vacina / Vaccine</td><td>${esc(c.vacina||'—')}</td></tr>
+      <tr><td>Lote / Batch Number</td><td>${esc(c.lote||'—')}</td></tr>
+      <tr><td>Data de Aplicação</td><td>${dtEmissao}</td></tr>
+      <tr><td>Validade do Certificado</td><td>${dtValidade}</td></tr>
+      <tr><td>Profissional Aplicador</td><td>${esc(c.aplicador||'—')}</td></tr>
+    </table>
+    <div class="assin-box">
+      <div class="assin"><div class="assin-line">Assinatura do Aplicador<br>${esc(c.aplicador||'')}</div></div>
+      <div class="assin"><div class="assin-line">Carimbo do Serviço de Vacinação</div></div>
+    </div>
+    <div class="footer">Documento gerado pelo sistema Previmune · ${new Date().toLocaleString('pt-BR')}</div>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  }
+
+  // ========================================================
+  // ===== MÓDULO: ALERTA VACINAS VENCENDO (DASHBOARD) ======
+  // ========================================================
+  function verificarVacinasVencendo() {
+    const alertEl = document.getElementById('dash-alerta-vencendo');
+    const listaEl = document.getElementById('dash-alerta-vencendo-lista');
+    if (!alertEl || !listaEl) return;
+
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const em30 = new Date(hoje); em30.setDate(em30.getDate() + 30);
+
+    const alertas = vacinas.filter(v => {
+      if (!v.validade || Number(v.stock||0) <= 0) return false;
+      const val = new Date(v.validade + 'T00:00:00');
+      return val <= em30;
+    }).sort((a,b) => new Date(a.validade) - new Date(b.validade));
+
+    if (!alertas.length) { alertEl.style.display = 'none'; return; }
+
+    alertEl.style.display = 'flex';
+    listaEl.innerHTML = alertas.map(v => {
+      const val = new Date(v.validade+'T00:00:00');
+      const diasRestantes = Math.ceil((val - hoje) / 86400000);
+      const cor = diasRestantes <= 0 ? '#b91c1c' : diasRestantes <= 7 ? '#b45309' : '#1d4ed8';
+      const texto = diasRestantes <= 0 ? '🚨 VENCIDA' : `⚠️ Vence em ${diasRestantes} dia(s)`;
+      return `<div style="color:${cor}"><strong>${esc(v.nome)}</strong> · Lote: ${esc(v.lote||'—')} · ${texto} (${new Date(v.validade+'T00:00:00').toLocaleDateString('pt-BR')}) · ${v.stock} dose(s)</div>`;
+    }).join('');
   }
 
   // ---- NAVEGAÇÃO POR TECLADO ----
@@ -5279,6 +5974,21 @@
 </div>
 
 
+<!-- ===== MODAL COMPROVANTE APLICAÇÃO EM CASA ===== -->
+<div id="modal-comp-casa" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
+    <div class="modal-head">
+      <div class="modal-title">🏠 Comprovante — Aplicação em Domicílio</div>
+      <button class="modal-close" onclick="fecharComprovanteCasa()">✕</button>
+    </div>
+    <div class="modal-body" id="comp-casa-body" style="padding:8px"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharComprovanteCasa()">Fechar</button>
+      <button class="btn btn-primary" onclick="imprimirComprovanteCasa()">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL ORÇAMENTO ===== -->
 <div id="modal-orcamento" class="modal-backdrop" style="display:none">
   <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
@@ -5458,316 +6168,15 @@
 <script>window.onload=function(){window.print();}<\/script>
 
 <!-- ===== MODAL RETIRADA ===== -->
-<div id="modal-retirada" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:560px">
-    <div class="modal-head">
-      <div class="modal-title">📤 Registrar Retirada de Vacina</div>
-      <button class="modal-close" onclick="fecharModalRetirada()">✕</button>
-    </div>
-    <div class="modal-body" style="display:grid;gap:14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Vacina *</label>
-          <select id="ret-vacina-id" class="form-control" onchange="preencherDadosVacinaRetirada()">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Lote</label>
-          <input id="ret-lote" class="form-control" readonly placeholder="Preenchido automaticamente">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Validade</label>
-          <input id="ret-validade" class="form-control" readonly placeholder="Preenchido automaticamente">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Quantidade *</label>
-          <input id="ret-quantidade" type="number" min="1" value="1" class="form-control">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Nome da Pessoa *</label>
-          <input id="ret-nome" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group">
-          <label class="form-label">CPF *</label>
-          <input id="ret-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Data da Retirada *</label>
-          <input id="ret-data" type="date" class="form-control">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Valor Pago (R$)</label>
-          <input id="ret-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Forma de Pagamento</label>
-        <select id="ret-pagamento" class="form-control">
-          <option value="">Selecione...</option>
-          <option value="dinheiro">Dinheiro</option>
-          <option value="cartao_credito">Cartão de Crédito</option>
-          <option value="cartao_debito">Cartão de Débito</option>
-          <option value="pix">PIX</option>
-          <option value="convenio">Convênio</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Observações</label>
-        <textarea id="ret-obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModalRetirada()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarRetirada()">💾 Registrar Retirada</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== COMPROVANTE DE RETIRADA (hidden, para impressão) ===== -->
-<div id="comprovante-retirada" style="display:none">
-  <style>
-    @media print {
-      body > *:not(#comprovante-retirada) { display: none !important; }
-      #comprovante-retirada { display: block !important; }
-    }
-  </style>
-  <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
-    <!-- conteúdo preenchido via JS -->
-  </div>
-</div>
 
 
 <!-- ===== MODAL AGENDAMENTO ===== -->
-<div id="modal-agendamento" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:620px;max-height:90vh;overflow-y:auto">
-    <div class="modal-head">
-      <div class="modal-title">📅 Novo Agendamento de Vacina</div>
-      <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
-    </div>
-    <div class="modal-body" style="display:grid;gap:14px">
 
-      <!-- Linha 1: Nome + CPF -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Nome Completo <span class="req">*</span></label>
-          <input id="agend-nome" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">CPF <span class="req">*</span></label>
-          <input id="agend-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
-        </div>
-      </div>
-
-      <!-- Linha 2: Data nascimento + Data agendamento + Horário -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data de Nascimento <span class="req">*</span></label>
-          <input id="agend-nascimento" type="date" class="form-control">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data do Agendamento <span class="req">*</span></label>
-          <input id="agend-data" type="date" class="form-control">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Horário</label>
-          <input id="agend-hora" type="time" class="form-control" placeholder="08:00">
-        </div>
-      </div>
-
-      <!-- Linha 3: Endereço -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Endereço Completo <span class="req">*</span></label>
-        <input id="agend-endereco" class="form-control" placeholder="Rua, número, bairro, cidade — CEP">
-      </div>
-
-      <!-- Linha 4: Vacina + Dose -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Vacina <span class="req">*</span></label>
-          <select id="agend-vacina-id" class="form-control" onchange="preencherDadosVacinaAgend()">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Dose</label>
-          <select id="agend-dose" class="form-control">
-            <option value="">—</option>
-            <option value="1ª dose">1ª Dose</option>
-            <option value="2ª dose">2ª Dose</option>
-            <option value="3ª dose">3ª Dose</option>
-            <option value="dose única">Dose Única</option>
-            <option value="reforço">Reforço</option>
-            <option value="anual">Anual</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Linha 5: Lote + Validade -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Lote</label>
-          <input id="agend-lote" class="form-control" placeholder="Preenchido automaticamente" readonly>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Validade</label>
-          <input id="agend-validade" class="form-control" placeholder="Preenchido automaticamente" readonly>
-        </div>
-      </div>
-
-      <!-- Linha 6: Local da aplicação (parte do corpo) -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Local da Aplicação (parte do corpo)</label>
-        <select id="agend-local" class="form-control">
-          <option value="">Selecione...</option>
-          <optgroup label="Braço">
-            <option value="Deltoide direito">Deltoide Direito</option>
-            <option value="Deltoide esquerdo">Deltoide Esquerdo</option>
-            <option value="Vasto lateral do braço direito">Vasto Lateral do Braço Direito</option>
-            <option value="Vasto lateral do braço esquerdo">Vasto Lateral do Braço Esquerdo</option>
-          </optgroup>
-          <optgroup label="Coxa">
-            <option value="Vasto lateral da coxa direita">Vasto Lateral da Coxa Direita</option>
-            <option value="Vasto lateral da coxa esquerda">Vasto Lateral da Coxa Esquerda</option>
-          </optgroup>
-          <optgroup label="Glúteo">
-            <option value="Glúteo direito (ventroglúteo)">Glúteo Direito (Ventroglúteo)</option>
-            <option value="Glúteo esquerdo (ventroglúteo)">Glúteo Esquerdo (Ventroglúteo)</option>
-          </optgroup>
-          <optgroup label="Outros">
-            <option value="Subcutâneo — abdome">Subcutâneo — Abdome</option>
-            <option value="Intradérmico — antebraço direito">Intradérmico — Antebraço Direito</option>
-            <option value="Intradérmico — antebraço esquerdo">Intradérmico — Antebraço Esquerdo</option>
-            <option value="Oral">Oral</option>
-          </optgroup>
-        </select>
-      </div>
-
-      <!-- Linha 7: Aplicador + Forma de Pagamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Aplicador</label>
-          <input id="agend-aplicador" class="form-control" placeholder="Nome do profissional">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Forma de Pagamento</label>
-          <select id="agend-pagamento" class="form-control">
-            <option value="">Selecione...</option>
-            <option value="dinheiro">Dinheiro</option>
-            <option value="cartao_credito">Cartão de Crédito</option>
-            <option value="cartao_debito">Cartão de Débito</option>
-            <option value="pix">PIX</option>
-            <option value="convenio">Convênio</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Linha 8: Valor + Obs -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Valor (R$)</label>
-          <input id="agend-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Status</label>
-          <select id="agend-status" class="form-control">
-            <option value="agendado">Agendado</option>
-            <option value="realizado">Realizado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Obs -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Observações</label>
-        <textarea id="agend-obs" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
-      </div>
-
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModalAgendamento()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar Agendamento</button>
-    </div>
-  </div>
-</div>
 
 
 <!-- ===== MODAL ORÇAMENTO ===== -->
-<div id="modal-orcamento" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
-    <div class="modal-head">
-      <div class="modal-title">📄 Novo Orçamento</div>
-      <button class="modal-close" onclick="fecharModalOrcamento()">✕</button>
-    </div>
-    <div class="modal-body" style="display:grid;gap:14px">
-
-      <!-- Paciente + Data -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Nome do Paciente <span class="req">*</span></label>
-          <input id="orc-paciente" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data</label>
-          <input id="orc-data" type="date" class="form-control">
-        </div>
-      </div>
-
-      <!-- Validade do orçamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Válido até</label>
-          <input id="orc-validade" type="date" class="form-control">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Status</label>
-          <select id="orc-status" class="form-control">
-            <option value="pendente">Pendente</option>
-            <option value="aprovado">Aprovado</option>
-            <option value="recusado">Recusado</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Itens de vacina -->
-      <div>
-        <label class="form-label">Vacinas do Orçamento <span class="req">*</span></label>
-        <div id="orc-itens-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="adicionarItemOrcamento()">➕ Adicionar vacina</button>
-      </div>
-
-      <!-- Total -->
-      <div style="background:var(--orange-50);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:600;color:var(--gray-700)">Total do Orçamento</span>
-        <span id="orc-total-display" style="font-size:1.3rem;font-weight:800;color:var(--orange-dark)">R$ 0,00</span>
-      </div>
-
-      <!-- Observações -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Observações</label>
-        <textarea id="orc-obs" class="form-control" rows="2" placeholder="Condições, validade, informações adicionais..."></textarea>
-      </div>
-
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModalOrcamento()">Cancelar</button>
-      <button class="btn btn-ghost" onclick="gerarPDFOrcamento()" style="color:var(--orange-dark)">🖨️ Salvar PDF</button>
-      <button class="btn btn-primary" onclick="salvarOrcamento()">💾 Salvar Orçamento</button>
-    </div>
-  </div>
-</div>
 
 <!-- PDF ORÇAMENTO (hidden) -->
-<div id="pdf-orcamento" style="display:none">
-  <div id="pdf-orc-conteudo" style="font-family:'Inter',sans-serif;max-width:680px;margin:0 auto;padding:40px 36px;color:#18181b"></div>
-</div>
 
 </body></html>`);
     win.document.close();
@@ -6348,7 +6757,7 @@
       // Modo edição
       const a = agendamentos.find(x => x.id === id);
       if (!a) return;
-      document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '✏️ Editar Agendamento';
+      const _mtEdit = document.getElementById('modal-agendamento'); if(_mtEdit) { const _t = _mtEdit.querySelector('.modal-title'); if(_t) _t.textContent = '✏️ Editar Agendamento'; }
       document.getElementById('agend-nome').value       = a.nome_completo || '';
       const celEdit = document.getElementById('agend-celular'); if (celEdit) celEdit.value = a.cpf || '';
       document.getElementById('agend-data').value       = a.data_agendamento || '';
@@ -6367,7 +6776,7 @@
       }
     } else {
       // Modo novo
-      document.getElementById('modal-agendamento').querySelector('.modal-title').textContent = '📅 Novo Agendamento de Vacina';
+      const _mtNovo = document.getElementById('modal-agendamento'); if(_mtNovo) { const _t = _mtNovo.querySelector('.modal-title'); if(_t) _t.textContent = '📅 Novo Agendamento de Vacina'; }
       initVacinasAgend();
       ['agend-nome','agend-celular','agend-cpf','agend-nascimento','agend-endereco','agend-lote','agend-validade','agend-aplicador','agend-obs','agend-hora'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
@@ -6381,11 +6790,11 @@
       document.getElementById('agend-status').value    = 'agendado';
     }
 
-    document.getElementById('modal-agendamento').style.display = 'flex';
+    const _maShow = document.getElementById('modal-agendamento'); if(_maShow) _maShow.style.display = 'flex';
   }
 
   function fecharModalAgendamento() {
-    document.getElementById('modal-agendamento').style.display = 'none';
+    const _maHide = document.getElementById('modal-agendamento'); if(_maHide) _maHide.style.display = 'none';
     agendEditId = null;
   }
 
@@ -6602,7 +7011,7 @@
     if (id) {
       const o = orcamentos.find(x => x.id === id);
       if (!o) return;
-      document.getElementById('modal-orcamento').querySelector('.modal-title').textContent = '✏️ Editar Orçamento';
+      const _mt_modal_orcamento = document.getElementById('modal-orcamento'); if(_mt_modal_orcamento){ const _t=_mt_modal_orcamento.querySelector('.modal-title'); if(_t)_t.textContent='✏️ Editar Orçamento'; }
       document.getElementById('orc-paciente').value = o.paciente || '';
       document.getElementById('orc-data').value     = o.data || '';
       document.getElementById('orc-validade').value = o.validade || '';
@@ -6610,7 +7019,7 @@
       document.getElementById('orc-obs').value      = o.obs || '';
       _orcItens = JSON.parse(JSON.stringify(o.itens || []));
     } else {
-      document.getElementById('modal-orcamento').querySelector('.modal-title').textContent = '📄 Novo Orçamento';
+      const _mt_modal_orcamento = document.getElementById('modal-orcamento'); if(_mt_modal_orcamento){ const _t=_mt_modal_orcamento.querySelector('.modal-title'); if(_t)_t.textContent='📄 Novo Orçamento'; }
       document.getElementById('orc-paciente').value = '';
       document.getElementById('orc-data').value     = new Date().toISOString().slice(0,10);
       // validade padrão: 30 dias
@@ -6911,7 +7320,6 @@
   </div>
 
 <script>window.onload=function(){window.print();};<\/script>
-</body>
 </html>`);
     win.document.close();
   }
@@ -7736,6 +8144,160 @@
   }
 
 
+  // ===== APLICAÇÃO EM CASA =====
+  function comprovanteCasa(id) {
+    try {
+      // Criar modal dinamicamente se não existir no DOM
+      if (!document.getElementById('modal-comp-casa')) {
+        var el = document.createElement('div');
+        el.id = 'modal-comp-casa';
+        el.className = 'modal-backdrop';
+        el.style.display = 'none';
+        el.innerHTML = '<div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">' +
+          '<div class="modal-head">' +
+          '<div class="modal-title">🏠 Comprovante — Aplicação em Domicílio</div>' +
+          '<button class="modal-close" onclick="fecharComprovanteCasa()">✕</button>' +
+          '</div>' +
+          '<div class="modal-body" id="comp-casa-body" style="padding:8px"></div>' +
+          '<div class="modal-foot">' +
+          '<button class="btn btn-ghost" onclick="fecharComprovanteCasa()">Fechar</button>' +
+          '<button class="btn btn-primary" onclick="imprimirComprovanteCasa()">🖨️ Imprimir / Salvar PDF</button>' +
+          '</div></div>';
+        document.body.appendChild(el);
+      }
+      var bodyEl = document.getElementById('comp-casa-body');
+      var modalEl = document.getElementById('modal-comp-casa');
+      if (!bodyEl || !modalEl) {
+        alert('Erro: modal não encontrado. Recarregue a página.');
+        return;
+      }
+      var a = null;
+      for (var i = 0; i < aplicacoes.length; i++) {
+        if (Number(aplicacoes[i].id) === Number(id)) { a = aplicacoes[i]; break; }
+      }
+      if (!a) { toast('Aplicação não encontrada.', 'warning'); return; }
+
+      var p = findPaciente(a.paciente_id);
+      function s(v) { return v ? String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '—'; }
+
+      var pacNome     = p ? s(p.nome)     : '—';
+      var pacCpf      = p ? s(p.cpf)      : '—';
+      var pacTel      = p ? s(p.telefone) : '—';
+      var pacEndereco = p ? s(p.endereco) : '—';
+      var pacNasc     = (p && p.nascimento) ? new Date(p.nascimento+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+
+      var idadeStr = '—';
+      if (p && p.nascimento) {
+        var nasc = new Date(p.nascimento+'T00:00:00');
+        var hoje = new Date();
+        var anos = hoje.getFullYear() - nasc.getFullYear();
+        var dm = hoje.getMonth() - nasc.getMonth();
+        if (dm < 0 || (dm === 0 && hoje.getDate() < nasc.getDate())) anos--;
+        if (anos < 2) {
+          var meses = (hoje.getFullYear()-nasc.getFullYear())*12+(hoje.getMonth()-nasc.getMonth());
+          if (hoje.getDate() < nasc.getDate()) meses--;
+          idadeStr = meses <= 0 ? 'Recém-nascido' : (meses===1 ? '1 mês' : meses+' meses');
+        } else { idadeStr = anos+' anos'; }
+      }
+
+      var dt       = a.data_aplicacao ? new Date(a.data_aplicacao+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      var vacina   = s(a.vacina_text || a.vacina);
+      var lote     = s(a.lote);
+      var dose     = s(a.dose);
+      var validade = a.validade ? new Date(a.validade+'T00:00:00').toLocaleDateString('pt-BR') : (a.validade_display || '—');
+      var aplicador= s(a.profissional_nome || a.aplicador);
+      var valor    = a.valor ? 'R$ ' + Number(a.valor).toFixed(2) : '—';
+      var pagamento= a.forma_pagamento ? s(a.forma_pagamento.replace(/_/g,' ')) : '—';
+      var local    = s(a.local_aplicacao) || 'Domicílio do paciente';
+      var gerado   = new Date().toLocaleString('pt-BR');
+
+      var html = '<div style="font-family:Arial,sans-serif;max-width:580px;margin:0 auto;padding:20px">'
+
+        // Cabeçalho
+        + '<div style="text-align:center;margin-bottom:16px">'
+        + '<div style="font-size:1.8rem">💉🏠</div>'
+        + '<h2 style="color:#e76b1f;margin:4px 0;font-size:1.2rem">COMPROVANTE DE APLICAÇÃO EM DOMICÍLIO</h2>'
+        + '<div style="color:#888;font-size:0.8rem">Previmune — Sistema de Vacinação</div>'
+        + '</div>'
+
+        // Paciente
+        + '<div style="background:#fff7f1;border:1px solid #ffc999;border-radius:10px;padding:14px 18px;margin-bottom:12px">'
+        + '<div style="font-size:0.7rem;font-weight:700;color:#c85a10;text-transform:uppercase;margin-bottom:10px">👤 Dados do Paciente</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:0.87rem">'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem;width:45%">Nome Completo</td><td style="padding:4px 0"><strong>'+pacNome+'</strong></td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">CPF</td><td style="padding:4px 0">'+pacCpf+'</td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Data de Nascimento</td><td style="padding:4px 0">'+pacNasc+' <span style="color:#888">('+idadeStr+')</span></td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Telefone</td><td style="padding:4px 0">'+pacTel+'</td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Endereço</td><td style="padding:4px 0">'+pacEndereco+'</td></tr>'
+        + '</table></div>'
+
+        // Aplicação
+        + '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px 18px;margin-bottom:12px">'
+        + '<div style="font-size:0.7rem;font-weight:700;color:#0369a1;text-transform:uppercase;margin-bottom:10px">💉 Dados da Aplicação</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:0.87rem">'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem;width:45%">Vacina</td><td style="padding:4px 0"><strong>'+vacina+'</strong></td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Data de Aplicação</td><td style="padding:4px 0"><strong style="color:#0369a1">'+dt+'</strong></td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Dose</td><td style="padding:4px 0">'+dose+'</td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Lote</td><td style="padding:4px 0">'+lote+'</td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Validade do Lote</td><td style="padding:4px 0">'+validade+'</td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Aplicador</td><td style="padding:4px 0">'+aplicador+'</td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Local</td><td style="padding:4px 0">'+local+'</td></tr>'
+        + '</table></div>'
+
+        // Pagamento
+        + '<div style="background:#fafafa;border:1px solid #e4e4e7;border-radius:10px;padding:14px 18px;margin-bottom:12px">'
+        + '<div style="font-size:0.7rem;font-weight:700;color:#555;text-transform:uppercase;margin-bottom:10px">💳 Pagamento</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:0.87rem">'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem;width:45%">Valor</td><td style="padding:4px 0"><strong>'+valor+'</strong></td></tr>'
+        + '<tr><td style="padding:4px 0;color:#888;font-size:0.75rem">Forma de Pagamento</td><td style="padding:4px 0">'+pagamento+'</td></tr>'
+        + '</table></div>'
+
+        // Confirmação
+        + '<div style="padding:10px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #86efac;font-size:0.8rem;color:#166534">'
+        + '✅ Aplicação registrada no sistema Previmune. Registro nº #'+id+'.</div>'
+
+        // Assinaturas
+        + '<div style="margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:center;font-size:0.82rem">'
+        + '<div><div style="height:48px"></div><div style="border-top:1px solid #bbb;padding-top:6px;color:#555">Assinatura do Aplicador</div><div style="color:#888;font-size:0.75rem">'+aplicador+'</div></div>'
+        + '<div><div style="height:48px"></div><div style="border-top:1px solid #bbb;padding-top:6px;color:#555">Assinatura do Paciente / Responsável</div><div style="color:#888;font-size:0.75rem">'+pacNome+'</div></div>'
+        + '</div>'
+
+        + '<div style="text-align:center;margin-top:14px;color:#bbb;font-size:0.7rem">Gerado em '+gerado+'</div>'
+        + '</div>';
+
+      bodyEl.innerHTML = html;
+      modalEl.style.display = 'flex';
+
+    } catch(err) {
+      console.error('comprovanteCasa erro:', err);
+      toast('Erro ao gerar comprovante: ' + err.message, 'error');
+    }
+  }
+
+  function fecharComprovanteCasa() {
+    var el = document.getElementById('modal-comp-casa');
+    if (el) el.style.display = 'none';
+  }
+
+  function imprimirComprovanteCasa() {
+    var bodyEl = document.getElementById('comp-casa-body');
+    if (!bodyEl) return;
+    var conteudo = bodyEl.innerHTML;
+    var win = window.open('', '_blank');
+    if (!win) { alert('Permita pop-ups para imprimir o comprovante.'); return; }
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
+      + '<title>Comprovante Domiciliar — Previmune</title>'
+      + '<style>body{margin:20px;font-family:Arial,sans-serif;color:#222}'
+      + '@media print{.no-print{display:none!important}body{margin:8px}}'
+      + '</style></head><body>'
+      + conteudo
+      + '<div class="no-print" style="text-align:center;margin-top:20px">'
+      + '<button onclick="window.print()" style="background:#e76b1f;color:#fff;border:none;'
+      + 'padding:10px 28px;border-radius:6px;cursor:pointer;font-size:1rem">🖨️ Imprimir / Salvar PDF</button>'
+      + '</div></body></html>');
+    win.document.close();
+  }
+
 </script>
 
 <!-- MODAL: NOVO / EDITAR USUÁRIO -->
@@ -7793,726 +8355,12 @@
 
 
 <!-- ===== MODAL RETIRADA ===== -->
-<div id="modal-retirada" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:560px">
-    <div class="modal-head">
-      <div class="modal-title">📤 Registrar Retirada de Vacina</div>
-      <button class="modal-close" onclick="fecharModalRetirada()">✕</button>
-    </div>
-    <div class="modal-body" style="display:grid;gap:14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Vacina *</label>
-          <select id="ret-vacina-id" class="form-control" onchange="preencherDadosVacinaRetirada()">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Lote</label>
-          <input id="ret-lote" class="form-control" readonly placeholder="Preenchido automaticamente">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Validade</label>
-          <input id="ret-validade" class="form-control" readonly placeholder="Preenchido automaticamente">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Quantidade *</label>
-          <input id="ret-quantidade" type="number" min="1" value="1" class="form-control">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Nome da Pessoa *</label>
-          <input id="ret-nome" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group">
-          <label class="form-label">CPF *</label>
-          <input id="ret-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">Data da Retirada *</label>
-          <input id="ret-data" type="date" class="form-control">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Valor Pago (R$)</label>
-          <input id="ret-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Forma de Pagamento</label>
-        <select id="ret-pagamento" class="form-control">
-          <option value="">Selecione...</option>
-          <option value="dinheiro">Dinheiro</option>
-          <option value="cartao_credito">Cartão de Crédito</option>
-          <option value="cartao_debito">Cartão de Débito</option>
-          <option value="pix">PIX</option>
-          <option value="convenio">Convênio</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Observações</label>
-        <textarea id="ret-obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModalRetirada()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarRetirada()">💾 Registrar Retirada</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== COMPROVANTE DE RETIRADA (hidden, para impressão) ===== -->
-<div id="comprovante-retirada" style="display:none">
-  <style>
-    @media print {
-      body > *:not(#comprovante-retirada) { display: none !important; }
-      #comprovante-retirada { display: block !important; }
-    }
-
-    /* ================================================================
-       REDESIGN PREVIMUNE — Visual Upgrade
-    ================================================================ */
-
-    /* --- ROOT: paleta atualizada com mais profundidade --- */
-    :root {
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-      --shadow-lg: 0 10px 30px rgba(0,0,0,0.10), 0 4px 10px rgba(0,0,0,0.05);
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --sidebar-width: 220px;
-      --transition: all 0.18s ease;
-    }
-
-    /* --- BODY --- */
-    body {
-      background: #f0f2f5 !important;
-      font-feature-settings: 'liga' 1, 'kern' 1;
-    }
-
-    /* --- SIDEBAR redesenhada --- */
-    .sidebar {
-      background: linear-gradient(175deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%) !important;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.18) !important;
-      border-right: none !important;
-    }
-
-    .sidebar-brand {
-      background: rgba(255,255,255,0.04) !important;
-      border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-      padding: 20px 18px !important;
-    }
-
-    .brand-name {
-      color: #ffffff !important;
-      font-size: 1.15rem !important;
-      font-weight: 800 !important;
-      letter-spacing: -0.3px;
-    }
-
-    .brand-sub {
-      color: rgba(255,255,255,0.45) !important;
-      font-size: 0.72rem !important;
-      margin-top: 1px;
-    }
-
-    .nav-item {
-      color: rgba(255,255,255,0.62) !important;
-      border-radius: 10px !important;
-      margin: 2px 10px !important;
-      padding: 9px 12px !important;
-      font-size: 0.855rem !important;
-      font-weight: 500 !important;
-      transition: var(--transition) !important;
-      border: none !important;
-    }
-
-    .nav-item:hover {
-      background: rgba(255,255,255,0.09) !important;
-      color: #ffffff !important;
-      transform: translateX(2px);
-    }
-
-    .nav-item.active {
-      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%) !important;
-      color: #ffffff !important;
-      box-shadow: 0 4px 14px rgba(231,107,31,0.40) !important;
-      font-weight: 700 !important;
-    }
-
-    .nav-section {
-      font-size: 0.67rem !important;
-      font-weight: 700 !important;
-      color: rgba(255,255,255,0.30) !important;
-      letter-spacing: 0.08em !important;
-      text-transform: uppercase !important;
-      padding: 14px 22px 4px !important;
-    }
-
-    /* Usuário logado na sidebar */
-    .sidebar-user {
-      background: rgba(255,255,255,0.05) !important;
-      border-top: 1px solid rgba(255,255,255,0.08) !important;
-    }
-
-    .sidebar-user .user-name {
-      color: rgba(255,255,255,0.85) !important;
-    }
-
-    .sidebar-user .user-role {
-      color: rgba(255,255,255,0.40) !important;
-    }
-
-    .btn-logout {
-      background: rgba(239,68,68,0.15) !important;
-      color: #fca5a5 !important;
-      border: 1px solid rgba(239,68,68,0.25) !important;
-      border-radius: 8px !important;
-    }
-
-    .btn-logout:hover {
-      background: rgba(239,68,68,0.30) !important;
-      color: #ffffff !important;
-    }
-
-    /* --- TOPBAR --- */
-    .topbar {
-      background: #ffffff !important;
-      border-bottom: 1px solid #e8eaf0 !important;
-      box-shadow: var(--shadow-sm) !important;
-      height: 58px !important;
-    }
-
-    .topbar-title {
-      font-size: 1.05rem !important;
-      font-weight: 700 !important;
-      color: var(--gray-900) !important;
-    }
-
-    /* --- CARDS --- */
-    .card {
-      border-radius: var(--radius-lg) !important;
-      box-shadow: var(--shadow-md) !important;
-      border: 1px solid rgba(0,0,0,0.04) !important;
-      transition: var(--transition) !important;
-      background: #ffffff !important;
-    }
-
-    .card:hover {
-      box-shadow: var(--shadow-lg) !important;
-    }
-
-    .card-header {
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
-      padding: 18px 22px !important;
-      border-bottom: 1px solid #f1f1f4 !important;
-      background: #ffffff !important;
-    }
-
-    .card-title {
-      font-size: 1rem !important;
-      font-weight: 700 !important;
-      color: var(--gray-900) !important;
-      letter-spacing: -0.2px !important;
-    }
-
-    .card-subtitle {
-      font-size: 0.78rem !important;
-      color: var(--gray-400) !important;
-      margin-top: 2px !important;
-    }
-
-    /* KPI / stat cards no dashboard */
-    .stat-card {
-      border-radius: var(--radius-lg) !important;
-      box-shadow: var(--shadow-md) !important;
-      border: none !important;
-      transition: var(--transition) !important;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: var(--shadow-lg) !important;
-    }
-
-    /* --- BOTÕES --- */
-    .btn {
-      border-radius: 9px !important;
-      font-weight: 600 !important;
-      font-size: 0.855rem !important;
-      transition: var(--transition) !important;
-      letter-spacing: 0.01em !important;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%) !important;
-      border: none !important;
-      box-shadow: 0 3px 10px rgba(231,107,31,0.30) !important;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px) !important;
-      box-shadow: 0 5px 16px rgba(231,107,31,0.40) !important;
-    }
-
-    .btn-primary:active {
-      transform: translateY(0) !important;
-    }
-
-    .btn-ghost {
-      background: transparent !important;
-      color: var(--gray-600) !important;
-      border: 1px solid var(--gray-200) !important;
-    }
-
-    .btn-ghost:hover {
-      background: var(--gray-100) !important;
-      border-color: var(--gray-300) !important;
-    }
-
-    .btn-danger, .btn-sm[style*="color:var(--red)"] {
-      color: var(--red) !important;
-    }
-
-    /* --- TABELAS --- */
-    .data-table {
-      border-collapse: separate !important;
-      border-spacing: 0 !important;
-    }
-
-    .data-table thead th {
-      background: #f8f9fc !important;
-      color: var(--gray-500) !important;
-      font-size: 0.72rem !important;
-      font-weight: 700 !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.06em !important;
-      padding: 10px 14px !important;
-      border-bottom: 2px solid #eef0f6 !important;
-    }
-
-    .data-table tbody tr {
-      transition: var(--transition) !important;
-    }
-
-    .data-table tbody tr:hover {
-      background: #fdf5ef !important;
-    }
-
-    .data-table tbody td {
-      padding: 11px 14px !important;
-      border-bottom: 1px solid #f3f4f8 !important;
-      font-size: 0.875rem !important;
-      color: var(--gray-800) !important;
-      vertical-align: middle !important;
-    }
-
-    /* --- FORMULÁRIOS --- */
-    .form-control {
-      border-radius: 9px !important;
-      border: 1.5px solid #e4e4e7 !important;
-      font-size: 0.875rem !important;
-      padding: 9px 13px !important;
-      transition: var(--transition) !important;
-      background: #fafafa !important;
-    }
-
-    .form-control:focus {
-      border-color: var(--orange) !important;
-      background: #ffffff !important;
-      box-shadow: 0 0 0 3px rgba(231,107,31,0.12) !important;
-      outline: none !important;
-    }
-
-    .form-label {
-      font-size: 0.78rem !important;
-      font-weight: 600 !important;
-      color: var(--gray-600) !important;
-      margin-bottom: 5px !important;
-      display: block !important;
-    }
-
-    /* --- BADGES --- */
-    .badge {
-      border-radius: 20px !important;
-      font-size: 0.73rem !important;
-      font-weight: 700 !important;
-      padding: 3px 10px !important;
-      letter-spacing: 0.02em !important;
-    }
-
-    .badge-green {
-      background: #dcfce7 !important;
-      color: #15803d !important;
-    }
-
-    .badge-yellow {
-      background: #fef9c3 !important;
-      color: #854d0e !important;
-    }
-
-    .badge-red {
-      background: #fee2e2 !important;
-      color: #991b1b !important;
-    }
-
-    /* --- MODAIS --- */
-    .modal-box {
-      border-radius: var(--radius-lg) !important;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.20) !important;
-      border: none !important;
-    }
-
-    .modal-head {
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
-      background: linear-gradient(135deg, #fff7f1 0%, #ffe8d4 100%) !important;
-      border-bottom: 2px solid var(--orange-200) !important;
-      padding: 18px 22px !important;
-    }
-
-    .modal-title {
-      font-size: 1rem !important;
-      font-weight: 800 !important;
-      color: var(--orange-dark) !important;
-    }
-
-    .modal-foot {
-      border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
-      background: #f9fafb !important;
-      border-top: 1px solid #f1f1f4 !important;
-      padding: 14px 22px !important;
-    }
-
-    .modal-body {
-      padding: 20px 22px !important;
-    }
-
-    .modal-close {
-      background: rgba(0,0,0,0.06) !important;
-      border-radius: 8px !important;
-      border: none !important;
-      padding: 4px 8px !important;
-      cursor: pointer !important;
-      font-size: 1rem !important;
-      color: var(--gray-600) !important;
-      transition: var(--transition) !important;
-    }
-
-    .modal-close:hover {
-      background: rgba(231,107,31,0.12) !important;
-      color: var(--orange-dark) !important;
-    }
-
-    /* --- TOAST --- */
-    .toast-container {
-      border-radius: 12px !important;
-      box-shadow: var(--shadow-lg) !important;
-    }
-
-    /* --- MAIN CONTENT --- */
-    .main-content {
-      background: #f0f2f5 !important;
-    }
-
-    .page {
-      padding: 24px !important;
-      max-width: 1200px;
-    }
-
-    /* --- FAIXA BUTTONS (planos vacinais) --- */
-    .faixa-btn {
-      border-radius: 22px !important;
-      font-size: 0.8rem !important;
-      font-weight: 600 !important;
-      padding: 6px 14px !important;
-      border: 1.5px solid var(--orange-200) !important;
-      background: #fff !important;
-      color: var(--orange-dark) !important;
-      transition: var(--transition) !important;
-      cursor: pointer !important;
-    }
-
-    .faixa-btn:hover {
-      background: var(--orange-100) !important;
-      transform: translateY(-1px) !important;
-    }
-
-    .faixa-btn.selected {
-      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%) !important;
-      color: #fff !important;
-      border-color: transparent !important;
-      box-shadow: 0 3px 10px rgba(231,107,31,0.35) !important;
-    }
-
-    /* --- LOGIN screen --- */
-    .login-card {
-      border-radius: 20px !important;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important;
-    }
-
-    .login-btn {
-      border-radius: 10px !important;
-    }
-
-    /* --- Scroll table wrapper --- */
-    .scroll-table, .table-wrapper {
-      border-radius: 0 0 var(--radius-lg) var(--radius-lg) !important;
-      overflow-y: auto !important;
-      overflow-x: auto !important;
-    }
-
-    /* --- Highlight bar / alerts --- */
-    .highlight-bar {
-      border-radius: 10px !important;
-    }
-
-    /* --- Btn outline orange --- */
-    .btn-outline-orange {
-      background: transparent !important;
-      border: 1.5px solid var(--orange) !important;
-      color: var(--orange-dark) !important;
-      border-radius: 9px !important;
-    }
-
-    .btn-outline-orange:hover {
-      background: var(--orange-50) !important;
-    }
-
-  </style>
-  <div id="comprovante-conteudo" style="font-family:'Inter',sans-serif;max-width:600px;margin:0 auto;padding:30px">
-    <!-- conteúdo preenchido via JS -->
-  </div>
-</div>
 
 
 <!-- ===== MODAL AGENDAMENTO ===== -->
-<div id="modal-agendamento" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:620px;max-height:90vh;overflow-y:auto">
-    <div class="modal-head">
-      <div class="modal-title">📅 Novo Agendamento de Vacina</div>
-      <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
-    </div>
-    <div class="modal-body" style="display:grid;gap:14px">
-
-      <!-- Linha 1: Nome + CPF -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Nome Completo <span class="req">*</span></label>
-          <input id="agend-nome" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">CPF <span class="req">*</span></label>
-          <input id="agend-cpf" class="form-control" placeholder="000.000.000-00" oninput="mascaraCPF(this)">
-        </div>
-      </div>
-
-      <!-- Linha 2: Data nascimento + Data agendamento + Horário -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 140px;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data de Nascimento <span class="req">*</span></label>
-          <input id="agend-nascimento" type="date" class="form-control">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data do Agendamento <span class="req">*</span></label>
-          <input id="agend-data" type="date" class="form-control">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Horário</label>
-          <input id="agend-hora" type="time" class="form-control" placeholder="08:00">
-        </div>
-      </div>
-
-      <!-- Linha 3: Endereço -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Endereço Completo <span class="req">*</span></label>
-        <input id="agend-endereco" class="form-control" placeholder="Rua, número, bairro, cidade — CEP">
-      </div>
-
-      <!-- Linha 4: Vacina + Dose -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Vacina <span class="req">*</span></label>
-          <select id="agend-vacina-id" class="form-control" onchange="preencherDadosVacinaAgend()">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Dose</label>
-          <select id="agend-dose" class="form-control">
-            <option value="">—</option>
-            <option value="1ª dose">1ª Dose</option>
-            <option value="2ª dose">2ª Dose</option>
-            <option value="3ª dose">3ª Dose</option>
-            <option value="dose única">Dose Única</option>
-            <option value="reforço">Reforço</option>
-            <option value="anual">Anual</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Linha 5: Lote + Validade -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Lote</label>
-          <input id="agend-lote" class="form-control" placeholder="Preenchido automaticamente" readonly>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Validade</label>
-          <input id="agend-validade" class="form-control" placeholder="Preenchido automaticamente" readonly>
-        </div>
-      </div>
-
-      <!-- Linha 6: Local da aplicação (parte do corpo) -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Local da Aplicação (parte do corpo)</label>
-        <select id="agend-local" class="form-control">
-          <option value="">Selecione...</option>
-          <optgroup label="Braço">
-            <option value="Deltoide direito">Deltoide Direito</option>
-            <option value="Deltoide esquerdo">Deltoide Esquerdo</option>
-            <option value="Vasto lateral do braço direito">Vasto Lateral do Braço Direito</option>
-            <option value="Vasto lateral do braço esquerdo">Vasto Lateral do Braço Esquerdo</option>
-          </optgroup>
-          <optgroup label="Coxa">
-            <option value="Vasto lateral da coxa direita">Vasto Lateral da Coxa Direita</option>
-            <option value="Vasto lateral da coxa esquerda">Vasto Lateral da Coxa Esquerda</option>
-          </optgroup>
-          <optgroup label="Glúteo">
-            <option value="Glúteo direito (ventroglúteo)">Glúteo Direito (Ventroglúteo)</option>
-            <option value="Glúteo esquerdo (ventroglúteo)">Glúteo Esquerdo (Ventroglúteo)</option>
-          </optgroup>
-          <optgroup label="Outros">
-            <option value="Subcutâneo — abdome">Subcutâneo — Abdome</option>
-            <option value="Intradérmico — antebraço direito">Intradérmico — Antebraço Direito</option>
-            <option value="Intradérmico — antebraço esquerdo">Intradérmico — Antebraço Esquerdo</option>
-            <option value="Oral">Oral</option>
-          </optgroup>
-        </select>
-      </div>
-
-      <!-- Linha 7: Aplicador + Forma de Pagamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Aplicador</label>
-          <input id="agend-aplicador" class="form-control" placeholder="Nome do profissional">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Forma de Pagamento</label>
-          <select id="agend-pagamento" class="form-control">
-            <option value="">Selecione...</option>
-            <option value="dinheiro">Dinheiro</option>
-            <option value="cartao_credito">Cartão de Crédito</option>
-            <option value="cartao_debito">Cartão de Débito</option>
-            <option value="pix">PIX</option>
-            <option value="convenio">Convênio</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Linha 8: Valor + Obs -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Valor (R$)</label>
-          <input id="agend-valor" type="number" step="0.01" min="0" class="form-control" placeholder="0,00">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Status</label>
-          <select id="agend-status" class="form-control">
-            <option value="agendado">Agendado</option>
-            <option value="realizado">Realizado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Obs -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Observações</label>
-        <textarea id="agend-obs" class="form-control" rows="2" placeholder="Informações adicionais..."></textarea>
-      </div>
-
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModalAgendamento()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarAgendamento()">💾 Salvar Agendamento</button>
-    </div>
-  </div>
-</div>
-
-
 <!-- ===== MODAL ORÇAMENTO ===== -->
-<div id="modal-orcamento" class="modal-backdrop" style="display:none">
-  <div class="modal-box" style="max-width:660px;max-height:92vh;overflow-y:auto">
-    <div class="modal-head">
-      <div class="modal-title">📄 Novo Orçamento</div>
-      <button class="modal-close" onclick="fecharModalOrcamento()">✕</button>
-    </div>
-    <div class="modal-body" style="display:grid;gap:14px">
-
-      <!-- Paciente + Data -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Nome do Paciente <span class="req">*</span></label>
-          <input id="orc-paciente" class="form-control" placeholder="Nome completo">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Data</label>
-          <input id="orc-data" type="date" class="form-control">
-        </div>
-      </div>
-
-      <!-- Validade do orçamento -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Válido até</label>
-          <input id="orc-validade" type="date" class="form-control">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Status</label>
-          <select id="orc-status" class="form-control">
-            <option value="pendente">Pendente</option>
-            <option value="aprovado">Aprovado</option>
-            <option value="recusado">Recusado</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Itens de vacina -->
-      <div>
-        <label class="form-label">Vacinas do Orçamento <span class="req">*</span></label>
-        <div id="orc-itens-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="adicionarItemOrcamento()">➕ Adicionar vacina</button>
-      </div>
-
-      <!-- Total -->
-      <div style="background:var(--orange-50);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:600;color:var(--gray-700)">Total do Orçamento</span>
-        <span id="orc-total-display" style="font-size:1.3rem;font-weight:800;color:var(--orange-dark)">R$ 0,00</span>
-      </div>
-
-      <!-- Observações -->
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Observações</label>
-        <textarea id="orc-obs" class="form-control" rows="2" placeholder="Condições, validade, informações adicionais..."></textarea>
-      </div>
-
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="fecharModalOrcamento()">Cancelar</button>
-      <button class="btn btn-ghost" onclick="gerarPDFOrcamento()" style="color:var(--orange-dark)">🖨️ Salvar PDF</button>
-      <button class="btn btn-primary" onclick="salvarOrcamento()">💾 Salvar Orçamento</button>
-    </div>
-  </div>
-</div>
 
 <!-- PDF ORÇAMENTO (hidden) -->
-<div id="pdf-orcamento" style="display:none">
-  <div id="pdf-orc-conteudo" style="font-family:'Inter',sans-serif;max-width:680px;margin:0 auto;padding:40px 36px;color:#18181b"></div>
-</div>
 
 
     <!-- ===== MODAL: JSON FHIR RNDS ===== -->
@@ -8538,6 +8386,187 @@
         </div>
       </div>
     </div>
+
+
+<!-- ===== MODAL EDITAR APLICAÇÃO ===== -->
+<div id="modal-editar-aplicacao" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-head">
+      <div class="modal-title">✏️ Editar Aplicação</div>
+      <button class="modal-close" onclick="fecharEditarAplicacao()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px;display:grid;gap:14px">
+      <input type="hidden" id="edit-aplic-id">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="form-label">Data da Aplicação</div>
+          <input type="date" class="form-control" id="edit-aplic-data">
+        </div>
+        <div>
+          <div class="form-label">Dose</div>
+          <input type="text" class="form-control" id="edit-aplic-dose" placeholder="Ex: 1ª Dose">
+        </div>
+      </div>
+
+      <div>
+        <div class="form-label">Local da Aplicação</div>
+        <select class="form-control" id="edit-aplic-local">
+          <option value="">Selecione o local...</option>
+                <option value="Aplicação Domiciliar">🏠 Aplicação Domiciliar</option>
+          <option value="Braço Direito - Deltóide">Braço Direito — Deltóide</option>
+          <option value="Braço Esquerdo - Deltóide">Braço Esquerdo — Deltóide</option>
+          <option value="Coxa Direita">Coxa Direita</option>
+          <option value="Coxa Esquerda">Coxa Esquerda</option>
+          <option value="Glúteo Direito">Glúteo Direito</option>
+          <option value="Glúteo Esquerdo">Glúteo Esquerdo</option>
+          <option value="Subcutâneo - Braço Direito">Subcutâneo — Braço Direito</option>
+          <option value="Subcutâneo - Braço Esquerdo">Subcutâneo — Braço Esquerdo</option>
+          <option value="Via Oral">Via Oral</option>
+          <option value="Intranasal">Intranasal</option>
+          <option value="Intradérmico - Antebraço">Intradérmico — Antebraço</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="form-label">Profissional</div>
+        <select class="form-control" id="edit-aplic-profissional">
+          <option value="">Selecione o profissional...</option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <div class="form-label">Valor (R$)</div>
+          <input type="number" class="form-control" id="edit-aplic-valor" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div>
+          <div class="form-label">Forma de Pagamento</div>
+          <select class="form-control" id="edit-aplic-pagamento">
+            <option value="">Selecione...</option>
+            <option value="Pix">Pix</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cartão de Crédito">Cartão de Crédito</option>
+            <option value="Cartão de Débito">Cartão de Débito</option>
+            <option value="Convênio">Convênio</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <div class="form-label">Observações</div>
+        <textarea class="form-control" id="edit-aplic-obs" rows="2" placeholder="Observações sobre a aplicação..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="fecharEditarAplicacao()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoAplicacao()">💾 Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL: REGISTRAR DESCARTE ===== -->
+<div id="modal-descarte" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title">🗑️ Registrar Descarte</div>
+      <button class="modal-close" onclick="fecharModalDescarte()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Vacina / Lote <span class="req">*</span></label>
+        <select class="form-control" id="desc-vacina-id" onchange="preencherInfoDescarte()">
+          <option value="">Selecione a vacina...</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Data do Descarte <span class="req">*</span></label>
+          <input class="form-control" type="date" id="desc-data">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantidade Descartada <span class="req">*</span></label>
+          <input class="form-control" type="number" min="1" id="desc-qtd" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motivo do Descarte <span class="req">*</span></label>
+        <select class="form-control" id="desc-motivo">
+          <option value="">Selecione o motivo...</option>
+          <option value="Vencimento">Vencimento do prazo de validade</option>
+          <option value="Quebra de Cadeia de Frio">Quebra de Cadeia de Frio</option>
+          <option value="Contaminação">Contaminação / Alteração visual</option>
+          <option value="Recall">Recall pelo fabricante</option>
+          <option value="Frasco Aberto não Utilizado">Frasco aberto não utilizado no prazo</option>
+          <option value="Dano Físico">Dano físico (frasco quebrado)</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsável pelo Descarte <span class="req">*</span></label>
+        <select class="form-control" id="desc-responsavel">
+          <option value="">Selecione o responsável...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" id="desc-obs" rows="2" placeholder="Informações adicionais, número de autorização, etc..."></textarea>
+      </div>
+      <div id="desc-alerta-stock" style="display:none;background:#fff7ed;border:1px solid #f97316;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#c2410c;margin-top:4px"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="fecharModalDescarte()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarDescarte()" style="background:#dc2626;border-color:#dc2626">🗑️ Confirmar Descarte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: REGISTRAR TEMPERATURA ===== -->
+<div id="modal-temperatura" class="modal-backdrop" style="display:none">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">🌡️ Registrar Temperatura</div>
+      <button class="modal-close" onclick="fecharModalTemperatura()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Data do Registro <span class="req">*</span></label>
+        <input class="form-control" type="date" id="temp-data">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Equipamento / Geladeira</label>
+        <input class="form-control" id="temp-equipamento" placeholder="Ex: Refrigerador 1, Câmara Fria A...">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Temp. Mínima (°C) <span class="req">*</span></label>
+          <input class="form-control" type="number" step="0.1" id="temp-min" placeholder="Ex: 2.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temp. Máxima (°C) <span class="req">*</span></label>
+          <input class="form-control" type="number" step="0.1" id="temp-max" placeholder="Ex: 7.8">
+        </div>
+      </div>
+      <div id="temp-status-preview" style="display:none;padding:10px 14px;border-radius:8px;font-weight:600;margin-top:4px;font-size:0.9rem"></div>
+      <div class="form-group">
+        <label class="form-label">Responsável pelo Registro <span class="req">*</span></label>
+        <select class="form-control" id="temp-responsavel">
+          <option value="">Selecione o responsável...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-control" id="temp-obs" rows="2" placeholder="Ex: Geladeira aberta por 10min, manutenção realizada..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="fecharModalTemperatura()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTemperatura()">✅ Salvar Registro</button>
+    </div>
+  </div>
+</div>
+</body>
 
 </body>
 </html>
