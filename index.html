@@ -3158,6 +3158,35 @@
     URL.revokeObjectURL(a.href);
   }
 
+  async function enviarParaRNDS() {
+    if (!fhirJsonAtual) { toast('Gere o payload FHIR primeiro.', 'warning'); return; }
+    const btn = document.getElementById('btn-enviar-rnds');
+    const msg = document.getElementById('rnds-envio-msg');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+    if (msg) { msg.style.display = 'none'; }
+    try {
+      const resp = await fetch('https://previmune-rnds-backend-production.up.railway.app/api/enviar-vacinacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fhirJsonAtual)
+      });
+      const data = await resp.json();
+      if (resp.ok || resp.status === 200 || resp.status === 201) {
+        toast('✅ Enviado para a RNDS com sucesso!', 'success');
+        if (msg) { msg.style.display = 'block'; msg.style.color = 'var(--green)'; msg.textContent = '✅ Registro enviado à RNDS com sucesso!'; }
+      } else {
+        const erro = data?.issue?.[0]?.diagnostics || data?.erro || JSON.stringify(data);
+        toast('Erro RNDS: ' + erro, 'error');
+        if (msg) { msg.style.display = 'block'; msg.style.color = 'var(--red)'; msg.textContent = '❌ Erro: ' + erro; }
+      }
+    } catch(e) {
+      toast('Erro de conexão com o backend: ' + e.message, 'error');
+      if (msg) { msg.style.display = 'block'; msg.style.color = 'var(--red)'; msg.textContent = '❌ Erro de conexão: ' + e.message; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🚀 Enviar para RNDS'; }
+    }
+  }
+
   // ===== PROFISSIONAIS =====
   let profissionais = [];
 
@@ -7816,11 +7845,13 @@
           <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
             <button class="btn btn-primary btn-sm" onclick="copiarFHIR()">📋 Copiar JSON</button>
             <button class="btn btn-ghost btn-sm" onclick="baixarFHIR()">⬇️ Baixar .json</button>
+            <button id="btn-enviar-rnds" class="btn btn-sm" style="background:var(--green,#22c55e);color:#fff;border:none;cursor:pointer" onclick="enviarParaRNDS()">🚀 Enviar para RNDS</button>
             <div id="fhir-copy-msg" style="font-size:0.8rem;color:var(--green);align-self:center;display:none">✅ Copiado!</div>
           </div>
           <pre id="fhir-json-output" style="background:var(--gray-50,#f8f9fa);border:1px solid var(--gray-200,#e5e7eb);border-radius:8px;padding:16px;font-size:0.72rem;overflow-x:auto;max-height:520px;white-space:pre-wrap;word-break:break-all;font-family:monospace"></pre>
-          <div id="fhir-aviso" style="margin-top:12px;padding:10px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:0.8rem;color:#92400e">
-            ⚠️ Este JSON é gerado localmente para conferência. O envio efetivo à RNDS requer autenticação via certificado digital ICP-Brasil e chamada ao endpoint FHIR do DATASUS. Consulte a documentação da RNDS em <a href="https://rnds-guia.saude.gov.br" target="_blank" style="color:#92400e">rnds-guia.saude.gov.br</a>.
+          <div id="rnds-envio-msg" style="margin-top:8px;font-size:0.85rem;font-weight:500;display:none"></div>
+          <div id="fhir-aviso" style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.8rem;color:#166534">
+            ✅ Backend RNDS conectado. Clique em "Enviar para RNDS" para transmitir o registro (ambiente de homologação). Certificado ICP-Brasil configurado no servidor.
           </div>
         </div>
       </div>
