@@ -3602,6 +3602,7 @@
 
     try {
       // tenta RPC
+      let ap_inserted = null;
       try {
         const { error } = await db.rpc('registrar_aplicacao', {
           paciente_id, vacina_id, vacina_text: v.nome, lote: v.lote||null,
@@ -3621,8 +3622,9 @@
           prof_cnes_vinculo: prof_cnes_vinculo||null,
           local_aplicacao: local_aplicacao||null
         };
-        const { data: ap_inserted, error: e1 } = await db.from('aplicacoes').insert([payload_ap]).select().single();
+        const { data: ap_data, error: e1 } = await db.from('aplicacoes').insert([payload_ap]).select().single();
         if (e1) throw e1;
+        ap_inserted = ap_data;
         await registrarAuditoria('INSERT', 'aplicacoes', ap_inserted?.id, null, payload_ap);
         const novoStock = Number(v.stock||0) - quantidade;
         const { error: e2 } = await db.from('vacinas').update({ stock: novoStock }).match({ id: vacina_id });
@@ -7851,7 +7853,7 @@
           <pre id="fhir-json-output" style="background:var(--gray-50,#f8f9fa);border:1px solid var(--gray-200,#e5e7eb);border-radius:8px;padding:16px;font-size:0.72rem;overflow-x:auto;max-height:520px;white-space:pre-wrap;word-break:break-all;font-family:monospace"></pre>
           <div id="rnds-envio-msg" style="margin-top:8px;font-size:0.85rem;font-weight:500;display:none"></div>
           <div id="fhir-aviso" style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.8rem;color:#166534">
-            ✅ Backend RNDS conectado. Clique em "Enviar para RNDS" para transmitir o registro (ambiente de homologação). Certificado ICP-Brasil configurado no servidor.
+            ✅ Backend RNDS conectado. Clique em "Enviar para RNDS" para transmitir o registro (homologação). Certificado ICP-Brasil configurado no servidor.
           </div>
         </div>
       </div>
