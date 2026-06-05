@@ -6120,7 +6120,86 @@
   }
 
   function imprimirRelatorio() {
-    window.print();
+    // Captura dados já renderizados na página
+    const totalEl     = document.getElementById('rel-total');
+    const qtdAplicEl  = document.getElementById('rel-qtd-aplic');
+    const qtdRetirEl  = document.getElementById('rel-qtd-retir');
+    const ticketEl    = document.getElementById('rel-ticket');
+    const deEl        = document.getElementById('rel-de');
+    const ateEl       = document.getElementById('rel-ate');
+    const pagEl       = document.getElementById('rel-pagamento');
+    const tipoEl      = document.getElementById('rel-tipo');
+    const tabelaEl    = document.querySelector('#tabela-relatorio tbody');
+    const pagamentosEl= document.getElementById('rel-por-pagamento');
+
+    if (!totalEl || totalEl.textContent === '—') {
+      toast('Gere o relatório antes de imprimir.', 'warning');
+      return;
+    }
+
+    const periodo = (deEl?.value ? new Date(deEl.value+'T00:00:00').toLocaleDateString('pt-BR') : '?')
+      + ' a ' + (ateEl?.value ? new Date(ateEl.value+'T00:00:00').toLocaleDateString('pt-BR') : '?');
+    const filtPag  = pagEl?.options[pagEl.selectedIndex]?.text || 'Todas';
+    const filtTipo = tipoEl?.options[tipoEl.selectedIndex]?.text || 'Todos';
+    const tabelaHTML = tabelaEl ? tabelaEl.innerHTML : '';
+    const pagamentosHTML = pagamentosEl ? pagamentosEl.innerHTML : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <title>Relatório Previmune</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #111; padding: 20px; }
+    h1 { font-size: 18px; color: #e76b1f; margin-bottom: 4px; }
+    .subtitle { font-size: 12px; color: #555; margin-bottom: 16px; }
+    .kpis { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .kpi { border: 1px solid #e4e4e7; border-radius: 8px; padding: 10px 16px; min-width: 130px; }
+    .kpi-label { font-size: 10px; color: #888; text-transform: uppercase; font-weight: 600; }
+    .kpi-value { font-size: 16px; font-weight: 700; color: #111; margin-top: 2px; }
+    .section-title { font-size: 13px; font-weight: 700; margin: 16px 0 8px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th { background: #f4f4f5; color: #444; font-weight: 600; padding: 7px 8px; text-align: left; border-bottom: 2px solid #e4e4e7; }
+    td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .pagamentos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .pag-card { background: #f4f4f5; border-radius: 8px; padding: 8px 14px; min-width: 120px; font-size: 11px; }
+    .footer { margin-top: 24px; font-size: 10px; color: #aaa; text-align: center; }
+    span[style*="background:#dcfce7"] { background: #dcfce7 !important; color: #166534 !important; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    span[style*="background:#ede9fe"] { background: #ede9fe !important; color: #5b21b6 !important; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+    @media print { body { padding: 10px; } .footer { position: fixed; bottom: 0; width: 100%; } }
+  </style>
+</head>
+<body>
+  <h1>📊 Relatório de Vendas — Previmune</h1>
+  <div class="subtitle">Período: <b>${periodo}</b> &nbsp;|&nbsp; Pagamento: <b>${filtPag}</b> &nbsp;|&nbsp; Tipo: <b>${filtTipo}</b></div>
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">💰 Total Faturado</div><div class="kpi-value">${totalEl.textContent}</div></div>
+    <div class="kpi"><div class="kpi-label">💉 Aplicações</div><div class="kpi-value">${qtdAplicEl?.textContent || '—'}</div></div>
+    <div class="kpi"><div class="kpi-label">📤 Retiradas</div><div class="kpi-value">${qtdRetirEl?.textContent || '—'}</div></div>
+    <div class="kpi"><div class="kpi-label">🎯 Ticket Médio</div><div class="kpi-value">${ticketEl?.textContent || '—'}</div></div>
+  </div>
+  <div class="section-title">Por Forma de Pagamento</div>
+  <div class="pagamentos">${pagamentosHTML}</div>
+  <div class="section-title">Detalhamento das Transações</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th><th>Tipo</th><th>Paciente/Pessoa</th><th>Vacina</th><th>Qtd</th><th>Pagamento</th><th style="text-align:right">Valor</th>
+      </tr>
+    </thead>
+    <tbody>${tabelaHTML}</tbody>
+  </table>
+  <div class="footer">Gerado em ${new Date().toLocaleString('pt-BR')} — Previmune Sistema de Vacinação</div>
+  <script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { toast('Permita pop-ups para imprimir.', 'warning'); return; }
+    win.document.write(html);
+    win.document.close();
   }
 
 
