@@ -1656,7 +1656,12 @@
           <div style="display:flex;gap:8px;align-items:center">
             <div class="search-wrap">
               <span class="icon-search">🔍</span>
-              <input class="form-control" style="width:220px" id="searchAplic" placeholder="Buscar por vacina/paciente" oninput="renderAplicacoes()">
+              <input class="form-control" style="width:180px" id="searchAplic" placeholder="Buscar por vacina/paciente" oninput="renderAplicacoes()">
+              <input class="form-control" type="date" id="filtroAplicDe" style="width:140px" title="De" onchange="renderAplicacoes()">
+              <input class="form-control" type="date" id="filtroAplicAte" style="width:140px" title="Até" onchange="renderAplicacoes()">
+              <input class="form-control" style="width:140px" id="filtroAplicLote" placeholder="Lote..." oninput="renderAplicacoes()">
+              <button class="btn btn-ghost btn-sm" onclick="limparFiltrosAplic()" title="Limpar filtros">✕</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportarRelatorioAplicacoes()" title="Exportar CSV" style="color:#059669;border-color:#a7f3d0">📊 CSV</button>
             </div>
             <button class="btn btn-primary" onclick="navTo('nova-aplicacao')">➕ Nova</button>
           </div>
@@ -1878,6 +1883,16 @@
             <div class="form-group">
               <label class="form-label">Nota Fiscal</label>
               <input class="form-control" id="novo_vacina_nf" placeholder="Ex: NF-2024-001">
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Código MS (RNDS) <span title="Código do imunobiológico no PNI/RNDS" style="cursor:help">ℹ️</span></label>
+                <input class="form-control" id="novo_vacina_codigo_ms" placeholder="Ex: 98, 86, 88...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fabricante PNI (RNDS) <span title="Código BRFabricantePNI" style="cursor:help">ℹ️</span></label>
+                <input class="form-control" id="novo_vacina_fabricante_pni" placeholder="Ex: 30587">
+              </div>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
               <button class="btn btn-ghost" onclick="navTo('estoque')">Cancelar</button>
@@ -2439,6 +2454,14 @@
           <label class="form-label">Data de Entrada</label>
           <input class="form-control" type="date" id="edit_vacina_entrada">
         </div>
+        <div class="form-group">
+          <label class="form-label">Código MS (RNDS) <span title="Código BRImunobiologico PNI" style="cursor:help">ℹ️</span></label>
+          <input class="form-control" id="edit_vacina_codigo_ms" placeholder="Ex: 98, 86, 88...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fabricante PNI (RNDS) <span title="Código BRFabricantePNI" style="cursor:help">ℹ️</span></label>
+          <input class="form-control" id="edit_vacina_fabricante_pni" placeholder="Ex: 30587">
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -2952,20 +2975,20 @@
 
   // ===== RNDS / FHIR =====
 
-  /**
-   * Gera o Bundle FHIR R4 de Imunização conforme o modelo RNDS (RIA).
-   * Referência: https://rnds-guia.saude.gov.br/docs/ria/ria-perfil
-   */
+  // ============================================================
+  //  gerarPayloadFHIR — VERSÃO CORRIGIDA RNDS RIA v2 (Jun/2026)
+  //  Compatível com: RIA-R (Rotina) e RIA-C (Campanha)
+  //  Manual de referência: DATASUS COINP v1.9
+  //  Identificador Solicitante: 60615 | CNES: 6841201
+  // ============================================================
   function gerarPayloadFHIR(ap) {
     if (!ap) return null;
 
-    const now = new Date().toISOString();
-    const dataAplic = ap.data || new Date().toISOString().slice(0, 10);
+    const now       = new Date().toISOString();
+    const dataAplic = ap.data_aplicacao || ap.data || new Date().toISOString().slice(0, 10);
+    const soNum     = s => (s || '').replace(/\D/g, '');
 
-    // ── helper: limpa formatação de documentos ──
-    const soNum = s => (s || '').replace(/\D/g, '');
-
-    // ── UUIDs locais (geração simples sem dependência) ──
+    // ── UUIDs ──
     function uuid() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
         const r = Math.random() * 16 | 0;
@@ -2973,147 +2996,202 @@
       });
     }
 
-    const immId   = uuid();
-    const patId   = uuid();
-    const pracId  = uuid();
-    const orgId   = uuid();
-    const bundleId = uuid();
+    // ── Detecta se é Campanha ou Rotina pelo código MS da vacina ──
+    // Vacinas de campanha RNDS: COVID-19 (85,87,88,89,90), Influenza (81,86), Mpox (91)
+    const VACINAS_CAMPANHA = new Set(['81','85','86','87','88','89','90','91']);
+    const codigoMS = String(ap.vacina_codigo_ms || '').trim();
+    const ehCampanha = VACINAS_CAMPANHA.has(codigoMS);
 
-    // ── Mapa de imunobiológico → código SNOMED / FHIR (PNI) ──
-    // O sistema ideal usa o código MS (Código do Imunobiológico do PNI).
-    // Se não disponível, usamos o nome como display e código genérico.
-    const codigoImuno = ap.vacina_codigo_ms
-      ? { system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico', code: ap.vacina_codigo_ms, display: ap.vacina_imuno || ap.vacina }
-      : { system: 'http://snomed.info/sct', code: '787859002', display: ap.vacina_imuno || ap.vacina };
+    // ── Perfis conforme tipo ──
+    const PROFILE_COMPOSITION = ehCampanha
+      ? 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroImunobiologicoAdministradoCampanha-2.0'
+      : 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroImunobiologicoAdministradoRotina-2.0';
 
-    // ── Local de aplicação → código FHIR ──
-    const localMap = {
-      'Braço Direito - Deltóide':    { code: '368209003', display: 'Braço Direito — Deltóide' },
-      'Braço Esquerdo - Deltóide':   { code: '368208006', display: 'Braço Esquerdo — Deltóide' },
-      'Coxa Direita':                { code: '11207009',  display: 'Coxa Direita' },
-      'Coxa Esquerda':               { code: '61396006',  display: 'Coxa Esquerda' },
-      'Glúteo Direito':              { code: '207002',    display: 'Glúteo Direito' },
-      'Glúteo Esquerdo':             { code: '287182009', display: 'Glúteo Esquerdo' },
-      'Subcutâneo - Braço Direito':  { code: '368209003', display: 'Subcutâneo — Braço Direito' },
-      'Subcutâneo - Braço Esquerdo': { code: '368208006', display: 'Subcutâneo — Braço Esquerdo' },
-      'Intradérmico - Antebraço':    { code: '13136005',  display: 'Intradérmico — Antebraço' },
-      'Oral':                        { code: '26643006',  display: 'Via Oral' },
-      'Nasal':                       { code: '46862004',  display: 'Via Nasal' },
+    const PROFILE_IMMUNIZATION = ehCampanha
+      ? 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRImunobiologicoAdministradoCampanha-2.0'
+      : 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRImunobiologicoAdministrado-3.0';
+
+    const TITLE_COMPOSITION = ehCampanha
+      ? 'Registro de Imunobiologico Administrado na Campanha'
+      : 'Registro de Imunobiologico Administrado na Rotina';
+
+    // ── Mapa: local de aplicação → código RNDS BRLocalAplicacao ──
+    const localMapRNDS = {
+      'Braço Direito - Deltóide':    '1',
+      'Braço Esquerdo - Deltóide':   '2',
+      'Coxa Direita':                '3',
+      'Coxa Esquerda':               '4',
+      'Glúteo Direito':              '5',
+      'Glúteo Esquerdo':             '6',
+      'Subcutâneo - Braço Direito':  '1',
+      'Subcutâneo - Braço Esquerdo': '2',
+      'Intradérmico - Antebraço':    '7',
+      'Oral':                        '0',
+      'Nasal':                       '0',
     };
-    const localInfo = localMap[ap.local_aplicacao] || { code: '1255663005', display: ap.local_aplicacao || 'Não informado' };
+    const codLocal = localMapRNDS[ap.local_aplicacao] || '0';
 
-    // ── Dose ──
+    // ── Mapa: via de administração → código RNDS BRViaAdministracao ──
+    const viaMap = {
+      'Intramuscular': 'IM',
+      'Subcutânea':    'SC',
+      'Subcutaneo':    'SC',
+      'Intradérmica':  'ID',
+      'Oral':          'VO',
+      'Nasal':         'IN',
+      'Intravenosa':   'IV',
+    };
+    const codVia = viaMap[ap.via_administracao] || 'IM';
+
+    // ── Mapa: dose ──
     const doseMap = {
       '1ª Dose': '1', '2ª Dose': '2', '3ª Dose': '3',
-      '4ª Dose': '4', 'Dose Única': '1', 'Reforço': 'B',
-      '1º Reforço': 'R1', '2º Reforço': 'R2',
+      '4ª Dose': '4', '5ª Dose': '5',
+      'Dose Única': '1',
+      'Reforço': 'R', '1º Reforço': 'R1', '2º Reforço': 'R2',
     };
-    const doseSeq = doseMap[ap.dose] || ap.dose || '1';
+    // Sanitiza dose: tenta mapa, depois extrai número puro do texto livre
+    const _doseRaw = (ap.dose || '').trim();
+    const _doseNum = _doseRaw.match(/^(\d+)/)?.[1];
+    const doseSeq = doseMap[_doseRaw] || (_doseNum ? _doseNum : '1');
 
-    // ── Patient resource ──
-    const patient = {
-      resourceType: 'Patient',
-      id: patId,
-      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0'] },
-      identifier: [],
-      name: [{ use: 'official', text: ap.paciente_nome }],
-      birthDate: ap.paciente_nascimento || undefined,
-      gender: ap.paciente_sexo === 'Masculino' ? 'male' : ap.paciente_sexo === 'Feminino' ? 'female' : 'unknown',
-    };
+    // ── Grupo de atendimento ──
+    const codGrupo = ap.grupo_atendimento_codigo || '000703';
 
+    // ── Condição maternal ──
+    // 1=Não se aplica, 2=Gestante, 3=Puérpera
+    const codMaternal = ap.condicao_maternal_codigo || '1';
+
+    // ── Identificadores do paciente ──
     const cpfPac = soNum(ap.paciente_cpf);
-    if (cpfPac) patient.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCPF', value: cpfPac });
     const cnsPac = soNum(ap.paciente_cns);
-    if (cnsPac) patient.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCNS', value: cnsPac });
-    if (ap.paciente_nome_mae) {
-      patient.extension = [{
-        url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRNomeMae-1.0',
-        valueString: ap.paciente_nome_mae
-      }];
-    }
 
-    // ── Practitioner resource (profissional aplicador) ──
-    const practitioner = {
-      resourceType: 'Practitioner',
-      id: pracId,
-      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRProfissional-1.0'] },
-      identifier: [],
-      name: [{ use: 'official', text: ap.profissional }],
-      qualification: ap.prof_cbo ? [{
-        code: {
-          coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCBO', code: ap.prof_cbo, display: ap.prof_cbo }]
-        }
-      }] : undefined
-    };
-    const cpfProf = soNum(ap.prof_cpf);
-    if (cpfProf) practitioner.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCPF', value: cpfProf });
+    // Subject na Composition e Patient na Immunization
+    const subjectIdentifier = cnsPac
+      ? { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cpf', value: cpfPac };
+
+    const patientIdentifier = cnsPac
+      ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cpfPac };
+
+    // ── CNS do profissional ──
     const cnsProf = soNum(ap.prof_cns);
-    if (cnsProf) practitioner.identifier.push({ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCNS', value: cnsProf });
 
-    // ── Organization (estabelecimento) ──
-    const organization = {
-      resourceType: 'Organization',
-      id: orgId,
-      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstabelecimentoSaude-1.0'] },
-      identifier: ap.prof_cnes_vinculo ? [{
-        system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BREstabelecimentoSaude',
-        value: ap.prof_cnes_vinculo
-      }] : []
-    };
+    // ── CNES do estabelecimento ──
+    const cnesEstab = ap.prof_cnes_vinculo || '6841201';
+
+    // ── Fabricante PNI ──
+    const codFabricante = ap.fabricante_codigo_pni || ap.fabricante_pni || ap.vacina_fabricante_pni || null;
+
+    // ── Extensions obrigatórias da Immunization ──
+    const extensions = [
+      {
+        url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRGrupoAtendimento',
+        valueCodeableConcept: {
+          coding: [{
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRGrupoAtendimento',
+            code: codGrupo
+          }]
+        }
+      },
+      {
+        url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRCondicaoMaternal',
+        valueCodeableConcept: {
+          coding: [{
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCondicaoMaternal',
+            code: codMaternal
+          }]
+        }
+      }
+    ];
 
     // ── Immunization resource ──
     const immunization = {
       resourceType: 'Immunization',
-      id: immId,
-      meta: { profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRImunizacao-1.0'] },
+      id: 'transient-1',
+      meta: { profile: [PROFILE_IMMUNIZATION] },
+      extension: extensions,
       status: 'completed',
       vaccineCode: {
-        coding: [codigoImuno]
-      },
-      patient: { reference: 'Patient/' + patId },
-      occurrenceDateTime: dataAplic,
-      primarySource: true,
-      lotNumber: ap.lote || undefined,
-      expirationDate: ap.validade || undefined,
-      site: {
         coding: [{
-          system: 'http://snomed.info/sct',
-          code: localInfo.code,
-          display: localInfo.display
+          system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico',
+          code: codigoMS
         }]
       },
+      patient: { identifier: patientIdentifier },
+      occurrenceDateTime: dataAplic,
+      ...(ehCampanha ? {} : { primarySource: true }),
+      ...(codFabricante ? {
+        manufacturer: {
+          identifier: {
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRFabricantePNI',
+            value: codFabricante
+          }
+        }
+      } : {}),
+      ...(ap.lote ? { lotNumber: ap.lote } : {}),
+      ...(ap.validade ? { expirationDate: ap.validade } : {}),
+      ...(!ehCampanha ? {
+        site: {
+          coding: [{
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRLocalAplicacao',
+            code: codLocal
+          }]
+        },
+        route: {
+          coding: [{
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRViaAdministracao',
+            code: codVia
+          }]
+        }
+      } : {}),
       performer: [{
-        function: {
-          coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v2-0443', code: 'AP', display: 'Administering Provider' }]
-        },
-        actor: { reference: 'Practitioner/' + pracId }
-      }, {
-        function: {
-          coding: [{ system: 'http://terminology.hl7.org/CodeSystem/v2-0443', code: 'OP', display: 'Ordering Provider' }]
-        },
-        actor: { reference: 'Organization/' + orgId }
+        actor: { reference: 'Practitioner/' + cnsProf }
       }],
-      protocolApplied: [{
-        targetDisease: [{ coding: [codigoImuno] }],
-        doseNumberString: doseSeq
+      protocolApplied: [{ doseNumberString: doseSeq }]
+    };
+
+    // ── Composition ──
+    const composition = {
+      resourceType: 'Composition',
+      id: 'transient-0',
+      meta: { profile: [PROFILE_COMPOSITION] },
+      status: 'final',
+      type: {
+        coding: [{
+          system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRTipoDocumento',
+          code: 'RIA'
+        }]
+      },
+      subject: { identifier: subjectIdentifier },
+      date: now,
+      author: [{
+        identifier: {
+          system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstabelecimentoSaude-1.0',
+          value: cnesEstab
+        }
+      }],
+      title: TITLE_COMPOSITION,
+      section: [{
+        entry: [{ reference: 'urn:uuid:transient-1' }]
       }]
     };
 
     // ── Bundle ──
+    const bundleId = uuid();
     const bundle = {
       resourceType: 'Bundle',
-      id: bundleId,
-      meta: {
-        lastUpdated: now,
-        profile: ['http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroImunobiologicoAdministrado-1.0']
+      meta: { lastUpdated: now },
+      identifier: {
+        system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/BRRNDS-60615',
+        value: bundleId
       },
       type: 'document',
       timestamp: now,
       entry: [
-        { fullUrl: 'urn:uuid:' + patId,   resource: patient },
-        { fullUrl: 'urn:uuid:' + pracId,  resource: practitioner },
-        { fullUrl: 'urn:uuid:' + orgId,   resource: organization },
-        { fullUrl: 'urn:uuid:' + immId,   resource: immunization }
+        { fullUrl: 'urn:uuid:transient-0', resource: composition },
+        { fullUrl: 'urn:uuid:transient-1', resource: immunization }
       ]
     };
 
@@ -3441,12 +3519,14 @@
     const fornecedor = document.getElementById('novo_vacina_fornecedor').value.trim();
     const nota_fiscal = document.getElementById('novo_vacina_nf').value.trim();
     const data_entrada = document.getElementById('novo_vacina_entrada').value;
+    const codigo_ms = document.getElementById('novo_vacina_codigo_ms').value.trim();
+    const fabricante_pni = document.getElementById('novo_vacina_fabricante_pni').value.trim();
     if (!nome) { toast('Informe o nome da vacina.', 'warning'); return; }
     try {
-      const { error } = await db.from('vacinas').insert([{ nome, lote, validade: validade||null, stock, preco: preco||null, fornecedor: fornecedor||null, nota_fiscal: nota_fiscal||null, data_entrada: data_entrada||null }]);
+      const { error } = await db.from('vacinas').insert([{ nome, lote, validade: validade||null, stock, preco: preco||null, fornecedor: fornecedor||null, nota_fiscal: nota_fiscal||null, data_entrada: data_entrada||null, codigo_ms: codigo_ms||null, fabricante_pni: fabricante_pni||null }]);
       if (error) throw error;
       toast('Vacina adicionada ao estoque!', 'success');
-      ['novo_vacina_nome','novo_vacina_lote','novo_vacina_validade','novo_vacina_preco','novo_vacina_fornecedor','novo_vacina_nf','novo_vacina_entrada'].forEach(id => document.getElementById(id).value = '');
+      ['novo_vacina_nome','novo_vacina_lote','novo_vacina_validade','novo_vacina_preco','novo_vacina_fornecedor','novo_vacina_nf','novo_vacina_entrada','novo_vacina_codigo_ms','novo_vacina_fabricante_pni'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('novo_vacina_stock').value = 0;
       await fetchVacinas();
       navTo('estoque');
@@ -3465,6 +3545,8 @@
     document.getElementById('edit_vacina_fornecedor').value = v.fornecedor || '';
     document.getElementById('edit_vacina_nf').value = v.nota_fiscal || '';
     document.getElementById('edit_vacina_entrada').value = v.data_entrada || '';
+    document.getElementById('edit_vacina_codigo_ms').value = v.codigo_ms || '';
+    document.getElementById('edit_vacina_fabricante_pni').value = v.fabricante_pni || '';
     document.getElementById('modal-editar-vacina').classList.add('open');
   }
 
@@ -3482,9 +3564,11 @@
     const fornecedor = document.getElementById('edit_vacina_fornecedor').value.trim();
     const nota_fiscal = document.getElementById('edit_vacina_nf').value.trim();
     const data_entrada = document.getElementById('edit_vacina_entrada').value;
+    const codigo_ms = document.getElementById('edit_vacina_codigo_ms').value.trim();
+    const fabricante_pni = document.getElementById('edit_vacina_fabricante_pni').value.trim();
     if (!nome) { toast('Informe o nome.', 'warning'); return; }
     try {
-      const { error } = await db.from('vacinas').update({ nome, lote, validade: validade||null, stock, preco: preco||null, fornecedor: fornecedor||null, nota_fiscal: nota_fiscal||null, data_entrada: data_entrada||null }).match({ id: Number(id) });
+      const { error } = await db.from('vacinas').update({ nome, lote, validade: validade||null, stock, preco: preco||null, fornecedor: fornecedor||null, nota_fiscal: nota_fiscal||null, data_entrada: data_entrada||null, codigo_ms: codigo_ms||null, fabricante_pni: fabricante_pni||null }).match({ id: Number(id) });
       if (error) throw error;
       toast('Vacina atualizada!', 'success');
       fecharModalEditarVacina();
@@ -3526,12 +3610,18 @@
   function renderAplicacoes() {
     const tbody = document.querySelector('#tabela-aplicacoes tbody');
     const q = (document.getElementById('searchAplic')?.value || '').toLowerCase().trim();
+    const filtDe   = document.getElementById('filtroAplicDe')?.value  || '';
+    const filtAte  = document.getElementById('filtroAplicAte')?.value || '';
+    const filtLote = (document.getElementById('filtroAplicLote')?.value || '').toLowerCase().trim();
     const list = aplicacoes.filter(a => {
-      if (!q) return true;
       const p = findPaciente(a.paciente_id);
-      return (a.vacina_text||a.vacina||'').toLowerCase().includes(q)
+      const matchQ = !q || (a.vacina_text||a.vacina||'').toLowerCase().includes(q)
           || (p && (p.nome||'').toLowerCase().includes(q))
           || (a.lote||'').toLowerCase().includes(q);
+      const matchDe  = !filtDe  || (a.data_aplicacao && a.data_aplicacao >= filtDe);
+      const matchAte = !filtAte || (a.data_aplicacao && a.data_aplicacao <= filtAte);
+      const matchLote = !filtLote || (a.lote||'').toLowerCase().includes(filtLote);
+      return matchQ && matchDe && matchAte && matchLote;
     });
     if (!list.length) {
       tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">💉</div><p>Nenhuma aplicação encontrada</p></div></td></tr>`;
@@ -3561,6 +3651,7 @@
           <div class="actions">
             <button class="btn btn-ghost btn-sm" onclick="verAplicacao(${a.id})" title="Ver detalhes">👁️</button>
             <button class="btn btn-ghost btn-sm" onclick="reabrirAplicacao(${a.id})" title="Imprimir etiqueta / ficha / Ver FHIR" style="color:#7c3aed;border-color:#ddd6fe">🖨️</button>
+            <button class="btn btn-ghost btn-sm" onclick="imprimirCIVPporAplicacao(${a.id})" title="Imprimir CIVP" style="color:#059669;border-color:#a7f3d0">📋</button>
             ${btnPag}
             ${a.local_aplicacao === 'Aplicação Domiciliar' ? `<button class="btn btn-ghost btn-sm" onclick="comprovanteCasa(${a.id})" title="Comprovante Aplicação em Casa" style="color:#0369a1;border-color:#bae6fd">🏠</button>` : ''}
             <button class="btn btn-ghost btn-sm" onclick="editarAplicacao(${a.id})" title="Editar aplicação" style="color:#7c3aed;border-color:#ddd6fe">✏️</button>
@@ -3569,6 +3660,62 @@
         </td>
       </tr>`;
     }).join('');
+  }
+
+  function limparFiltrosAplic() {
+    ['searchAplic','filtroAplicDe','filtroAplicAte','filtroAplicLote'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    renderAplicacoes();
+  }
+
+  function exportarRelatorioAplicacoes() {
+    const q         = (document.getElementById('searchAplic')?.value    || '').toLowerCase().trim();
+    const filtDe    = document.getElementById('filtroAplicDe')?.value   || '';
+    const filtAte   = document.getElementById('filtroAplicAte')?.value  || '';
+    const filtLote  = (document.getElementById('filtroAplicLote')?.value || '').toLowerCase().trim();
+
+    const list = aplicacoes.filter(a => {
+      const p = findPaciente(a.paciente_id);
+      const matchQ    = !q || (a.vacina_text||a.vacina||'').toLowerCase().includes(q)
+                          || (p && (p.nome||'').toLowerCase().includes(q))
+                          || (a.lote||'').toLowerCase().includes(q);
+      const matchDe   = !filtDe   || (a.data_aplicacao && a.data_aplicacao >= filtDe);
+      const matchAte  = !filtAte  || (a.data_aplicacao && a.data_aplicacao <= filtAte);
+      const matchLote = !filtLote || (a.lote||'').toLowerCase().includes(filtLote);
+      return matchQ && matchDe && matchAte && matchLote;
+    });
+
+    if (!list.length) { toast('Nenhum registro para exportar.', 'warning'); return; }
+
+    const header = ['Data','Paciente','CPF','Vacina','Lote','Dose','Qtd','Valor','Pagamento','Profissional'];
+    const rows = list.map(a => {
+      const p = findPaciente(a.paciente_id);
+      const dt = a.data_aplicacao ? new Date(a.data_aplicacao+'T00:00:00').toLocaleDateString('pt-BR') : '';
+      return [
+        dt,
+        p ? p.nome : '',
+        p ? (p.cpf||'') : '',
+        a.vacina_text||a.vacina||'',
+        a.lote||'',
+        a.dose||'',
+        a.quantidade||1,
+        a.valor ? Number(a.valor).toFixed(2).replace('.',',') : '',
+        a.forma_pagamento||'',
+        a.profissional||a.aplicador||''
+      ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(';');
+    });
+
+    const csv = '\uFEFF' + header.map(h => `"${h}"`).join(';') + '\n' + rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const de   = filtDe  ? filtDe.replace(/-/g,'')  : 'inicio';
+    const ate  = filtAte ? filtAte.replace(/-/g,'') : 'hoje';
+    a.href = url; a.download = `aplicacoes_${de}_${ate}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    toast(`${list.length} registros exportados!`, 'success');
   }
 
   async function registrarAplicacao() {
@@ -3660,8 +3807,9 @@
         prof_cpf:          prof_cpf         || '',
         prof_cbo:          prof_cbo         || '',
         prof_cnes_vinculo: prof_cnes_vinculo|| '',
-        vacina_codigo_ms:  v.codigo_ms      || '',
-        vacina_imuno:      v.imuno          || v.nome || ''
+        vacina_codigo_ms:      v.codigo_ms      || '',
+        vacina_imuno:         v.imuno          || v.nome || '',
+        vacina_fabricante_pni: v.fabricante_pni  || ''
       };
       const btnImpr = document.getElementById('btn-imprimir-etiqueta');
       if (btnImpr) btnImpr.style.display = 'inline-flex';
@@ -4678,6 +4826,19 @@
       if (error) console.error('Erro CIVP:', error);
       else await fetchCIVP();
     } catch(e) { console.error('gerarCIVP:', e); }
+  }
+
+  // Chamado direto da linha de aplicações — busca CIVP existente ou gera na hora
+  async function imprimirCIVPporAplicacao(aplicacaoId) {
+    // Tenta achar CIVP já gerado para essa aplicação
+    let c = civpRegistros.find(x => Number(x.aplicacao_id) === Number(aplicacaoId));
+    if (!c) {
+      // Não tem CIVP ainda — gera agora
+      await gerarCIVP(aplicacaoId);
+      c = civpRegistros.find(x => Number(x.aplicacao_id) === Number(aplicacaoId));
+    }
+    if (!c) { toast('Não foi possível gerar o CIVP.', 'error'); return; }
+    imprimirCIVP(c.id);
   }
 
   function imprimirCIVP(id) {
