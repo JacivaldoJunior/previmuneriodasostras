@@ -3243,10 +3243,17 @@
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
     if (msg) { msg.style.display = 'none'; }
     try {
+      // CNS do profissional vem do payload FHIR já gerado
+      const cnsProf = fhirJsonAtual?._cns_profissional || '';
+      const payloadParaEnviar = { ...fhirJsonAtual };
+      delete payloadParaEnviar._cns_profissional; // remove campo interno antes de enviar
       const resp = await fetch('https://previmune-rnds-backend-production.up.railway.app/api/enviar-vacinacao', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fhirJsonAtual)
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CNS-Profissional': cnsProf
+        },
+        body: JSON.stringify({ bundle: payloadParaEnviar, cns_profissional: cnsProf })
       });
       const data = await resp.json();
       if (resp.ok || resp.status === 200 || resp.status === 201) {
