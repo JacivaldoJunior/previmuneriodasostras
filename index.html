@@ -3067,9 +3067,10 @@
     const cnsPac = soNum(ap.paciente_cns);
 
     // Subject na Composition e Patient na Immunization
+    // Subject usa BRIndividuo-1.0 conforme manual RIA-R v1.9 (página 28)
     const subjectIdentifier = cnsPac
-      ? { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns', value: cnsPac }
-      : { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cpf', value: cpfPac };
+      ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cpfPac };
 
     const patientIdentifier = cnsPac
       ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
@@ -3084,7 +3085,7 @@
     // ── Fabricante PNI ──
     const codFabricante = ap.fabricante_codigo_pni || ap.fabricante_pni || ap.vacina_fabricante_pni || null;
 
-    // ── Extensions obrigatórias da Immunization ──
+    // ── Extensions obrigatórias da Immunization (manual RIA-R v1.9) ──
     const extensions = [
       {
         url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRGrupoAtendimento',
@@ -3103,6 +3104,11 @@
             code: codMaternal
           }]
         }
+      },
+      {
+        // BRContatoHanseniase — obrigatório conforme manual v1.9
+        url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRContatoHanseniase',
+        valueBoolean: false
       }
     ];
 
@@ -3149,7 +3155,19 @@
       performer: [{
         actor: { reference: 'Practitioner/' + cnsProf }
       }],
-      protocolApplied: [{ doseNumberString: doseSeq }]
+      protocolApplied: [{
+        extension: [{
+          // BREstrategiaVacinacao — obrigatório conforme manual v1.9
+          url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstrategiaVacinacao-1.0',
+          valueCodeableConcept: {
+            coding: [{
+              system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BREstrategiaVacinacao',
+              code: '1' // 1 = Rotina
+            }]
+          }
+        }],
+        doseNumberString: doseSeq
+      }]
     };
 
     // ── Composition ──
