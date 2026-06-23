@@ -3131,7 +3131,7 @@
       ...(codFabricante ? {
         manufacturer: {
           identifier: {
-            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRFabricantePNI',
+            system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/BRFabricantePNI',
             value: codFabricante
           }
         }
@@ -3153,6 +3153,12 @@
         }
       } : {}),
       performer: [{
+        function: {
+          coding: [{
+            system: 'http://terminology.hl7.org/CodeSystem/v2-0443',
+            code: 'AP'
+          }]
+        },
         actor: {
           identifier: {
             system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns',
@@ -3170,6 +3176,12 @@
               code: '1' // 1 = Rotina
             }]
           }
+        }],
+        targetDisease: [{
+          coding: [{
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCID10',
+            code: 'Z27.8'
+          }]
         }],
         doseNumberString: doseSeq
       }]
