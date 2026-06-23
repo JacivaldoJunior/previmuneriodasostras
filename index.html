@@ -3263,20 +3263,25 @@
 
   async function enviarParaRNDS() {
     if (!fhirJsonAtual) { toast('Gere o payload FHIR primeiro.', 'warning'); return; }
+
+    // CNS do profissional vem do payload FHIR gerado
+    const cnsProf = fhirJsonAtual?._cns_profissional || '';
+    if (!cnsProf) {
+      toast('⚠️ CNS do profissional não encontrado. Verifique o cadastro.', 'warning');
+      return;
+    }
+
     const btn = document.getElementById('btn-enviar-rnds');
     const msg = document.getElementById('rnds-envio-msg');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
     if (msg) { msg.style.display = 'none'; }
     try {
-      // CNS do profissional vem do payload FHIR já gerado
-      const cnsProf = fhirJsonAtual?._cns_profissional || '';
       const payloadParaEnviar = { ...fhirJsonAtual };
       delete payloadParaEnviar._cns_profissional; // remove campo interno antes de enviar
       const resp = await fetch('https://previmune-rnds-backend-production.up.railway.app/api/enviar-vacinacao', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-CNS-Profissional': cnsProf
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ bundle: payloadParaEnviar, cns_profissional: cnsProf })
       });
@@ -8122,10 +8127,11 @@
             <button id="btn-enviar-rnds" class="btn btn-sm" style="background:var(--green,#22c55e);color:#fff;border:none;cursor:pointer" onclick="enviarParaRNDS()">🚀 Enviar para RNDS</button>
             <div id="fhir-copy-msg" style="font-size:0.8rem;color:var(--green);align-self:center;display:none">✅ Copiado!</div>
           </div>
+
           <pre id="fhir-json-output" style="background:var(--gray-50,#f8f9fa);border:1px solid var(--gray-200,#e5e7eb);border-radius:8px;padding:16px;font-size:0.72rem;overflow-x:auto;max-height:520px;white-space:pre-wrap;word-break:break-all;font-family:monospace"></pre>
           <div id="rnds-envio-msg" style="margin-top:8px;font-size:0.85rem;font-weight:500;display:none"></div>
           <div id="fhir-aviso" style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.8rem;color:#166534">
-            ✅ Backend RNDS conectado. Clique em "Enviar para RNDS" para transmitir o registro (homologação). Certificado ICP-Brasil configurado no servidor.
+            ✅ Backend RNDS conectado. Clique em "Enviar para RNDS" para transmitir o registro. Certificado ICP-Brasil configurado no servidor.
           </div>
         </div>
       </div>
