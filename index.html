@@ -3033,15 +3033,15 @@
 
     // ── Mapa: via de administração → código RNDS BRViaAdministracao ──
     const viaMap = {
-      'Intramuscular': 'IM',
-      'Subcutânea':    'SC',
-      'Subcutaneo':    'SC',
-      'Intradérmica':  'ID',
-      'Oral':          'VO',
-      'Nasal':         'IN',
-      'Intravenosa':   'IV',
+      'Intramuscular': '4',
+      'Subcutânea':    '5',
+      'Subcutaneo':    '5',
+      'Intradérmica':  '3',
+      'Oral':          '6',
+      'Nasal':         '9',
+      'Intravenosa':   '7',
     };
-    const codVia = viaMap[ap.via_administracao] || 'IM';
+    const codVia = viaMap[ap.via_administracao] || '4';
 
     // ── Mapa: dose ──
     const doseMap = {
@@ -3069,12 +3069,12 @@
     // Subject na Composition e Patient na Immunization
     // Subject usa BRIndividuo-1.0 conforme manual RIA-R v1.9 (página 28)
     const subjectIdentifier = cnsPac
-      ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
-      : { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cpfPac };
+      ? { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cpf', value: cpfPac };
 
     const patientIdentifier = cnsPac
-      ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
-      : { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cpfPac };
+      ? { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cpf', value: cpfPac };
 
     // ── CNS do profissional ──
     const cnsProf = soNum(ap.prof_cns);
@@ -3153,7 +3153,12 @@
         }
       } : {}),
       performer: [{
-        actor: { reference: 'Practitioner/' + cnsProf }
+        actor: {
+          identifier: {
+            system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns',
+            value: cnsProf
+          }
+        }
       }],
       protocolApplied: [{
         extension: [{
@@ -3186,7 +3191,7 @@
       date: now,
       author: [{
         identifier: {
-          system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstabelecimentoSaude-1.0',
+          system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cnes',
           value: cnesEstab
         }
       }],
@@ -3213,8 +3218,10 @@
       ]
     };
 
-    // Remove campos undefined para JSON limpo
-    return JSON.parse(JSON.stringify(bundle));
+    // Injeta CNS do profissional como campo interno (removido antes do envio RNDS)
+    const resultado = JSON.parse(JSON.stringify(bundle));
+    resultado._cns_profissional = cnsProf || '';
+    return resultado;
   }
 
   let fhirJsonAtual = null;
