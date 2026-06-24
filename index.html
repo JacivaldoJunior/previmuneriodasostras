@@ -3069,12 +3069,12 @@
     // Subject na Composition e Patient na Immunization
     // Subject usa BRIndividuo-1.0 conforme manual RIA-R v1.9 (página 28)
     const subjectIdentifier = cnsPac
-      ? { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns', value: cnsPac }
-      : { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cpf', value: cpfPac };
+      ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cpfPac };
 
     const patientIdentifier = cnsPac
-      ? { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns', value: cnsPac }
-      : { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cpf', value: cpfPac };
+      ? { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac }
+      : { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cpfPac };
 
     // ── CNS do profissional ──
     const cnsProf = soNum(ap.prof_cns);
@@ -3131,7 +3131,7 @@
       ...(codFabricante ? {
         manufacturer: {
           identifier: {
-            system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/BRFabricantePNI',
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRFabricantePNI',
             value: codFabricante
           }
         }
@@ -3153,17 +3153,8 @@
         }
       } : {}),
       performer: [{
-        function: {
-          coding: [{
-            system: 'http://terminology.hl7.org/CodeSystem/v2-0443',
-            code: 'AP'
-          }]
-        },
         actor: {
-          identifier: {
-            system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cns',
-            value: cnsProf
-          }
+          reference: 'Practitioner/' + cnsProf
         }
       }],
       protocolApplied: [{
@@ -3203,7 +3194,7 @@
       date: now,
       author: [{
         identifier: {
-          system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/cnes',
+          system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstabelecimentoSaude-1.0',
           value: cnesEstab
         }
       }],
