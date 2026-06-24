@@ -3078,6 +3078,7 @@
 
     // ── CNS do profissional ──
     const cnsProf = soNum(ap.prof_cns);
+    const cboProf = ap.prof_cbo || ap.cbo || '225103'; // CBO do profissional
 
     // ── CNES do estabelecimento ──
     const cnesEstab = ap.prof_cnes_vinculo || '6841201';
@@ -3153,6 +3154,12 @@
         }
       } : {}),
       performer: [{
+        function: {
+          coding: [{
+            system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRCBO',
+            code: cboProf || '225103'
+          }]
+        },
         actor: {
           reference: 'Practitioner/' + cnsProf
         }
