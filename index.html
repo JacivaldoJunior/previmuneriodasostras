@@ -3000,6 +3000,14 @@
     // Vacinas de campanha RNDS: COVID-19 (85,87,88,89,90), Influenza (81,86), Mpox (91)
     const VACINAS_CAMPANHA = new Set(['81','85','86','87','88','89','90','91']);
     const codigoMS = String(ap.vacina_codigo_ms || '').trim();
+
+    // ── Validação preventiva: RNDS rejeita "code" vazio ──
+    if (!codigoMS) {
+      const nomeVac = ap.vacina_text || ap.vacina || ap.vacina_imuno || 'vacina desconhecida';
+      toast(`Código MS (RNDS) não encontrado para "${nomeVac}". Edite o cadastro dessa vacina e preencha o campo "Código MS (RNDS)" antes de gerar/enviar o FHIR.`, 'error');
+      return null;
+    }
+
     const ehCampanha = VACINAS_CAMPANHA.has(codigoMS);
 
     // ── Perfis conforme tipo ──
@@ -3900,13 +3908,16 @@
     const a = aplicacoes.find(x => Number(x.id) === Number(id));
     if (!a) { toast('Aplicação não encontrada.', 'warning'); return; }
     const p = findPaciente(a.paciente_id);
+    // Busca a vacina atual pelo vacina_id para sempre pegar o Código MS/Fabricante PNI mais recente do cadastro
+    const vAtual = findVacina(a.vacina_id) || {};
 
     // Montar objeto no mesmo formato de ultimaAplicacao para reuso do gerarPayloadFHIR
     const aplicObj = {
       id:                 a.id,
       vacina:             a.vacina_text || a.vacina || '',
       vacina_text:        a.vacina_text || a.vacina || '',
-      vacina_codigo_ms:   a.vacina_codigo_ms || '',
+      vacina_codigo_ms:   vAtual.codigo_ms || a.vacina_codigo_ms || '',
+      vacina_fabricante_pni: vAtual.fabricante_pni || a.vacina_fabricante_pni || '',
       vacina_imuno:       a.vacina_imuno || '',
       lote:               a.lote || '',
       validade:           a.validade || '',
@@ -3959,11 +3970,13 @@
       }
     }
 
+    const vAtualReab = findVacina(a.vacina_id) || {};
     ultimaAplicacao = {
       id:                 a.id,
       vacina:             a.vacina_text || a.vacina || '',
       vacina_text:        a.vacina_text || a.vacina || '',
-      vacina_codigo_ms:   a.vacina_codigo_ms || '',
+      vacina_codigo_ms:   vAtualReab.codigo_ms || a.vacina_codigo_ms || '',
+      vacina_fabricante_pni: vAtualReab.fabricante_pni || a.vacina_fabricante_pni || '',
       vacina_imuno:       a.vacina_imuno || a.vacina_text || a.vacina || '',
       lote:               a.lote || '',
       validade:           a.validade || '',
