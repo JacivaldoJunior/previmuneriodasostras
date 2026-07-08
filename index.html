@@ -3331,9 +3331,11 @@
     const testeObj = gerarPayloadFHIRv2Teste(ultimaAplicacao);
     if (!testeObj) return;
 
-    // Mostra o payload de teste no campo editável, assim dá pra ver/ajustar antes do envio
+    // Mostra o payload de teste no campo editável, no MESMO formato que "Enviar para RNDS" espera
+    // (bundle "achatado" + _cns_profissional), assim dá pra editar e já clicar em "Enviar para RNDS" também
     const area = document.getElementById('fhir-json-output');
-    if (area) area.value = JSON.stringify(testeObj, null, 2);
+    const paraExibir = { ...testeObj.bundle, _cns_profissional: testeObj.cns_profissional };
+    if (area) area.value = JSON.stringify(paraExibir, null, 2);
 
     const btn = document.getElementById('btn-testar-v2');
     const msg = document.getElementById('rnds-envio-msg');
