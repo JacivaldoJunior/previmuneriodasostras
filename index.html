@@ -3236,15 +3236,156 @@
     return resultado;
   }
 
+  // ===== 🧪 TESTE DE ISOLAMENTO: payload com perfis ANTIGOS (v1.0/v2.0), sem as extensions novas =====
+  // Objetivo: descobrir se a RNDS produção rejeita especificamente a versão -3.0/-2.0 dos perfis.
+  // Baseado no exemplo OFICIAL publicado em rnds-guia.saude.gov.br (RIA-R).
+  function gerarPayloadFHIRv2Teste(ap) {
+    if (!ap) return null;
+    const now       = new Date().toISOString();
+    const dataAplic = ap.data_aplicacao || ap.data || new Date().toISOString().slice(0, 10);
+    const soNum     = s => (s || '').replace(/\D/g, '');
+    function uuid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+    const codigoMS = String(ap.vacina_codigo_ms || '').trim();
+    if (!codigoMS) { toast('Código MS (RNDS) não encontrado. Gere o FHIR normal primeiro.', 'error'); return null; }
+
+    const localMapRNDS = { 'Braço Direito - Deltóide':'1','Braço Esquerdo - Deltóide':'2','Coxa Direita':'3','Coxa Esquerda':'4','Glúteo Direito':'5','Glúteo Esquerdo':'6','Subcutâneo - Braço Direito':'1','Subcutâneo - Braço Esquerdo':'2','Intradérmico - Antebraço':'7','Oral':'0','Nasal':'0' };
+    const codLocal = localMapRNDS[ap.local_aplicacao] || '0';
+    const viaMap = { 'Intramuscular':'4','Subcutânea':'5','Subcutaneo':'5','Intradérmica':'3','Oral':'6','Nasal':'9','Intravenosa':'7' };
+    const codVia = viaMap[ap.via_administracao] || '4';
+    const doseMap = { '1ª Dose':'1','2ª Dose':'2','3ª Dose':'3','4ª Dose':'4','5ª Dose':'5','Dose Única':'1','Reforço':'R','1º Reforço':'R1','2º Reforço':'R2' };
+    const _doseRaw = (ap.dose || '').trim();
+    const _doseNum = _doseRaw.match(/^(\d+)/)?.[1];
+    const doseSeq = doseMap[_doseRaw] || (_doseNum ? _doseNum : '1');
+
+    const cpfPac = soNum(ap.paciente_cpf);
+    const cnsPac = soNum(ap.paciente_cns);
+    const subjectIdentifier = { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac || cpfPac };
+    const patientIdentifier = { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRIndividuo-1.0', value: cnsPac || cpfPac };
+    const cnsProf   = soNum(ap.prof_cns);
+    const cnesEstab = ap.prof_cnes_vinculo || '6841201';
+    const codFabricante = ap.fabricante_codigo_pni || ap.fabricante_pni || ap.vacina_fabricante_pni || null;
+
+    // PERFIS ANTIGOS — sem extensions novas (não existiam na v2.0)
+    const PROFILE_COMPOSITION_V1  = 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroImunobiologicoAdministradoRotina-1.0';
+    const PROFILE_IMMUNIZATION_V2 = 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BRImunobiologicoAdministrado-2.0';
+
+    const immunization = {
+      resourceType: 'Immunization',
+      id: 'transient-1',
+      meta: { profile: [PROFILE_IMMUNIZATION_V2] },
+      status: 'completed',
+      vaccineCode: { coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRImunobiologico', code: codigoMS }] },
+      patient: { identifier: patientIdentifier },
+      occurrenceDateTime: dataAplic,
+      ...(codFabricante ? { manufacturer: { identifier: { system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRFabricantePNI', value: codFabricante } } } : {}),
+      ...(ap.lote ? { lotNumber: ap.lote } : {}),
+      ...(ap.validade ? { expirationDate: ap.validade } : {}),
+      site:  { coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRLocalAplicacao', code: codLocal }] },
+      route: { coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRViaAdministracao', code: codVia }] },
+      performer: [{ actor: { reference: 'Practitioner/' + cnsProf } }],
+      protocolApplied: [{
+        extension: [{
+          url: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstrategiaVacinacao-1.0',
+          valueCodeableConcept: { coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BREstrategiaVacinacao', code: '1' }] }
+        }],
+        doseNumberString: doseSeq
+      }]
+    };
+
+    const composition = {
+      resourceType: 'Composition',
+      id: 'transient-0',
+      meta: { profile: [PROFILE_COMPOSITION_V1] },
+      status: 'final',
+      type: { coding: [{ system: 'http://www.saude.gov.br/fhir/r4/CodeSystem/BRTipoDocumento', code: 'RIA' }] },
+      subject: { identifier: subjectIdentifier },
+      date: now,
+      author: [{ identifier: { system: 'http://www.saude.gov.br/fhir/r4/StructureDefinition/BREstabelecimentoSaude-1.0', value: cnesEstab } }],
+      title: 'Registro de Imunobiologico Administrado na Rotina',
+      section: [{ entry: [{ reference: 'urn:uuid:transient-1' }] }]
+    };
+
+    const bundle = {
+      resourceType: 'Bundle',
+      meta: { lastUpdated: now },
+      identifier: { system: 'http://www.saude.gov.br/fhir/r4/NamingSystem/BRRNDS-60615', value: uuid() },
+      type: 'document',
+      timestamp: now,
+      entry: [
+        { fullUrl: 'urn:uuid:transient-0', resource: composition },
+        { fullUrl: 'urn:uuid:transient-1', resource: immunization }
+      ]
+    };
+
+    return { bundle, cns_profissional: cnsProf };
+  }
+
+  // Botão de teste: gera o payload com perfis antigos e envia direto pro backend, mostrando o retorno cru da RNDS
+  async function testarPerfilAntigoV2() {
+    if (!ultimaAplicacao) { toast('Registre/abra uma aplicação primeiro (clique em "Ver FHIR").', 'warning'); return; }
+    const testeObj = gerarPayloadFHIRv2Teste(ultimaAplicacao);
+    if (!testeObj) return;
+
+    // Mostra o payload de teste no campo editável, assim dá pra ver/ajustar antes do envio
+    const area = document.getElementById('fhir-json-output');
+    if (area) area.value = JSON.stringify(testeObj, null, 2);
+
+    const btn = document.getElementById('btn-testar-v2');
+    const msg = document.getElementById('rnds-envio-msg');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Testando v2.0...'; }
+    if (msg) { msg.style.display = 'none'; }
+    try {
+      const resp = await fetch('https://previmune-rnds-backend-production.up.railway.app/api/enviar-vacinacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testeObj)
+      });
+      const data = await resp.json();
+      if (resp.ok || resp.status === 200 || resp.status === 201) {
+        toast('✅ TESTE v2.0: aceito pela RNDS!', 'success');
+        if (msg) { msg.style.display = 'block'; msg.style.color = 'var(--green)'; msg.textContent = '✅ [TESTE v2.0] Aceito! Status ' + resp.status + ' — ' + JSON.stringify(data).slice(0,300); }
+      } else {
+        const erro = data?.issue?.[0]?.diagnostics || data?.erro || JSON.stringify(data);
+        toast('TESTE v2.0 — Erro RNDS: ' + erro, 'error');
+        if (msg) { msg.style.display = 'block'; msg.style.color = 'var(--red)'; msg.textContent = '❌ [TESTE v2.0] Status ' + resp.status + ' — ' + erro; }
+      }
+      console.log('[TESTE v2.0] Payload enviado:', testeObj);
+      console.log('[TESTE v2.0] Resposta RNDS:', data);
+    } catch(e) {
+      toast('Erro de conexão no teste: ' + e.message, 'error');
+      if (msg) { msg.style.display = 'block'; msg.style.color = 'var(--red)'; msg.textContent = '❌ [TESTE v2.0] Erro de conexão: ' + e.message; }
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '🧪 Testar perfil antigo (v2.0)'; }
+    }
+  }
+
   let fhirJsonAtual = null;
 
   function abrirModalFHIR() {
     if (!ultimaAplicacao) { toast('Registre uma aplicação primeiro.', 'warning'); return; }
     fhirJsonAtual = gerarPayloadFHIR(ultimaAplicacao);
-    const pre = document.getElementById('fhir-json-output');
-    if (pre) pre.textContent = JSON.stringify(fhirJsonAtual, null, 2);
+    const area = document.getElementById('fhir-json-output');
+    if (area) area.value = JSON.stringify(fhirJsonAtual, null, 2);
     const bd = document.getElementById('backdrop-fhir');
     if (bd) { bd.style.display = 'flex'; window.scrollTo(0,0); }
+  }
+
+  // Lê e valida o JSON atualmente no textarea (já com as edições manuais do usuário).
+  // Retorna o objeto parseado ou null (com toast de erro) se o JSON estiver inválido.
+  function lerFHIREditado() {
+    const area = document.getElementById('fhir-json-output');
+    if (!area) return fhirJsonAtual;
+    try {
+      return JSON.parse(area.value);
+    } catch (e) {
+      toast('⚠️ JSON inválido no campo de edição: ' + e.message, 'error');
+      return null;
+    }
   }
 
   function fecharModalFHIR() {
@@ -3253,17 +3394,21 @@
   }
 
   async function copiarFHIR() {
-    if (!fhirJsonAtual) return;
+    const area = document.getElementById('fhir-json-output');
+    const texto = area ? area.value : (fhirJsonAtual ? JSON.stringify(fhirJsonAtual, null, 2) : '');
+    if (!texto) return;
     try {
-      await navigator.clipboard.writeText(JSON.stringify(fhirJsonAtual, null, 2));
+      await navigator.clipboard.writeText(texto);
       const msg = document.getElementById('fhir-copy-msg');
       if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 2500); }
     } catch(e) { toast('Erro ao copiar: ' + e.message, 'error'); }
   }
 
   function baixarFHIR() {
-    if (!fhirJsonAtual) return;
-    const blob = new Blob([JSON.stringify(fhirJsonAtual, null, 2)], { type: 'application/json' });
+    const area = document.getElementById('fhir-json-output');
+    const texto = area ? area.value : (fhirJsonAtual ? JSON.stringify(fhirJsonAtual, null, 2) : '');
+    if (!texto) return;
+    const blob = new Blob([texto], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const pacNome = (ultimaAplicacao?.paciente_nome || 'paciente').replace(/\s+/g, '_').toLowerCase();
@@ -3274,12 +3419,14 @@
   }
 
   async function enviarParaRNDS() {
-    if (!fhirJsonAtual) { toast('Gere o payload FHIR primeiro.', 'warning'); return; }
+    // Lê o JSON diretamente do campo (respeita qualquer edição manual feita pelo usuário)
+    const jsonEditado = lerFHIREditado();
+    if (!jsonEditado) return; // lerFHIREditado já mostrou o toast de erro se inválido
 
-    // CNS do profissional vem do payload FHIR gerado
-    const cnsProf = fhirJsonAtual?._cns_profissional || '';
+    // CNS do profissional vem do payload FHIR gerado/editado
+    const cnsProf = jsonEditado?._cns_profissional || '';
     if (!cnsProf) {
-      toast('⚠️ CNS do profissional não encontrado. Verifique o cadastro.', 'warning');
+      toast('⚠️ CNS do profissional não encontrado no JSON. Adicione o campo "_cns_profissional" ou verifique o cadastro.', 'warning');
       return;
     }
 
@@ -3288,7 +3435,7 @@
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
     if (msg) { msg.style.display = 'none'; }
     try {
-      const payloadParaEnviar = { ...fhirJsonAtual };
+      const payloadParaEnviar = { ...jsonEditado };
       delete payloadParaEnviar._cns_profissional; // remove campo interno antes de enviar
       const resp = await fetch('https://previmune-rnds-backend-production.up.railway.app/api/enviar-vacinacao', {
         method: 'POST',
@@ -8142,10 +8289,12 @@
             <button class="btn btn-primary btn-sm" onclick="copiarFHIR()">📋 Copiar JSON</button>
             <button class="btn btn-ghost btn-sm" onclick="baixarFHIR()">⬇️ Baixar .json</button>
             <button id="btn-enviar-rnds" class="btn btn-sm" style="background:var(--green,#22c55e);color:#fff;border:none;cursor:pointer" onclick="enviarParaRNDS()">🚀 Enviar para RNDS</button>
+            <button id="btn-testar-v2" class="btn btn-sm" style="background:#f59e0b;color:#fff;border:none;cursor:pointer" onclick="testarPerfilAntigoV2()" title="Envia a MESMA aplicação usando os perfis antigos (Rotina-1.0 / Administrado-2.0, sem as extensions novas) só para isolar se a RNDS produção reconhece a v3.0">🧪 Testar perfil antigo (v2.0)</button>
             <div id="fhir-copy-msg" style="font-size:0.8rem;color:var(--green);align-self:center;display:none">✅ Copiado!</div>
           </div>
 
-          <pre id="fhir-json-output" style="background:var(--gray-50,#f8f9fa);border:1px solid var(--gray-200,#e5e7eb);border-radius:8px;padding:16px;font-size:0.72rem;overflow-x:auto;max-height:520px;white-space:pre-wrap;word-break:break-all;font-family:monospace"></pre>
+          <textarea id="fhir-json-output" spellcheck="false" style="width:100%;background:var(--gray-50,#f8f9fa);border:1px solid var(--gray-200,#e5e7eb);border-radius:8px;padding:16px;font-size:0.72rem;overflow:auto;height:520px;resize:vertical;white-space:pre;font-family:monospace;box-sizing:border-box"></textarea>
+          <div style="font-size:0.75rem;color:var(--gray-500,#6b7280);margin-top:4px">✏️ Você pode editar o JSON acima livremente antes de copiar/baixar/enviar — as ações usam sempre o texto atual do campo.</div>
           <div id="rnds-envio-msg" style="margin-top:8px;font-size:0.85rem;font-weight:500;display:none"></div>
           <div id="fhir-aviso" style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.8rem;color:#166534">
             ✅ Backend RNDS conectado. Clique em "Enviar para RNDS" para transmitir o registro. Certificado ICP-Brasil configurado no servidor.
