@@ -5821,122 +5821,232 @@ console.log('Previmune v2805-1152 carregado');
 
   function imprimirFicha() {
     if (!ultimaAplicacao) { toast('Nenhuma aplicação registrada ainda.', 'warning'); return; }
-    const { vacina, lote, validade, data, profissional, paciente_nome, paciente_cpf, local_aplicacao } = ultimaAplicacao;
+    const { vacina, lote, validade, data, profissional, paciente_nome, paciente_cpf, paciente_cns, local_aplicacao, dose } = ultimaAplicacao;
 
-    const dataFmt = data     ? new Date(data     + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-    const valFmt  = validade ? new Date(validade  + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-    const hoje    = new Date().toLocaleDateString('pt-BR');
-    const nomeP   = paciente_nome || '-';
-    const cpfFmt  = paciente_cpf  || '-';
+    const dataFmt = data     ? new Date(data     + 'T00:00:00').toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+    const valFmt  = validade ? new Date(validade  + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const nomeP   = paciente_nome || '—';
+    const cpfFmt  = paciente_cpf  || '—';
+    const cnsFmt  = paciente_cns  || '—';
+    const loteFmt = lote || '—';
+    const doseFmt = dose || '—';
+    const localFmt = local_aplicacao || '—';
 
-    const win = window.open('', '_blank', 'width=620,height=600');
+    const win = window.open('', '_blank', 'width=680,height=700');
     win.document.write(`<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>Ficha de Vacinação &#x2014; Previmune</title>
+<title>Comprovante de Vacinação — ACM Medicina Integrativa</title>
 <style>
-  @page { size: A5 portrait; margin: 8mm; }
+  @page { size: A5 portrait; margin: 10mm; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:Arial,sans-serif; background:#fff; color:#000; padding:6mm; }
+  body { font-family:Arial,sans-serif; background:#fff; color:#000; padding:6mm; font-size:9pt; }
+
   .ficha-wrap {
-    width:100%; font-size:9pt; color:#000;
-    border:1.5px solid #1a56a0; border-radius:2mm; overflow:hidden;
+    width:100%;
+    border:2px solid #e76b1f;
+    border-radius:3mm;
+    overflow:hidden;
   }
+
+  /* ── CABEÇALHO ── */
   .ficha-header {
-    background:#1a56a0; color:#fff;
-    display:flex; align-items:center; justify-content:center;
-    padding:4mm 6mm; gap:8px;
+    background:#e76b1f;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:4mm 6mm;
+    gap:8px;
   }
-  .ficha-logo-txt  { font-size:16pt; font-weight:900; letter-spacing:1px; }
-  .ficha-logo-sub  { font-size:6.5pt; opacity:0.85; margin-top:1px; }
+  .ficha-header-left { display:flex; flex-direction:column; }
+  .ficha-clinica-nome { font-size:13pt; font-weight:900; letter-spacing:0.5px; line-height:1.2; }
+  .ficha-clinica-sub  { font-size:7pt;  opacity:0.9; margin-top:1px; }
+  .ficha-header-right { text-align:right; font-size:6.5pt; opacity:0.9; line-height:1.6; }
+
+  /* ── FAIXA TÍTULO ── */
   .ficha-titulo {
-    background:#e8f0fb; text-align:center; font-size:8pt; font-weight:700;
-    color:#1a56a0; padding:1.5mm 0; border-bottom:1px solid #c0d0ec;
-    text-transform:uppercase; letter-spacing:0.5px;
+    background:#fff3eb;
+    text-align:center;
+    font-size:8pt;
+    font-weight:700;
+    color:#e76b1f;
+    padding:2mm 0;
+    border-bottom:1.5px solid #f5c4a0;
+    text-transform:uppercase;
+    letter-spacing:0.8px;
   }
-  .ficha-body { padding:3mm 5mm; }
+
+  /* ── SEÇÕES ── */
+  .ficha-section-title {
+    background:#fff3eb;
+    color:#c85a10;
+    font-size:7pt;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    padding:1.5mm 5mm;
+    border-top:1px solid #f5c4a0;
+    border-bottom:1px solid #f5c4a0;
+  }
+
+  .ficha-body { padding:0; }
+
   .ficha-row {
-    display:flex; align-items:stretch;
-    border-bottom:1px solid #e0e8f5; min-height:8mm;
+    display:flex;
+    align-items:stretch;
+    border-bottom:1px solid #f0e8e0;
+    min-height:8mm;
   }
   .ficha-row:last-child { border-bottom:none; }
+
   .ficha-cell-lbl {
-    background:#f0f4fb; color:#1a56a0; font-weight:900; font-size:7pt;
-    min-width:34mm; max-width:34mm; display:flex; align-items:center;
-    padding:1mm 2.5mm; border-right:1px solid #c0d0ec; white-space:nowrap;
+    background:#fdf6f1;
+    color:#c85a10;
+    font-weight:900;
+    font-size:7pt;
+    min-width:36mm;
+    max-width:36mm;
+    display:flex;
+    align-items:center;
+    padding:1.5mm 3mm;
+    border-right:1px solid #f5c4a0;
+    white-space:nowrap;
   }
   .ficha-cell-val {
-    flex:1; font-size:8pt; font-weight:700;
-    display:flex; align-items:center; padding:1mm 3mm; word-break:break-word;
+    flex:1;
+    font-size:8.5pt;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    padding:1.5mm 4mm;
+    word-break:break-word;
+    color:#1a1a1a;
   }
+
+  /* ── ASSINATURA ── */
+  .ficha-assinatura {
+    padding:4mm 6mm 3mm;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:8mm;
+    border-top:1px solid #f0e8e0;
+  }
+  .assin-box { flex:1; text-align:center; }
+  .assin-line {
+    border-top:1px solid #555;
+    margin-bottom:1.5mm;
+    margin-top:10mm;
+  }
+  .assin-lbl { font-size:6.5pt; color:#666; }
+
+  /* ── RODAPÉ ── */
   .ficha-footer {
-    background:#1a56a0; color:#fff; text-align:center;
-    font-size:6pt; padding:1.5mm 0; opacity:0.9;
+    background:#e76b1f;
+    color:#fff;
+    text-align:center;
+    font-size:6pt;
+    padding:2mm 0;
+    letter-spacing:0.3px;
   }
-  @media print { @page { margin:8mm; } }
+
+  @media print { @page { margin:10mm; } body { padding:0; } }
 </style>
 </head><body>
 <div class="ficha-wrap">
+
+  <!-- CABEÇALHO -->
   <div class="ficha-header">
-    <div>
-      <div class="ficha-logo-txt">+ Previmune</div>
-      <div class="ficha-logo-sub">Sistema de Vacinação</div>
+    <div class="ficha-header-left">
+      <div class="ficha-clinica-nome">ACM Medicina Integrativa</div>
+      <div class="ficha-clinica-sub">Sistema Previmune — Controle de Vacinação</div>
+    </div>
+    <div class="ficha-header-right">
+      Av. Gov. Roberto Silveira, 445<br>
+      Costa Azul<br>
+      CNPJ: 57.825.255/0001-00<br>
+      Emitido em: ${dataFmt}
     </div>
   </div>
-  <div class="ficha-titulo">Comprovante de Aplicação de Vacina</div>
+
+  <!-- TÍTULO -->
+  <div class="ficha-titulo">✦ Comprovante de Aplicação de Vacina ✦</div>
+
   <div class="ficha-body">
+
+    <!-- SEÇÃO PACIENTE -->
+    <div class="ficha-section-title">👤 Dados do Paciente</div>
+
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">&#x1F464; Paciente</div>
+      <div class="ficha-cell-lbl">Nome</div>
       <div class="ficha-cell-val">${nomeP}</div>
     </div>
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">&#x1FAAA; CPF</div>
+      <div class="ficha-cell-lbl">CPF</div>
       <div class="ficha-cell-val">${cpfFmt}</div>
     </div>
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">&#x1F489; Vacina</div>
+      <div class="ficha-cell-lbl">CNS</div>
+      <div class="ficha-cell-val">${cnsFmt}</div>
+    </div>
+
+    <!-- SEÇÃO VACINA -->
+    <div class="ficha-section-title">💉 Dados da Vacinação</div>
+
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">Vacina</div>
       <div class="ficha-cell-val">${vacina}</div>
     </div>
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">&#x1F4E6; Lote</div>
-      <div class="ficha-cell-val">${lote}</div>
+      <div class="ficha-cell-lbl">Lote</div>
+      <div class="ficha-cell-val">${loteFmt}</div>
     </div>
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">&#x1F4C5; Validade</div>
+      <div class="ficha-cell-lbl">Validade do Lote</div>
       <div class="ficha-cell-val">${valFmt}</div>
     </div>
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">Aplic. Aplicador(a)</div>
+      <div class="ficha-cell-lbl">Dose</div>
+      <div class="ficha-cell-val">${doseFmt}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">Data de Aplicação</div>
+      <div class="ficha-cell-val">${dataFmt}</div>
+    </div>
+    <div class="ficha-row">
+      <div class="ficha-cell-lbl">Aplicador(a)</div>
       <div class="ficha-cell-val">${profissional}</div>
     </div>
     <div class="ficha-row">
-      <div class="ficha-cell-lbl">📍 Local de Aplicação</div>
-      <div class="ficha-cell-val">${local_aplicacao||'—'}</div>
+      <div class="ficha-cell-lbl">Local de Aplicação</div>
+      <div class="ficha-cell-val">${localFmt}</div>
     </div>
-    <div class="ficha-row">
-      <div class="ficha-cell-lbl">&#x1F5D3;&#xFE0F; Data de Aplicação</div>
-      <div class="ficha-cell-val">${hoje}</div>
+
+  </div>
+
+  <!-- ASSINATURA -->
+  <div class="ficha-assinatura">
+    <div class="assin-box">
+      <div class="assin-line"></div>
+      <div class="assin-lbl">Assinatura do Aplicador(a)</div>
+    </div>
+    <div class="assin-box">
+      <div class="assin-line"></div>
+      <div class="assin-lbl">Assinatura do Paciente / Responsável</div>
     </div>
   </div>
-  <div class="ficha-footer">Previmune &copy; ${new Date().getFullYear()} &#x2014; Documento gerado automaticamente</div>
+
+  <!-- RODAPÉ -->
+  <div class="ficha-footer">
+    ACM Medicina Integrativa &nbsp;|&nbsp; Av. Gov. Roberto Silveira, 445 — Costa Azul &nbsp;|&nbsp; CNPJ: 57.825.255/0001-00 &nbsp;|&nbsp; Documento gerado automaticamente pelo Previmune
+  </div>
+
 </div>
 <script>window.onload=function(){window.print();}<\/script>
-
-<!-- ===== MODAL RETIRADA ===== -->
-
-
-<!-- ===== MODAL AGENDAMENTO ===== -->
-
-
-
-<!-- ===== MODAL ORÇAMENTO ===== -->
-
-<!-- PDF ORÇAMENTO (hidden) -->
-
 </body></html>`);
     win.document.close();
   }
-
 
   // Mostrar botão imprimir ao selecionar vacina (pré-visualização)
   document.addEventListener('DOMContentLoaded', function() {
