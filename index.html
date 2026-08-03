@@ -965,6 +965,7 @@
     .estoque-vacina-meta { font-size: 0.75rem; color: var(--gray-500); margin-top: 3px; display: flex; gap: 12px; flex-wrap: wrap; }
     .estoque-vacina-qtd { text-align: center; min-width: 70px; }
     .estoque-vacina-acoes { display: flex; gap: 6px; }
+    #tabela-vacinas-simples .badge { font-size: 1.1rem; padding: 5px 16px; }
 
     @media (max-width: 768px) {
       .estoque-stat { min-width: 120px; }
@@ -1899,10 +1900,11 @@
           </div>
         </div>
 
-        <!-- Toggle: Tabela / Cards -->
+        <!-- Toggle: Tabela / Cards / Simples -->
         <div style="display:flex;gap:6px;padding:12px 20px 0">
           <button class="estoque-filtro-btn active" id="view-table" onclick="toggleView('table')">📋 Tabela</button>
           <button class="estoque-filtro-btn" id="view-cards" onclick="toggleView('cards')">🗂️ Cards</button>
+          <button class="estoque-filtro-btn" id="view-simple" onclick="toggleView('simple')">🔤 Somente Quantidade</button>
         </div>
 
         <!-- View Tabela -->
@@ -1920,6 +1922,16 @@
         <!-- View Cards -->
         <div id="estoque-view-cards" style="display:none;padding:8px 20px 20px">
           <div id="estoque-cards-container"></div>
+        </div>
+
+        <!-- View Simples (nome + qtd) -->
+        <div class="scroll-table" id="estoque-view-simple" style="display:none">
+          <table class="data-table" id="tabela-vacinas-simples">
+            <thead>
+              <tr><th>Vacina</th><th style="text-align:right">Qtd</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2688,8 +2700,10 @@ console.log('Previmune v2805-1152 carregado');
     _viewMode = mode;
     document.getElementById('estoque-view-table').style.display = mode === 'table' ? '' : 'none';
     document.getElementById('estoque-view-cards').style.display = mode === 'cards' ? '' : 'none';
+    document.getElementById('estoque-view-simple').style.display = mode === 'simple' ? '' : 'none';
     document.getElementById('view-table').classList.toggle('active', mode === 'table');
     document.getElementById('view-cards').classList.toggle('active', mode === 'cards');
+    document.getElementById('view-simple').classList.toggle('active', mode === 'simple');
     renderVacinas();
   }
 
@@ -3983,6 +3997,26 @@ console.log('Previmune v2805-1152 carregado');
             <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="abrirDescarte(${v.id})" title="Descartar">🗑️</button>
           </div>
         </div>`;
+      }).join('');
+    }
+
+    // ===== RENDER SIMPLES (nome + qtd) =====
+    if (_viewMode === 'simple') {
+      const tbodySimples = document.querySelector('#tabela-vacinas-simples tbody');
+      if (!lista.length) {
+        tbodySimples.innerHTML = `<tr><td colspan="2"><div class="empty-state"><div class="empty-icon">📦</div><p>${q ? 'Nenhuma vacina encontrada' : 'Nenhuma vacina no estoque'}</p></div></td></tr>`;
+        return;
+      }
+      tbodySimples.innerHTML = lista.map(v => {
+        const qtd = Number(v.stock || 0);
+        let qtdBadge;
+        if (qtd <= 0) qtdBadge = `<span class="badge badge-red">🚨 ${qtd}</span>`;
+        else if (qtd <= 5) qtdBadge = `<span class="badge badge-yellow">⚠️ ${qtd}</span>`;
+        else qtdBadge = `<span class="badge badge-green">✓ ${qtd}</span>`;
+        return `<tr>
+          <td style="font-size:1.1rem"><strong>${esc(v.nome||'')}</strong></td>
+          <td style="text-align:right;font-size:1.4rem;font-weight:700">${qtdBadge}</td>
+        </tr>`;
       }).join('');
     }
   }
