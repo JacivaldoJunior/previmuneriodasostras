@@ -903,6 +903,73 @@
       .vacina-row > *:nth-child(3), .vacina-row > *:nth-child(4),
       .vacina-row-header > *:nth-child(3), .vacina-row-header > *:nth-child(4) { display:none; }
     }
+
+    /* ===== MELHORIAS ESTOQUE ===== */
+    .estoque-stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .estoque-stat {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 14px 18px;
+      flex: 1; min-width: 140px;
+      display: flex; align-items: center; gap: 12px;
+      transition: box-shadow 0.2s;
+    }
+    .estoque-stat:hover { box-shadow: var(--shadow-md); }
+    .estoque-stat-icon {
+      width: 42px; height: 42px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .estoque-stat-info { display: flex; flex-direction: column; }
+    .estoque-stat-num { font-size: 22px; font-weight: 700; line-height: 1; color: var(--gray-800); }
+    .estoque-stat-label { font-size: 11px; color: var(--gray-500); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .estoque-filtros {
+      display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .estoque-filtro-btn {
+      padding: 6px 14px; border-radius: 999px; cursor: pointer;
+      font-size: 0.78rem; font-weight: 600; border: 2px solid var(--gray-200);
+      background: var(--white); color: var(--gray-600); transition: all 0.15s;
+      font-family: inherit;
+    }
+    .estoque-filtro-btn:hover { border-color: var(--orange); color: var(--orange-dark); }
+    .estoque-filtro-btn.active { border-color: var(--orange); background: var(--orange); color: white; box-shadow: 0 2px 8px rgba(231,107,31,0.3); }
+
+    .validade-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+    }
+    .validade-ok { background: #dcfce7; color: #166534; }
+    .validade-proxima { background: #fef3c7; color: #92400e; }
+    .validade-vencendo { background: #fee2e2; color: #991b1b; }
+    .validade-vencida { background: #ef4444; color: white; }
+
+    .estoque-progress {
+      width: 80px; height: 6px; border-radius: 3px; background: var(--gray-200);
+      overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px;
+    }
+    .estoque-progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+    .estoque-card-vacina {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; border-bottom: 1px solid var(--gray-100);
+      transition: background 0.1s;
+    }
+    .estoque-card-vacina:hover { background: var(--orange-50); }
+    .estoque-card-vacina:last-child { border-bottom: none; }
+    .estoque-vacina-info { flex: 1; min-width: 0; }
+    .estoque-vacina-nome { font-weight: 600; font-size: 0.9rem; color: var(--gray-800); }
+    .estoque-vacina-meta { font-size: 0.75rem; color: var(--gray-500); margin-top: 3px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .estoque-vacina-qtd { text-align: center; min-width: 70px; }
+    .estoque-vacina-acoes { display: flex; gap: 6px; }
+
+    @media (max-width: 768px) {
+      .estoque-stat { min-width: 120px; }
+      .estoque-stats { gap: 8px; }
+    }
 </style>
 </head>
 <body>
@@ -1802,6 +1869,18 @@
 
     <!-- ===== PAGE: ESTOQUE ===== -->
     <div id="page-estoque" class="page">
+      <!-- Cards de resumo -->
+      <div class="estoque-stats" id="estoque-stats"></div>
+
+      <!-- Filtros rápidos -->
+      <div class="estoque-filtros">
+        <button class="estoque-filtro-btn active" data-filtro="todos" onclick="filtrarEstoque('todos')">📦 Todos</button>
+        <button class="estoque-filtro-btn" data-filtro="baixo" onclick="filtrarEstoque('baixo')">⚠️ Estoque baixo</button>
+        <button class="estoque-filtro-btn" data-filtro="vencendo" onclick="filtrarEstoque('vencendo')">🕐 Vencendo</button>
+        <button class="estoque-filtro-btn" data-filtro="vencidas" onclick="filtrarEstoque('vencidas')">🚨 Vencidas</button>
+        <button class="estoque-filtro-btn" data-filtro="disponiveis" onclick="filtrarEstoque('disponiveis')">✅ Disponíveis</button>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <div>
@@ -1819,15 +1898,28 @@
             <button class="btn btn-primary" onclick="navTo('nova-vacina')">➕ Adicionar</button>
           </div>
         </div>
-        <div class="scroll-table">
+
+        <!-- Toggle: Tabela / Cards -->
+        <div style="display:flex;gap:6px;padding:12px 20px 0">
+          <button class="estoque-filtro-btn active" id="view-table" onclick="toggleView('table')">📋 Tabela</button>
+          <button class="estoque-filtro-btn" id="view-cards" onclick="toggleView('cards')">🗂️ Cards</button>
+        </div>
+
+        <!-- View Tabela -->
+        <div class="scroll-table" id="estoque-view-table">
           <table class="data-table" id="tabela-vacinas">
             <thead>
               <tr>
-                <th>Vacina</th><th>Fornecedor</th><th>Lote</th><th>NF</th><th>Entrada</th><th>Validade</th><th>Qtd</th><th>Preço (R$)</th><th style="text-align:right">Ações</th>
+                <th>Vacina</th><th>Fornecedor</th><th>Lote</th><th>Validade</th><th>Qtd</th><th>Preço (R$)</th><th style="text-align:right">Ações</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+
+        <!-- View Cards -->
+        <div id="estoque-view-cards" style="display:none;padding:8px 20px 20px">
+          <div id="estoque-cards-container"></div>
         </div>
       </div>
     </div>
@@ -2581,6 +2673,83 @@ console.log('Previmune v2805-1152 carregado');
 
   let pacientes = [], aplicacoes = [], vacinas = [], lembretes = [], retiradas = [], agendamentos = [], orcamentos = [];
   let _mostrarZeradas = false;
+  let _filtroEstoque = 'todos';
+  let _viewMode = 'table';
+
+  function filtrarEstoque(f) {
+    _filtroEstoque = f;
+    document.querySelectorAll('.estoque-filtro-btn[data-filtro]').forEach(b => {
+      b.classList.toggle('active', b.dataset.filtro === f);
+    });
+    renderVacinas();
+  }
+
+  function toggleView(mode) {
+    _viewMode = mode;
+    document.getElementById('estoque-view-table').style.display = mode === 'table' ? '' : 'none';
+    document.getElementById('estoque-view-cards').style.display = mode === 'cards' ? '' : 'none';
+    document.getElementById('view-table').classList.toggle('active', mode === 'table');
+    document.getElementById('view-cards').classList.toggle('active', mode === 'cards');
+    renderVacinas();
+  }
+
+  function getValidadeStatus(v) {
+    if (!v.validade) return { classe: 'validade-ok', texto: '—', dias: null };
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const val = new Date(v.validade + 'T00:00:00');
+    const dias = Math.ceil((val - hoje) / 86400000);
+    if (dias < 0) return { classe: 'validade-vencida', texto: '🚨 Vencida', dias };
+    if (dias <= 7) return { classe: 'validade-vencendo', texto: `🕐 ${dias}d restantes`, dias };
+    if (dias <= 30) return { classe: 'validade-proxima', texto: `⚠️ ${dias}d restantes`, dias };
+    return { classe: 'validade-ok', texto: val.toLocaleDateString('pt-BR'), dias };
+  }
+
+  function renderEstoqueStats() {
+    const container = document.getElementById('estoque-stats');
+    if (!container) return;
+    const total = vacinas.length;
+    const disponiveis = vacinas.filter(v => Number(v.stock||0) > 0).length;
+    const baixo = vacinas.filter(v => { const q = Number(v.stock||0); return q > 0 && q <= 5; }).length;
+    const zeradas = vacinas.filter(v => Number(v.stock||0) <= 0).length;
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const vencendo = vacinas.filter(v => {
+      if (!v.validade || Number(v.stock||0) <= 0) return false;
+      const dias = Math.ceil((new Date(v.validade+'T00:00:00') - hoje) / 86400000);
+      return dias <= 30;
+    }).length;
+    const vencidas = vacinas.filter(v => {
+      if (!v.validade || Number(v.stock||0) <= 0) return false;
+      const dias = Math.ceil((new Date(v.validade+'T00:00:00') - hoje) / 86400000);
+      return dias < 0;
+    }).length;
+
+    container.innerHTML = `
+      <div class="estoque-stat">
+        <div class="estoque-stat-icon" style="background:#fff7f1;color:var(--orange)">📦</div>
+        <div class="estoque-stat-info"><div class="estoque-stat-num">${total}</div><div class="estoque-stat-label">Lotes</div></div>
+      </div>
+      <div class="estoque-stat">
+        <div class="estoque-stat-icon" style="background:#dcfce7;color:#166534">✅</div>
+        <div class="estoque-stat-info"><div class="estoque-stat-num">${disponiveis}</div><div class="estoque-stat-label">Disponíveis</div></div>
+      </div>
+      <div class="estoque-stat">
+        <div class="estoque-stat-icon" style="background:#fef3c7;color:#92400e">⚠️</div>
+        <div class="estoque-stat-info"><div class="estoque-stat-num">${baixo}</div><div class="estoque-stat-label">Estoque baixo</div></div>
+      </div>
+      <div class="estoque-stat">
+        <div class="estoque-stat-icon" style="background:#fee2e2;color:#991b1b">🚨</div>
+        <div class="estoque-stat-info"><div class="estoque-stat-num">${vencidas}</div><div class="estoque-stat-label">Vencidas</div></div>
+      </div>
+      <div class="estoque-stat">
+        <div class="estoque-stat-icon" style="background:#dbeafe;color:#1e40af">🕐</div>
+        <div class="estoque-stat-info"><div class="estoque-stat-num">${vencendo}</div><div class="estoque-stat-label">Vencendo (30d)</div></div>
+      </div>
+      <div class="estoque-stat">
+        <div class="estoque-stat-icon" style="background:#f4f4f5;color:var(--gray-500)">⊘</div>
+        <div class="estoque-stat-info"><div class="estoque-stat-num">${zeradas}</div><div class="estoque-stat-label">Zeradas</div></div>
+      </div>
+    `;
+  }
 
   const CALENDARIO_VACINAL = [{"faixa": "Ao nascer", "desc": "Recém-nascido", "vacinas": [{"nome": "BCG", "doses": "Dose única", "obs": "Proteção contra formas graves de tuberculose"}, {"nome": "Hepatite B", "doses": "1ª dose", "obs": "Primeira dose ao nascer"}]}, {"faixa": "1 mês", "desc": "1 mês de vida", "vacinas": [{"nome": "Hepatite B", "doses": "2ª dose", "obs": "Segunda dose"}]}, {"faixa": "2 meses", "desc": "2 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "1ª dose", "obs": "Difteria, Tétano, Coqueluche, Hib, Hepatite B"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "1ª dose", "obs": "Pólio injetável"}, {"nome": "Pneumocócica 13-valente", "doses": "1ª dose", "obs": "Previne pneumonia, meningite, otite"}, {"nome": "Rotavírus", "doses": "1ª dose", "obs": "Previne diarreia grave por rotavírus"}]}, {"faixa": "3 meses", "desc": "3 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "1ª dose", "obs": "Previne meningite meningocócica C"}, {"nome": "Meningocócica ACWY", "doses": "1ª dose", "obs": "Sorogrupos A, C, W e Y (particular)"}]}, {"faixa": "4 meses", "desc": "4 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Pneumocócica 13-valente", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Rotavírus", "doses": "2ª dose", "obs": "Segunda e última dose"}]}, {"faixa": "5 meses", "desc": "5 meses de vida", "vacinas": [{"nome": "Meningocócica C conjugada", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Meningocócica ACWY", "doses": "2ª dose", "obs": "Segunda dose (particular)"}]}, {"faixa": "6 meses", "desc": "6 meses de vida", "vacinas": [{"nome": "Pentavalente (DTP+Hib+HepB)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "VIP (Poliomielite Inativada)", "doses": "3ª dose", "obs": "Terceira dose"}, {"nome": "Influenza", "doses": "1ª dose", "obs": "Anual — 2 doses no 1º ano (intervalo 30 dias)"}, {"nome": "Hepatite B", "doses": "3ª dose", "obs": "Apenas se não fez esquema pentavalente completo"}]}, {"faixa": "7 meses", "desc": "7 meses de vida", "vacinas": [{"nome": "Influenza", "doses": "2ª dose", "obs": "Somente no primeiro ano de vacinação, 30 dias após a 1ª"}]}, {"faixa": "9 meses", "desc": "9 meses de vida", "vacinas": [{"nome": "Febre Amarela", "doses": "1ª dose", "obs": "Dose inicial (reforço aos 4 anos)"}, {"nome": "Meningocócica B", "doses": "3ª dose", "obs": "Esquema 2+1 (particular)"}]}, {"faixa": "12 meses", "desc": "1 ano de vida", "vacinas": [{"nome": "Tríplice Viral (SCR)", "doses": "1ª dose", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Pneumocócica 13-valente", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica C conjugada", "doses": "Reforço", "obs": "Dose de reforço"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Dose de reforço (particular)"}, {"nome": "Varicela", "doses": "1ª dose", "obs": "Primeira dose da Catapora"}, {"nome": "Hepatite A", "doses": "1ª dose", "obs": "Dose única no calendário público; 2 doses no particular"}]}, {"faixa": "15 meses", "desc": "15 meses de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "1º Reforço", "obs": "Reforço de Difteria, Tétano, Coqueluche"}, {"nome": "VOP (Poliomielite Oral)", "doses": "1º Reforço", "obs": "Gotinhas de reforço"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Segunda dose (calendário particular)"}, {"nome": "Tetra Viral (SCRV)", "doses": "Dose única", "obs": "SCR + Varicela (alternativa à SCR + Varicela separados)"}]}, {"faixa": "18 meses", "desc": "18 meses de vida", "vacinas": [{"nome": "Meningocócica B", "doses": "Reforço", "obs": "Reforço (particular)"}, {"nome": "Meningocócica ACWY", "doses": "Reforço adicional", "obs": "Conforme indicação médica"}]}, {"faixa": "4 anos", "desc": "4 anos de vida", "vacinas": [{"nome": "DTP (Tríplice Bacteriana)", "doses": "2º Reforço", "obs": "Último reforço da DTP"}, {"nome": "VOP (Poliomielite Oral)", "doses": "2º Reforço", "obs": "Último reforço da Pólio"}, {"nome": "Varicela", "doses": "2ª dose", "obs": "Segunda dose da Catapora"}, {"nome": "Tríplice Viral (SCR)", "doses": "2ª dose", "obs": "Segunda dose"}, {"nome": "Febre Amarela", "doses": "Reforço", "obs": "Reforço (se fez a 1ª antes dos 5 anos)"}]}, {"faixa": "5 anos", "desc": "5 anos de vida", "vacinas": [{"nome": "Pneumocócica 23-valente", "doses": "Dose única", "obs": "Apenas grupos de risco"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Repetir todo ano"}, {"nome": "Hepatite A", "doses": "2ª dose", "obs": "Se não completou o esquema"}]}, {"faixa": "9 anos", "desc": "9 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "1ª dose", "obs": "Meninas — Previne HPV tipos 6,11,16,18"}, {"nome": "HPV Nonavalente", "doses": "1ª dose", "obs": "Particular — 9 tipos de HPV"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Reforço a cada 5 anos"}]}, {"faixa": "11 anos", "desc": "11 anos de vida", "vacinas": [{"nome": "HPV Quadrivalente", "doses": "2ª dose", "obs": "Meninos também (particular/público conforme calendário)"}, {"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "Reforço", "obs": "Proteção reforçada contra Coqueluche"}, {"nome": "Meningocócica B", "doses": "Reforço", "obs": "Particular — reforço adolescente"}, {"nome": "Meningocócica ACWY", "doses": "Reforço", "obs": "Particular"}]}, {"faixa": "Gestantes", "desc": "Durante a gestação", "vacinas": [{"nome": "dTpa (Tríplice Acelular do Adulto)", "doses": "A cada gestação", "obs": "A partir da 20ª semana — protege o bebê contra Coqueluche"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Qualquer trimestre"}, {"nome": "Hepatite B", "doses": "Conforme esquema", "obs": "Se não vacinada anteriormente"}, {"nome": "COVID-19", "doses": "Conforme protocolo", "obs": "Segura e recomendada na gestação"}]}, {"faixa": "Adultos (20–59 anos)", "desc": "Adultos de 20 a 59 anos", "vacinas": [{"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Tríplice Viral (SCR)", "doses": "2 doses (se não vacinado)", "obs": "Sarampo, Caxumba, Rubéola"}, {"nome": "Febre Amarela", "doses": "Dose única vitalícia", "obs": "Reforço único se necessário"}, {"nome": "Influenza", "doses": "Dose anual", "obs": "Todo ano"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}, {"faixa": "Idosos (60+ anos)", "desc": "60 anos ou mais", "vacinas": [{"nome": "Influenza", "doses": "Dose anual", "obs": "Alta prioridade"}, {"nome": "Pneumocócica 23-valente", "doses": "1 a 2 doses", "obs": "Prevenção de pneumonia grave"}, {"nome": "dT (Dupla Adulto)", "doses": "Reforço a cada 10 anos", "obs": "Difteria e Tétano"}, {"nome": "Herpes Zóster", "doses": "2 doses", "obs": "Intervalo de 2–6 meses (a partir de 50 anos)"}, {"nome": "Hepatite B", "doses": "3 doses", "obs": "Se não vacinado"}]}];
   let _jornadaPacienteId = null;
@@ -3680,7 +3849,7 @@ console.log('Previmune v2805-1152 carregado');
 
   async function fetchVacinas() {
     try {
-      if (!db) { renderEstoque(); return; }
+      if (!db) { renderVacinas(); return; }
       const { data, error } = await db.from('vacinas').select('*').order('id', { ascending: false });
       if (error) throw error;
       vacinas = data || [];
@@ -3688,6 +3857,7 @@ console.log('Previmune v2805-1152 carregado');
       populateVacinaSelect();
       document.getElementById('stat-vacinas').textContent = vacinas.length;
       document.getElementById('nav-count-estoque').textContent = vacinas.length;
+      if (typeof verificarVacinasVencendo === 'function') verificarVacinasVencendo();
     } catch (err) {
       console.error(err); toast('Erro ao buscar vacinas: ' + (err.message||err), 'error');
     }
@@ -3701,10 +3871,33 @@ console.log('Previmune v2805-1152 carregado');
   }
 
   function renderVacinas() {
-    const tbody = document.querySelector('#tabela-vacinas tbody');
+    renderEstoqueStats();
     const q = (document.getElementById('searchEstoque')?.value || '').toLowerCase().trim();
-    // Filtro base: se não está mostrando zeradas, oculta stock <= 0
+
+    // Filtro base: zeradas
     let listaFiltrada = _mostrarZeradas ? vacinas : vacinas.filter(v => Number(v.stock||0) > 0);
+
+    // Filtros rápidos
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    if (_filtroEstoque === 'baixo') {
+      listaFiltrada = listaFiltrada.filter(v => { const s = Number(v.stock||0); return s > 0 && s <= 5; });
+    } else if (_filtroEstoque === 'vencendo') {
+      listaFiltrada = listaFiltrada.filter(v => {
+        if (!v.validade || Number(v.stock||0) <= 0) return false;
+        const dias = Math.ceil((new Date(v.validade+'T00:00:00') - hoje) / 86400000);
+        return dias > 0 && dias <= 30;
+      });
+    } else if (_filtroEstoque === 'vencidas') {
+      listaFiltrada = listaFiltrada.filter(v => {
+        if (!v.validade || Number(v.stock||0) <= 0) return false;
+        const dias = Math.ceil((new Date(v.validade+'T00:00:00') - hoje) / 86400000);
+        return dias < 0;
+      });
+    } else if (_filtroEstoque === 'disponiveis') {
+      listaFiltrada = listaFiltrada.filter(v => Number(v.stock||0) > 5);
+    }
+
+    // Busca por texto
     const lista = q
       ? listaFiltrada.filter(v =>
           (v.nome||'').toLowerCase().includes(q) ||
@@ -3713,38 +3906,85 @@ console.log('Previmune v2805-1152 carregado');
           (v.nota_fiscal||'').toLowerCase().includes(q)
         )
       : listaFiltrada;
-    if (!lista.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📦</div><p>${q ? 'Nenhuma vacina encontrada para "' + q + '"' : 'Nenhuma vacina no estoque'}</p></div></td></tr>`;
-      return;
+
+    // Ordenar: vencidas primeiro, depois vencendo, depois por validade
+    lista.sort((a, b) => {
+      const va = a.validade ? new Date(a.validade+'T00:00:00') : new Date(9999,11,31);
+      const vb = b.validade ? new Date(b.validade+'T00:00:00') : new Date(9999,11,31);
+      return va - vb;
+    });
+
+    // ===== RENDER TABELA =====
+    if (_viewMode === 'table') {
+      const tbody = document.querySelector('#tabela-vacinas tbody');
+      if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📦</div><p>${q ? 'Nenhuma vacina encontrada para "' + q + '"' : 'Nenhuma vacina no estoque'}</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = lista.map(v => {
+        const valInfo = getValidadeStatus(v);
+        const qtd = Number(v.stock || 0);
+        let qtdBadge;
+        if (qtd <= 0) qtdBadge = `<span class="badge badge-red">🚨 ${qtd}</span>`;
+        else if (qtd <= 5) qtdBadge = `<span class="badge badge-yellow">⚠️ ${qtd}</span>`;
+        else qtdBadge = `<span class="badge badge-green">✓ ${qtd}</span>`;
+        const preco = v.preco ? `R$ ${Number(v.preco).toFixed(2)}` : '—';
+        const fornecedor = esc(v.fornecedor || '—');
+        return `<tr>
+          <td><strong>${esc(v.nome||'')}</strong>${v.lote ? '<br><small style="color:var(--gray-500)">Lote: '+esc(v.lote)+'</small>' : ''}</td>
+          <td>${fornecedor}</td>
+          <td>${esc(v.lote||'—')}</td>
+          <td><span class="validade-badge ${valInfo.classe}">${valInfo.texto}</span></td>
+          <td>${qtdBadge}</td>
+          <td>${preco}</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-ghost btn-sm" onclick="abrirEditarVacina(${v.id})" title="Editar">✏️</button>
+              <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="abrirDescarte(${v.id})" title="Descartar">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
     }
-    tbody.innerHTML = lista.map(v => {
-      const val = v.validade ? new Date(v.validade + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
-      const qtd = Number(v.stock || 0);
-      let qtdBadge;
-      if (qtd <= 0) qtdBadge = `<span class="badge badge-red">🚨 ${qtd}</span>`;
-      else if (qtd <= 5) qtdBadge = `<span class="badge badge-yellow">⚠️ ${qtd}</span>`;
-      else qtdBadge = `<span class="badge badge-green">✓ ${qtd}</span>`;
-      const preco = v.preco ? `R$ ${Number(v.preco).toFixed(2)}` : '—';
-      const fornecedor = esc(v.fornecedor || '—');
-      const nf = esc(v.nota_fiscal || '—');
-      const entrada = v.data_entrada ? new Date(v.data_entrada + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
-      return `<tr>
-        <td><strong>${esc(v.nome||'')}</strong></td>
-        <td>${fornecedor}</td>
-        <td>${esc(v.lote||'—')}</td>
-        <td>${nf}</td>
-        <td>${entrada}</td>
-        <td>${val}</td>
-        <td>${qtdBadge}</td>
-        <td>${preco}</td>
-        <td>
-          <div class="actions">
-            <button class="btn btn-ghost btn-sm" onclick="abrirEditarVacina(${v.id})">✏️ Editar</button>
-            <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="abrirDescarte(${v.id})" title="Registrar Descarte">🗑️ Descartar</button>
+
+    // ===== RENDER CARDS =====
+    if (_viewMode === 'cards') {
+      const container = document.getElementById('estoque-cards-container');
+      if (!lista.length) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><p>${q ? 'Nenhuma vacina encontrada' : 'Nenhuma vacina no estoque'}</p></div>`;
+        return;
+      }
+      container.innerHTML = lista.map(v => {
+        const valInfo = getValidadeStatus(v);
+        const qtd = Number(v.stock || 0);
+        let qtdClass = qtd <= 0 ? 'badge-red' : qtd <= 5 ? 'badge-yellow' : 'badge-green';
+        let qtdIcon = qtd <= 0 ? '🚨' : qtd <= 5 ? '⚠️' : '✓';
+        const maxBar = Math.max(qtd, 10);
+        const barPct = Math.min(100, (qtd / maxBar) * 100);
+        const barColor = qtd <= 0 ? '#ef4444' : qtd <= 5 ? '#f59e0b' : '#22c55e';
+        const preco = v.preco ? `R$ ${Number(v.preco).toFixed(2)}` : '—';
+        return `<div class="estoque-card-vacina">
+          <div class="estoque-vacina-info">
+            <div class="estoque-vacina-nome">${esc(v.nome||'')}</div>
+            <div class="estoque-vacina-meta">
+              ${v.lote ? '<span>🏷️ Lote: '+esc(v.lote)+'</span>' : ''}
+              ${v.fornecedor ? '<span>🏭 '+esc(v.fornecedor)+'</span>' : ''}
+              <span>💰 ${preco}</span>
+              ${v.nota_fiscal ? '<span>📄 NF: '+esc(v.nota_fiscal)+'</span>' : ''}
+            </div>
+            <div style="margin-top:6px"><span class="validade-badge ${valInfo.classe}">${valInfo.texto}</span></div>
           </div>
-        </td>
-      </tr>`;
-    }).join('');
+          <div class="estoque-vacina-qtd">
+            <div class="estoque-progress"><div class="estoque-progress-fill" style="width:${barPct}%;background:${barColor}"></div></div>
+            <span class="badge ${qtdClass}">${qtdIcon} ${qtd}</span>
+          </div>
+          <div class="estoque-vacina-acoes">
+            <button class="btn btn-ghost btn-sm" onclick="abrirEditarVacina(${v.id})" title="Editar">✏️</button>
+            <button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fca5a5" onclick="abrirDescarte(${v.id})" title="Descartar">🗑️</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
   }
 
   function populateVacinaSelect() {
