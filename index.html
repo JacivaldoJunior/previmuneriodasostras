@@ -1069,6 +1069,10 @@
         <button class="nav-item" onclick="navTo('agendamentos')">
           <span class="icon">📅</span> Agendar Vacina
         </button>
+        <button class="nav-item" onclick="navTo('app-mobile')">
+          <span class="icon">📱</span> Painel App Mobile
+          <span class="badge-count" id="nav-count-app">—</span>
+        </button>
       </div>
     </div>
     <div class="nav-section">
@@ -1421,6 +1425,144 @@
     </div>
 
     
+    <!-- ===== PAGE: PAINEL APP MOBILE ===== -->
+    <style id="css-app-mobile">
+      /* CSS escopado — só afeta esta página */
+      #page-app-mobile .am-kpis { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+      #page-app-mobile .am-kpi { flex:1; min-width:150px; background:#fff; border:1px solid #e4e4e7; border-left:4px solid var(--orange); border-radius:10px; padding:14px 16px; }
+      #page-app-mobile .am-kpi-label { font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; color:#71717a; font-weight:700; }
+      #page-app-mobile .am-kpi-value { font-size:22px; font-weight:800; color:#18181b; margin-top:4px; }
+      #page-app-mobile .am-kpi-sub { font-size:11px; color:#a1a1aa; margin-top:2px; }
+      #page-app-mobile .am-card { background:#fff; border:1px solid #e4e4e7; border-radius:10px; margin-bottom:16px; overflow:hidden; }
+      #page-app-mobile .am-card-head { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid #f4f4f5; flex-wrap:wrap; }
+      #page-app-mobile .am-card-title { font-size:14px; font-weight:700; color:#18181b; }
+      #page-app-mobile .am-card-sub { font-size:11.5px; color:#71717a; margin-top:2px; }
+      #page-app-mobile .am-body { padding:0; }
+      #page-app-mobile .am-alerta { background:#fff7f1; border:1px solid #ffc999; color:#8a4b12; border-radius:8px; padding:12px 14px; font-size:12.5px; line-height:1.55; margin-bottom:16px; display:none; }
+      #page-app-mobile .am-alerta code { background:#fff; border:1px solid #ffc999; border-radius:4px; padding:1px 5px; font-size:11.5px; }
+      #page-app-mobile .am-tag { display:inline-block; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+      #page-app-mobile .am-tag.pendente { background:#fff7f1; color:#8a4b12; border:1px solid #ffc999; }
+      #page-app-mobile .am-tag.agendado { background:#eef6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+      #page-app-mobile .am-tag.realizado { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+      #page-app-mobile .am-tag.pago { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+      #page-app-mobile .am-tag.cancelado { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+      #page-app-mobile .am-tag.baixo { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+      #page-app-mobile .am-tag.ok { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+      #page-app-mobile .am-tag.vencendo { background:#fffbeb; color:#b45309; border:1px solid #fde68a; }
+      #page-app-mobile .am-vazio { padding:28px 16px; text-align:center; color:#a1a1aa; font-size:12.5px; }
+      #page-app-mobile .am-btn { border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; margin-right:4px; }
+      #page-app-mobile .am-btn-ok { background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; }
+      #page-app-mobile .am-btn-blue { background:#eef6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+      #page-app-mobile .am-btn-danger { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+      #page-app-mobile .am-mini { font-size:11px; color:#71717a; }
+      #page-app-mobile .am-itens { font-size:11.5px; color:#52525b; line-height:1.5; }
+    </style>
+    <div id="page-app-mobile" class="page">
+      <div class="am-alerta" id="app-alerta-sql"></div>
+
+      <div class="am-kpis">
+        <div class="am-kpi">
+          <div class="am-kpi-label">Aguardando confirmação</div>
+          <div class="am-kpi-value" id="app-kpi-pendentes">—</div>
+          <div class="am-kpi-sub">agendamentos feitos pelo app</div>
+        </div>
+        <div class="am-kpi">
+          <div class="am-kpi-label">Agendados hoje</div>
+          <div class="am-kpi-value" id="app-kpi-hoje">—</div>
+          <div class="am-kpi-sub" id="app-kpi-hoje-sub">nenhum</div>
+        </div>
+        <div class="am-kpi">
+          <div class="am-kpi-label">Pedidos do app</div>
+          <div class="am-kpi-value" id="app-kpi-pedidos">—</div>
+          <div class="am-kpi-sub" id="app-kpi-receita">R$ 0,00 faturado</div>
+        </div>
+        <div class="am-kpi">
+          <div class="am-kpi-label">Estoque em alerta</div>
+          <div class="am-kpi-value" id="app-kpi-estoque">—</div>
+          <div class="am-kpi-sub">vacinas baixas ou vencendo</div>
+        </div>
+      </div>
+
+      <div class="am-card">
+        <div class="am-card-head">
+          <div>
+            <div class="am-card-title">📅 Agendamentos vindos do app</div>
+            <div class="am-card-sub">Confirme, conclua ou cancele direto por aqui</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="fetchAppMobile()">🔄 Atualizar</button>
+        </div>
+        <div class="am-body">
+          <div class="table-wrapper">
+            <table class="data-table" id="app-tabela-agendamentos">
+              <thead>
+                <tr>
+                  <th>Data / Hora</th>
+                  <th>Paciente</th>
+                  <th>Vacina</th>
+                  <th>Contato</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="am-card">
+        <div class="am-card-head">
+          <div>
+            <div class="am-card-title">🛒 Pedidos do app</div>
+            <div class="am-card-sub">Compras de vacinas feitas pelos pacientes no aplicativo</div>
+          </div>
+        </div>
+        <div class="am-body">
+          <div class="table-wrapper">
+            <table class="data-table" id="app-tabela-pedidos">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Paciente / Dependente</th>
+                  <th>Itens</th>
+                  <th>Total</th>
+                  <th>Pagamento</th>
+                  <th>Status</th>
+                  <th style="text-align:right">Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="am-card">
+        <div class="am-card-head">
+          <div>
+            <div class="am-card-title">📦 Estoque monitorado pelo app</div>
+            <div class="am-card-sub">O app mostra ao paciente somente o que existe aqui</div>
+          </div>
+        </div>
+        <div class="am-body">
+          <div class="table-wrapper">
+            <table class="data-table" id="app-tabela-estoque">
+              <thead>
+                <tr>
+                  <th>Vacina</th>
+                  <th>Lote</th>
+                  <th>Validade</th>
+                  <th>Estoque</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== PAGE: ORÇAMENTOS ===== -->
     <div id="page-orcamentos" class="page">
       <div class="card">
@@ -2946,6 +3088,7 @@ console.log('Previmune v2805-1152 carregado');
     'orcamentos':      { id: 'page-orcamentos',       title: '📄 Orçamentos' },
     'planos-vacinais': { id: 'page-planos-vacinais',  title: '🗓️ Planos Vacinais' },
     'guia-vacinal':    { id: 'page-guia-vacinal',      title: '📖 Guia Vacinal — Calendário PNI' },
+    'app-mobile':      { id: 'page-app-mobile',        title: '📱 Painel App Mobile' },
   };
 
   function navTo(page) {
@@ -2969,6 +3112,7 @@ console.log('Previmune v2805-1152 carregado');
     if (page === 'nova-aplicacao') { populatePacienteSelect(); populateVacinaSelect(); populateProfissionalSelect(); setDefaultDate(); }
     if (page === 'profissionais') { fetchProfissionais(); }
     if (page === 'usuarios') { fetchUsuarios(); }
+    if (page === 'app-mobile') { fetchAppMobile(); }
     if (page === 'novo-paciente') {
       const editId = document.getElementById('paciente_edit_id').value;
       document.getElementById('form-paciente-title').textContent = editId ? 'Editar Paciente' : 'Novo Paciente';
@@ -8514,6 +8658,209 @@ console.log('Previmune v2805-1152 carregado');
       + 'padding:10px 28px;border-radius:6px;cursor:pointer;font-size:1rem">🖨️ Imprimir / Salvar PDF</button>'
       + '</div></body></html>');
     win.document.close();
+  }
+
+
+  // =====================================================================
+  // PAINEL APP MOBILE
+  // =====================================================================
+  let _appAgendamentos = [];
+  let _appPedidos = [];
+
+  function appMoeda(v) {
+    return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+  function appDataBR(iso) {
+    if (!iso) return '—';
+    const p = String(iso).slice(0, 10).split('-');
+    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : String(iso);
+  }
+  function appHojeISO() {
+    const d = new Date();
+    const off = d.getTimezoneOffset() * 60000;
+    return new Date(d - off).toISOString().slice(0, 10);
+  }
+  function appSemCNS() { return ''; }
+
+  function appMostrarAlerta(html) {
+    const el = document.getElementById('app-alerta-sql');
+    if (!el) return;
+    if (!html) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.innerHTML = html;
+    el.style.display = 'block';
+  }
+
+  async function fetchAppMobile() {
+    if (!db) return;
+    const problemas = [];
+
+    // --- Agendamentos do app ---
+    try {
+      const { data, error } = await db.from('agendamentos')
+        .select('*').eq('origem', 'app')
+        .order('data_agendamento', { ascending: false }).limit(200);
+      if (error) throw error;
+      _appAgendamentos = data || [];
+    } catch (err) {
+      _appAgendamentos = [];
+      if (String(err.message || '').includes('origem')) {
+        problemas.push('A coluna <code>origem</code> ainda não existe na tabela <b>agendamentos</b>. Rode o SQL do painel para ativar esta lista.');
+      } else {
+        problemas.push('Não foi possível ler os agendamentos do app: ' + esc(err.message || err));
+      }
+    }
+
+    // --- Pedidos do app ---
+    try {
+      const { data, error } = await db.from('pedidos_app')
+        .select('*').order('created_at', { ascending: false }).limit(200);
+      if (error) throw error;
+      _appPedidos = data || [];
+    } catch (err) {
+      _appPedidos = [];
+      problemas.push('A tabela <code>pedidos_app</code> ainda não existe. Rode o SQL do painel para começar a receber as compras do app.');
+    }
+
+    appMostrarAlerta(problemas.length ? problemas.join('<br>') : '');
+
+    renderAppAgendamentos();
+    renderAppPedidos();
+    renderAppEstoque();
+    atualizarKpisApp();
+  }
+
+  function atualizarKpisApp() {
+    const hoje = appHojeISO();
+    const pendentes = _appAgendamentos.filter(a => (a.status || 'pendente') === 'pendente');
+    const doDia = _appAgendamentos.filter(a => a.data_agendamento === hoje && a.status !== 'cancelado');
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('app-kpi-pendentes', pendentes.length);
+    set('app-kpi-hoje', doDia.length);
+    set('app-kpi-hoje-sub', doDia.length === 1 ? '1 aplicação hoje' : `${doDia.length} aplicações hoje`);
+    set('app-kpi-pedidos', _appPedidos.length);
+
+    const receita = _appPedidos.filter(p => p.status === 'pago').reduce((s, p) => s + (Number(p.total) || 0), 0);
+    set('app-kpi-receita', appMoeda(receita) + ' faturado');
+
+    const alertasEstoque = (vacinas || []).filter(v => {
+      const baixo = Number(v.stock || 0) <= 5;
+      const venc = v.validade ? (new Date(v.validade + 'T00:00:00') - new Date()) / 86400000 <= 60 : false;
+      return baixo || venc;
+    });
+    set('app-kpi-estoque', alertasEstoque.length);
+
+    const badge = document.getElementById('nav-count-app');
+    if (badge) badge.textContent = pendentes.length || '0';
+  }
+
+  function renderAppAgendamentos() {
+    const tb = document.querySelector('#app-tabela-agendamentos tbody');
+    if (!tb) return;
+    if (!_appAgendamentos.length) {
+      tb.innerHTML = '<tr><td colspan="6"><div class="am-vazio">Nenhum agendamento do aplicativo ainda.<br>Assim que um paciente agendar no app, ele aparece aqui.</div></td></tr>';
+      return;
+    }
+    const STATUS = { pendente: 'Aguardando', agendado: 'Confirmado', realizado: 'Realizado', cancelado: 'Cancelado' };
+    tb.innerHTML = _appAgendamentos.map(a => {
+      const st = a.status || 'pendente';
+      const pendente = st === 'pendente';
+      return `<tr>
+        <td><strong>${appDataBR(a.data_agendamento)}</strong><div class="am-mini">${esc(a.hora_agendamento || '—')}</div></td>
+        <td>${esc(a.nome_completo || '—')}</td>
+        <td>${esc(a.vacina_nome || '—')}<div class="am-mini">${esc(a.dose || '')}</div></td>
+        <td class="am-mini">${esc(a.cpf || a.telefone || '—')}</td>
+        <td><span class="am-tag ${st}">${STATUS[st] || st}</span></td>
+        <td style="text-align:right;white-space:nowrap">
+          ${pendente ? `<button class="am-btn am-btn-ok" onclick="appSetStatusAgendamento(${a.id},'agendado')">✓ Confirmar</button>` : ''}
+          ${st !== 'realizado' && st !== 'cancelado' ? `<button class="am-btn am-btn-blue" onclick="appSetStatusAgendamento(${a.id},'realizado')">✔ Realizado</button>` : ''}
+          ${st !== 'cancelado' ? `<button class="am-btn am-btn-danger" onclick="appSetStatusAgendamento(${a.id},'cancelado')">✕</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderAppPedidos() {
+    const tb = document.querySelector('#app-tabela-pedidos tbody');
+    if (!tb) return;
+    if (!_appPedidos.length) {
+      tb.innerHTML = '<tr><td colspan="7"><div class="am-vazio">Nenhum pedido do aplicativo ainda.</div></td></tr>';
+      return;
+    }
+    const STATUS = { pendente: 'Pendente', pago: 'Pago', separado: 'Separado', entregue: 'Entregue', cancelado: 'Cancelado' };
+    tb.innerHTML = _appPedidos.map(p => {
+      let itens = '—';
+      try {
+        const arr = Array.isArray(p.itens) ? p.itens : JSON.parse(p.itens || '[]');
+        itens = arr.map(i => `${i.qtd || 1}x ${esc(i.nome || i.vacina || '')}`).join('<br>') || '—';
+      } catch (e) {}
+      const st = p.status || 'pendente';
+      return `<tr>
+        <td class="am-mini">${p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '—'}</td>
+        <td>${esc(p.paciente_nome || '—')}${p.dependente_nome ? `<div class="am-mini">para ${esc(p.dependente_nome)}</div>` : ''}</td>
+        <td class="am-itens">${itens}</td>
+        <td><strong>${appMoeda(p.total)}</strong></td>
+        <td class="am-mini">${esc(p.forma_pagamento || '—')}</td>
+        <td><span class="am-tag ${st}">${STATUS[st] || st}</span></td>
+        <td style="text-align:right;white-space:nowrap">
+          ${st !== 'pago' && st !== 'cancelado' ? `<button class="am-btn am-btn-ok" onclick="appSetStatusPedido(${p.id},'pago')">$ Pago</button>` : ''}
+          ${st !== 'entregue' && st !== 'cancelado' ? `<button class="am-btn am-btn-blue" onclick="appSetStatusPedido(${p.id},'entregue')">Entregue</button>` : ''}
+          ${st !== 'cancelado' ? `<button class="am-btn am-btn-danger" onclick="appSetStatusPedido(${p.id},'cancelado')">✕</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderAppEstoque() {
+    const tb = document.querySelector('#app-tabela-estoque tbody');
+    if (!tb) return;
+    const lista = (vacinas || []).slice().sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0));
+    if (!lista.length) {
+      tb.innerHTML = '<tr><td colspan="5"><div class="am-vazio">Nenhuma vacina em estoque.</div></td></tr>';
+      return;
+    }
+    tb.innerHTML = lista.map(v => {
+      const stock = Number(v.stock || 0);
+      const dias = v.validade ? Math.ceil((new Date(v.validade + 'T00:00:00') - new Date()) / 86400000) : null;
+      let situacao = '<span class="am-tag ok">Disponível</span>';
+      if (stock <= 0) situacao = '<span class="am-tag baixo">Sem estoque</span>';
+      else if (stock <= 5) situacao = '<span class="am-tag baixo">Estoque baixo</span>';
+      else if (dias !== null && dias < 0) situacao = '<span class="am-tag baixo">Vencida</span>';
+      else if (dias !== null && dias <= 60) situacao = `<span class="am-tag vencendo">Vence em ${dias}d</span>`;
+      return `<tr>
+        <td><strong>${esc(v.nome || '—')}</strong><div class="am-mini">${esc(v.fabricante || '')}</div></td>
+        <td class="am-mini">${esc(v.lote || '—')}</td>
+        <td class="am-mini">${appDataBR(v.validade)}</td>
+        <td><strong>${stock}</strong></td>
+        <td>${situacao}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function appSetStatusAgendamento(id, status) {
+    if (!db) return;
+    try {
+      const { error } = await db.from('agendamentos').update({ status }).match({ id });
+      if (error) throw error;
+      toast('Agendamento atualizado.', 'success');
+      await fetchAppMobile();
+    } catch (err) {
+      console.error(err);
+      toast('Erro ao atualizar: ' + (err.message || err), 'error');
+    }
+  }
+
+  async function appSetStatusPedido(id, status) {
+    if (!db) return;
+    try {
+      const { error } = await db.from('pedidos_app').update({ status }).match({ id });
+      if (error) throw error;
+      toast('Pedido atualizado.', 'success');
+      await fetchAppMobile();
+    } catch (err) {
+      console.error(err);
+      toast('Erro ao atualizar pedido: ' + (err.message || err), 'error');
+    }
   }
 
 </script>
